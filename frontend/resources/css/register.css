@@ -1,0 +1,172 @@
+.register-page {
+    min-height: calc(100vh - 190px);
+    display: flex;
+    align-items: center;
+    padding: 1.25rem 0;
+}
+
+.register-shell {
+    display: grid;
+    grid-template-columns: minmax(280px, 420px) minmax(0, 720px);
+    align-items: center;
+    gap: 3rem;
+    width: 100%;
+}
+
+.register-copy {
+    max-width: 420px;
+}
+
+.register-eyebrow {
+    display: inline-flex;
+    color: #ff4d5a;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-bottom: .85rem;
+    text-transform: uppercase;
+}
+
+.register-copy h1 {
+    color: #ffffff;
+    font-size: clamp(2.4rem, 4.4vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+.register-copy p {
+    color: #b8b8b8;
+    font-size: 1.02rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.register-panel {
+    background: linear-gradient(145deg, #181818, #101010);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    padding: 2rem;
+    width: 100%;
+}
+
+.register-brand {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.6rem;
+}
+
+.register-brand img {
+    border: 1px solid rgba(193, 18, 31, .45);
+    border-radius: 8px;
+    height: 54px;
+    object-fit: cover;
+    width: 54px;
+}
+
+.register-brand span {
+    color: #aaa;
+    display: block;
+    font-size: .9rem;
+}
+
+.register-brand strong {
+    color: #fff;
+    display: block;
+    font-size: 1.45rem;
+}
+
+.register-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 1.35rem;
+}
+
+.register-grid-full {
+    grid-column: 1 / -1;
+}
+
+.register-form .form-label {
+    color: #dddddd;
+    margin-bottom: .45rem;
+}
+
+.register-form .form-control,
+.register-form .input-group-text {
+    background-color: #0b0b0b;
+    border-color: #303030;
+    color: #f5f5f5;
+}
+
+.register-form .form-control::placeholder {
+    color: #777;
+}
+
+.register-form .form-control:focus {
+    border-color: #c1121f;
+    box-shadow: 0 0 0 .2rem rgba(193, 18, 31, .2);
+}
+
+.register-hint {
+    color: #8f8f8f;
+    display: block;
+    font-size: .82rem;
+    margin-top: .35rem;
+}
+
+.register-form .btn {
+    font-weight: 700;
+    min-height: 48px;
+}
+
+.register-login-link,
+.login-register-link {
+    color: #a8a8a8;
+    font-size: .92rem;
+    margin: 1rem 0 0;
+    text-align: center;
+}
+
+.register-login-link a,
+.login-register-link a {
+    color: #ff4d5a;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.register-login-link a:hover,
+.login-register-link a:hover {
+    color: #ffffff;
+}
+
+@media (max-width: 1199.98px) {
+    .register-shell {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .register-copy {
+        max-width: 720px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .register-page {
+        min-height: auto;
+    }
+
+    .register-panel {
+        padding: 1.4rem;
+    }
+
+    .register-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .register-grid-full {
+        grid-column: auto;
+    }
+}

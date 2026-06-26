@@ -105,6 +105,11 @@
                             <i class="fa-solid fa-right-to-bracket me-2"></i>
                             Ingresar
                         </button>
+
+                        <p class="login-register-link">
+                            No tienes cuenta?
+                            <a href="{{ route('user.register') }}">Registrarme</a>
+                        </p>
                     </form>
                 </div>
             </div>

@@ -19,3 +19,5 @@ Route::get('/exercise/{id}/resource', [ExerciseController::class, 'getExerciseRe
 Route::get('/profile/{id}', [UserController::class, 'getProfile'])->name('user.profile');
 
 Route::get('/login', [AuthController::class, 'login'])->name('user.login');
+
+Route::get('/register', [AuthController::class, 'register'])->name('user.register');
