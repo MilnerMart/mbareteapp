@@ -1,0 +1,24 @@
+.empty-exercises-wrapper {
+    min-height: calc(100vh - 180px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.leoncio-rest-img {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    max-height: calc(100vh - 220px);
+    object-fit: contain;
+    display: block;
+    border-radius: 10%;
+}
+
+@media (max-width: 576px) {
+    .leoncio-rest-img {
+        max-width: 92vw;
+        max-height: calc(100vh - 180px);
+    }
+}
