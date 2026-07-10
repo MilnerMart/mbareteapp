@@ -1,5 +1,6 @@
 @php
     $userProfile = $data['profileInfo'] ?? null;
+    $fullName = trim(($userProfile['name'] ?? '') . ' ' . ($userProfile['last_name'] ?? ''));
 @endphp
 @extends('layouts.layout')
 @section('css')
@@ -30,10 +31,10 @@
 
                 <div class="row g-3 profile-info-row">
                     <div class="col-12 col-md-6">
-                        <p><strong>Nombre:</strong> Leoncio Paraguay</p>
-                        <p><strong>Edad:</strong> 25 años</p>
-                        <p><strong>Altura:</strong> 1.75 cm</p>
-                        <p><strong>Peso:</strong> 90 kg</p>
+                        <p><strong>Nombre:</strong> {{ $fullName ?: 'Usuario' }}</p>
+                        <p><strong>Edad:</strong> {{ $userProfile['age'] ?? '-' }} años</p>
+                        <p><strong>Altura:</strong> {{ $userProfile['height'] ?? '-' }} cm</p>
+                        <p><strong>Peso:</strong> {{ $userProfile['weight'] ?? '-' }} kg</p>
                     </div>
 
                     <div class="col-12 col-md-6">

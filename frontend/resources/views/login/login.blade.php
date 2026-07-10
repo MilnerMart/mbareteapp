@@ -46,7 +46,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="#" class="login-form">
+                    <form method="POST" action="{{ route('user.login.submit') }}" class="login-form">
                         @csrf
 
                         <div class="mb-3">
@@ -63,6 +63,7 @@
                                     value="{{ old('email') }}"
                                     placeholder="usuario@email.com"
                                     autocomplete="email"
+                                    maxlength="255"
                                     required>
                             </div>
                             @error('email')
@@ -84,6 +85,14 @@
                                     placeholder="Tu contrasena"
                                     autocomplete="current-password"
                                     required>
+                                <button
+                                    type="button"
+                                    class="btn btn-password-toggle"
+                                    data-password-toggle="#password"
+                                    aria-label="Mostrar contrasena"
+                                    aria-pressed="false">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </div>
                             @error('password')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>

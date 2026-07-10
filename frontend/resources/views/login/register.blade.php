@@ -32,7 +32,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="#" class="register-form">
+                <form method="POST" action="{{ route('user.register.submit') }}" class="register-form">
                     @csrf
 
                     <div class="register-grid">
@@ -50,6 +50,7 @@
                                     value="{{ old('name') }}"
                                     placeholder="Tu nombre"
                                     autocomplete="given-name"
+                                    maxlength="255"
                                     required>
                             </div>
                             @error('name')
@@ -71,6 +72,7 @@
                                     value="{{ old('last_name') }}"
                                     placeholder="Tu apellido"
                                     autocomplete="family-name"
+                                    maxlength="255"
                                     required>
                             </div>
                             @error('last_name')
@@ -92,6 +94,7 @@
                                     value="{{ old('email') }}"
                                     placeholder="usuario@email.com"
                                     autocomplete="email"
+                                    maxlength="255"
                                     required>
                             </div>
                             <small class="register-hint">Lo usaremos para verificar tu cuenta mas adelante.</small>
@@ -113,7 +116,16 @@
                                     name="password"
                                     placeholder="Crea una contrasena"
                                     autocomplete="new-password"
+                                    minlength="8"
                                     required>
+                                <button
+                                    type="button"
+                                    class="btn btn-password-toggle"
+                                    data-password-toggle="#password"
+                                    aria-label="Mostrar contrasena"
+                                    aria-pressed="false">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </div>
                             @error('password')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -133,7 +145,16 @@
                                     name="password_confirmation"
                                     placeholder="Repite la contrasena"
                                     autocomplete="new-password"
+                                    minlength="8"
                                     required>
+                                <button
+                                    type="button"
+                                    class="btn btn-password-toggle"
+                                    data-password-toggle="#password_confirmation"
+                                    aria-label="Mostrar confirmacion"
+                                    aria-pressed="false">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -152,6 +173,8 @@
                                     placeholder="25"
                                     min="12"
                                     max="100"
+                                    step="1"
+                                    inputmode="numeric"
                                     required>
                             </div>
                             @error('age')
@@ -174,7 +197,8 @@
                                     placeholder="75"
                                     min="25"
                                     max="250"
-                                    step="0.1"
+                                    step="1"
+                                    inputmode="numeric"
                                     required>
                                 <span class="input-group-text">kg</span>
                             </div>
@@ -198,7 +222,8 @@
                                     placeholder="175"
                                     min="100"
                                     max="230"
-                                    step="0.1"
+                                    step="1"
+                                    inputmode="numeric"
                                     required>
                                 <span class="input-group-text">cm</span>
                             </div>

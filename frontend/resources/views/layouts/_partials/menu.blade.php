@@ -24,13 +24,25 @@
                         <a class="nav-link" href="#">Rutinas</a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('user.profile', 12) }}">Perfil</a>
-                    </li>
+                    @if(session('auth_user'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('user.profile', session('auth_user.id')) }}">Perfil</a>
+                        </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('user.login') }}">Ingresar</a>
-                    </li>
+                        <li class="nav-item nav-logout-item">
+                            <form method="POST" action="{{ route('user.logout') }}" class="nav-logout-form">
+                                @csrf
+                                <button type="submit" class="nav-link nav-logout-button">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                    <span>Salir</span>
+                                </button>
+                            </form>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('user.login') }}">Ingresar</a>
+                        </li>
+                    @endif
 
                 </ul>
             </div>

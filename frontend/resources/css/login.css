@@ -124,6 +124,22 @@
     box-shadow: 0 0 0 .2rem rgba(193, 18, 31, .2);
 }
 
+.login-form .btn-password-toggle {
+    background-color: #0b0b0b;
+    border-color: #303030;
+    color: #d8d8d8;
+    min-height: auto;
+    width: 48px;
+}
+
+.login-form .btn-password-toggle:hover,
+.login-form .btn-password-toggle:focus {
+    background-color: #161616;
+    border-color: #c1121f;
+    color: #ffffff;
+    box-shadow: none;
+}
+
 .login-options {
     display: flex;
     align-items: center;

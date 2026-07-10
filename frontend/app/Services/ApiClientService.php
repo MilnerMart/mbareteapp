@@ -13,25 +13,33 @@ class ApiClientService
         $this->baseUrl = config('services.backend.url');
     }
 
+    private function request()
+    {
+        $request = Http::acceptJson();
+        $token = session('auth_token');
+
+        return $token ? $request->withToken($token) : $request;
+    }
+
     private function get($endpoint, $params = [])
     {   
-        $resquest = Http::get($this->baseUrl . $endpoint, $params)->json();
+        $resquest = $this->request()->get($this->baseUrl . $endpoint, $params)->json();
         return $resquest ? $resquest['data']: null;
     }
 
     private function post($endpoint, $data = [])
     {
-        return Http::post($this->baseUrl . $endpoint, $data)->json();
+        return $this->request()->post($this->baseUrl . $endpoint, $data)->json();
     }
 
     private function patch($endpoint, $data = [])
     {
-        return Http::patch($this->baseUrl . $endpoint, $data)->json();
+        return $this->request()->patch($this->baseUrl . $endpoint, $data)->json();
     }
 
     private function delete($endpoint, $data = [])
     {
-        return Http::delete($this->baseUrl . $endpoint, $data)->json();
+        return $this->request()->delete($this->baseUrl . $endpoint, $data)->json();
     }
 
 
@@ -52,12 +60,27 @@ class ApiClientService
     }
 
     public function getUser(int $id){
-        $this->get('/user/'.$id);
+        return $this->get('/user/'.$id);
     }
 
     public function setUser(array $params){
-        $this->post('/user', $params);
+        return $this->post('/user', $params);
     }
 
+    public function login(array $params){
+        return $this->post('/auth/login', $params);
+    }
+
+    public function register(array $params){
+        return $this->post('/auth/register', $params);
+    }
+
+    public function logout(){
+        return $this->post('/auth/logout');
+    }
+
+    public function me(){
+        return $this->get('/auth/me');
+    }
 
 }

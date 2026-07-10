@@ -33,6 +33,41 @@
     color: #c1121f !important;
 }
 
+.navbar-nav {
+    align-items: center;
+}
+
+.nav-logout-form {
+    align-items: center;
+    display: flex;
+    margin: 0;
+}
+
+.nav-logout-button {
+    align-items: center;
+    background: rgba(193, 18, 31, .12);
+    border: 1px solid rgba(193, 18, 31, .45);
+    border-radius: 8px;
+    color: #ffffff !important;
+    display: inline-flex;
+    font: inherit;
+    gap: .45rem;
+    line-height: 1.2;
+    margin-left: .35rem;
+    padding: .45rem .8rem !important;
+}
+
+.nav-logout-button:hover,
+.nav-logout-button:focus {
+    background: #c1121f;
+    border-color: #c1121f;
+    color: #ffffff !important;
+}
+
+.nav-logout-button i {
+    font-size: .9rem;
+}
+
 .logo-container {
     height: 50px;
     width: 50px;
