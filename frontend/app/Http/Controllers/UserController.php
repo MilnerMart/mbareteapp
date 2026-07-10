@@ -27,7 +27,7 @@ class UserController extends Controller{
 
         $response = $this->apiClient->updateProfileImage($id, $validated['profile_image']);
 
-        if(!(($response['success'] ?? false) || ($response['sucess'] ?? false))){
+        if(!($response['success'] ?? false)){
             return back()->withErrors([
                 'profile_image' => $response['message'] ?? 'No pudimos actualizar la foto de perfil.',
             ]);

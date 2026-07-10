@@ -2,22 +2,18 @@
 
 namespace App;
 
-use Illuminate\Http\Resources\Json\JsonResource;
-
 trait ApiResponse
 {
-    public function successApiResponse(?JsonResource $data = null, ?int $code = 200){
+    public function successApiResponse(mixed $data = null, ?int $code = 200){
         return response()->json([
             'success' => true,
-            'sucess' => true, 
             'data' => $data ?? []
         ], $code);
     }
 
-    public function errorApiResponse(?JsonResource $data, int $code = 500){
+    public function errorApiResponse(mixed $data = null, int $code = 500){
         return response()->json([
             'success' => false,
-            'sucess' => false, 
             'data' => $data ? $data : null
         ], $code);
     }

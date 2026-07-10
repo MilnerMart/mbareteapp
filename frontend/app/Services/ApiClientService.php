@@ -24,25 +24,14 @@ class ApiClientService
 
     private function get($endpoint, $params = [])
     {   
-        $resquest = $this->request()->get($this->baseUrl . $endpoint, $params)->json();
-        return $resquest ? $resquest['data']: null;
+        $response = $this->request()->get($this->baseUrl . $endpoint, $params)->json();
+        return $response['data'] ?? null;
     }
 
     private function post($endpoint, $data = [])
     {
         return $this->request()->post($this->baseUrl . $endpoint, $data)->json();
     }
-
-    private function patch($endpoint, $data = [])
-    {
-        return $this->request()->patch($this->baseUrl . $endpoint, $data)->json();
-    }
-
-    private function delete($endpoint, $data = [])
-    {
-        return $this->request()->delete($this->baseUrl . $endpoint, $data)->json();
-    }
-
 
     public function getMuscles(){
         return $this->get('/muscle');
@@ -62,10 +51,6 @@ class ApiClientService
 
     public function getUser(int $id){
         return $this->get('/user/'.$id);
-    }
-
-    public function setUser(array $params){
-        return $this->post('/user', $params);
     }
 
     public function updateProfileImage(int $id, UploadedFile $image){
@@ -94,5 +79,4 @@ class ApiClientService
     public function me(){
         return $this->get('/auth/me');
     }
-
 }

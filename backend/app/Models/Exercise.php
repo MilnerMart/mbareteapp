@@ -23,4 +23,14 @@ class Exercise extends Model
         $self->gif = $gifUrl;
         return $self;
     }
+
+    public function muscle()
+    {
+        return $this->belongsTo(Muscle::class);
+    }
+
+    public function resources()
+    {
+        return $this->hasMany(ExerciseResourceModel::class, 'exercise_id');
+    }
 }

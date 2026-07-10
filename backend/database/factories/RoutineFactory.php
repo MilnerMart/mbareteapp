@@ -22,7 +22,7 @@ class RoutineFactory extends Factory
         return [
             'name' => fake()->name(),
             'slug' => fake()->slug(),
-            'frecuency' => fake()->numberBetween(1, 3),
+            'frequency' => fake()->numberBetween(1, 3),
             'rest_between_exercises' => fake()->numberBetween(1, 3),
             'data' => [
                 'exercise_list' => $exercise,

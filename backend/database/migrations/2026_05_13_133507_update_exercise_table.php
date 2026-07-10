@@ -22,6 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::table('exercises', function (Blueprint $table) {
+            $table->string('video', 200)->nullable(true)->change();
+            $table->string('gif', 200)->nullable(true)->change();
+        });
     }
 };
