@@ -20,8 +20,12 @@ class ExerciseResourceModel extends Model
     }
 
     public static function kindMap(int $kindId){
-        $kind = self::kindMap[$kindId];
-        return $kind ?? null;
+        return self::kindMap[$kindId] ?? null;
+    }
+
+    public function exercise()
+    {
+        return $this->belongsTo(Exercise::class);
     }
 
     private const kindMap = [

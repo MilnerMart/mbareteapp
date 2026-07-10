@@ -25,9 +25,12 @@ class ExerciseRequest extends FormRequest
         return [
             'name' => 'required|min:5|max:200',
             'slug' => 'required|min:5|max:50',
-            'muscle_id' => 'required',
+            'muscle_id' => 'required|exists:muscles,id',
             'description' => 'required|min:5|max:255',
-            'recommended_rest_time' => 'required|int'
+            'recommended_rest_time' => 'required|integer|min:1',
+            'image' => 'nullable|string|max:200',
+            'video' => 'nullable|string|max:200',
+            'gif' => 'nullable|string|max:200',
         ];
     }
 }

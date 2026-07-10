@@ -23,7 +23,10 @@ class ResourceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|min:3|max:255',
+            'kind' => 'required|integer|in:1,5,11',
+            'url' => 'required|string|max:255',
+            'status' => 'required|integer|min:1',
         ];
     }
 }

@@ -25,7 +25,8 @@ class MuscleRequest extends FormRequest
         return [
             'name' => 'required|min:5|max:50',
             'slug' => 'required|min:5|max:50',
-            'recommended_rest_days' => 'required',
+            'description' => 'required|min:5|max:255',
+            'recommended_rest_days' => 'required|integer|min:1',
             'image_url' => 'required|max:10240'
         ];
     }

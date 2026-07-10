@@ -41,8 +41,8 @@ class Muscle extends Model
         $this->recommended_rest_days = $restDays;
     }
 
-    function getRestDays(): string{
-        return $this->slug;
+    function getRestDays(): int{
+        return $this->recommended_rest_days;
     }
 
     function setImg(string $image){
@@ -59,5 +59,10 @@ class Muscle extends Model
 
     function getDescription(){
         return $this->description;
+    }
+
+    public function exercises()
+    {
+        return $this->hasMany(Exercise::class);
     }
 }

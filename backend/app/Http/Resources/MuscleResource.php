@@ -18,7 +18,7 @@ class MuscleResource extends JsonResource
             "id" => $this->id,
             "name" =>  $this->name,
             "slug" =>  $this->slug,
-            "recommended_rest_days" => 2 .' days',
+            "recommended_rest_days" => $this->recommended_rest_days,
             "description" => $this->description,
             "image_url" => $this->image_url
         ];

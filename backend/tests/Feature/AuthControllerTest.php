@@ -29,7 +29,6 @@ class AuthControllerTest extends TestCase
         $response
             ->assertCreated()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('sucess', true)
             ->assertJsonStructure([
                 'data' => [
                     'user' => ['id', 'name', 'last_name', 'email', 'age', 'height', 'weight'],
@@ -63,8 +62,7 @@ class AuthControllerTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/v1/auth/logout')
             ->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('sucess', true);
+            ->assertJsonPath('success', true);
 
         $this->assertSame(0, $user->tokens()->count());
     }

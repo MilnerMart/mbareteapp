@@ -100,6 +100,6 @@ class AuthController extends Controller
 
     private function isSuccess(?array $response): bool
     {
-        return (bool) (($response['success'] ?? false) || ($response['sucess'] ?? false));
+        return (bool) ($response['success'] ?? false);
     }
 }
