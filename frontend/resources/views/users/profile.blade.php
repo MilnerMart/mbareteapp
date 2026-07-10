@@ -1,6 +1,7 @@
 @php
     $userProfile = $data['profileInfo'] ?? null;
     $fullName = trim(($userProfile['name'] ?? '') . ' ' . ($userProfile['last_name'] ?? ''));
+    $profileImage = $userProfile['profile_image_url'] ?? asset('images/leoncioBiceps.png');
 @endphp
 @extends('layouts.layout')
 @section('css')
@@ -15,17 +16,36 @@
                         <i class="fa-solid fa-pen"></i>
                     </button>
                 </div>
+                @if (session('profile_image_updated'))
+                    <div class="alert alert-success profile-alert">
+                        {{ session('profile_image_updated') }}
+                    </div>
+                @endif
+                @error('profile_image')
+                    <div class="alert alert-danger profile-alert">
+                        {{ $message }}
+                    </div>
+                @enderror
                 <div class="row justify-content-center mb-4">
                     <div class="col-12 d-flex justify-content-center">
-                        <label class="profile-picture" for="profileImageInput">
-                            <img src="{{ asset('images/leoncioBiceps.png') }}" alt="Foto de perfil">
+                        <form method="POST" action="{{ route('user.profile.image', $userProfile['id'] ?? session('auth_user.id')) }}" enctype="multipart/form-data" class="profile-picture-form">
+                            @csrf
+                            <label class="profile-picture" for="profileImageInput">
+                                <img src="{{ $profileImage }}" alt="Foto de perfil">
 
-                            <div class="profile-picture-overlay">
-                                <i class="fa-solid fa-pen"></i>
-                            </div>
-                        </label>
+                                <span class="profile-picture-overlay">
+                                    <i class="fa-solid fa-camera"></i>
+                                </span>
+                            </label>
 
-                        <input type="file" id="profileImageInput" name="profile_image" class="d-none">
+                            <input
+                                type="file"
+                                id="profileImageInput"
+                                name="profile_image"
+                                class="d-none"
+                                accept="image/jpeg,image/png,image/webp"
+                                onchange="this.form.submit()">
+                        </form>
                     </div>
                 </div>
 

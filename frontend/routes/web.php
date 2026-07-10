@@ -20,6 +20,8 @@ Route::get('/exercise/{id}/resource', [ExerciseController::class, 'getExerciseRe
 
 Route::get('/profile/{id}', [UserController::class, 'getProfile'])->name('user.profile');
 
+Route::post('/profile/{id}/image', [UserController::class, 'updateProfileImage'])->name('user.profile.image');
+
 Route::get('/login', [AuthController::class, 'login'])->name('user.login');
 
 Route::post('/login', [AuthController::class, 'authenticate'])->name('user.login.submit');

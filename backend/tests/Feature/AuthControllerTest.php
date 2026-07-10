@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -95,5 +97,29 @@ class AuthControllerTest extends TestCase
                 'height',
                 'weight',
             ]);
+    }
+
+    public function test_user_can_update_profile_image(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $response = $this->withToken($token)
+            ->postJson('/api/v1/user/'.$user->id.'/profile-image', [
+                'profile_image' => UploadedFile::fake()->image('avatar.jpg', 400, 400),
+            ]);
+
+        $profileImagePath = $response->json('data.profile_image_url');
+        $storedPath = $user->fresh()->profile_image_url;
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertNotNull($storedPath);
+        $this->assertStringContainsString('/images/profiles/', $profileImagePath);
+        $this->assertFileExists(public_path($storedPath));
+
+        File::delete(public_path($storedPath));
     }
 }
