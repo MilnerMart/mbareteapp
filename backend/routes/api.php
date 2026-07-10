@@ -14,6 +14,8 @@ Route::prefix('/v1')->group(function(){
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 
+    Route::middleware('auth:sanctum')->post('/user/{id}/profile-image', [UserController::class, 'updateProfileImage']);
+
     Route::resource('/muscle', MuscleController::class);
     Route::resource('/exercise', ExerciseController::class);
     Route::resource('/user', UserController::class);

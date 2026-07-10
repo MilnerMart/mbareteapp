@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\UploadedFile;
 
 class ApiClientService
 {
@@ -65,6 +66,17 @@ class ApiClientService
 
     public function setUser(array $params){
         return $this->post('/user', $params);
+    }
+
+    public function updateProfileImage(int $id, UploadedFile $image){
+        return $this->request()
+            ->attach(
+                'profile_image',
+                fopen($image->getRealPath(), 'r'),
+                $image->getClientOriginalName()
+            )
+            ->post($this->baseUrl.'/user/'.$id.'/profile-image')
+            ->json();
     }
 
     public function login(array $params){

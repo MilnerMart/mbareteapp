@@ -22,6 +22,7 @@ class UserResource extends JsonResource
             'age' => $this->age,
             'height' => $this->height,
             'weight' => $this->weight,
+            'profile_image_url' => $this->profile_image_url ? asset($this->profile_image_url) : null,
         ];
     }
 }
