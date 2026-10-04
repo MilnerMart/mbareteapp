@@ -27,7 +27,6 @@ class MuscleRequest extends FormRequest
             'slug' => 'required|min:5|max:50',
             'description' => 'required|min:5|max:255',
             'recommended_rest_days' => 'required|integer|min:1',
-            'image_url' => 'required|max:10240'
         ];
     }
 }

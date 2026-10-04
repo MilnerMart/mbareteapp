@@ -20,7 +20,6 @@ class MuscleResource extends JsonResource
             "slug" =>  $this->slug,
             "recommended_rest_days" => $this->recommended_rest_days,
             "description" => $this->description,
-            "image_url" => $this->image_url
         ];
     }
 }

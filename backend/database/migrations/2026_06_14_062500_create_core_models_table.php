@@ -8,15 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('profile_image_url')->nullable()->after('weight');
+        Schema::create('core_models', function (Blueprint $table) {
+            $table->integer('id')->primary();
+            $table->string('slug');
+            $table->string('name');
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('profile_image_url');
-        });
+        Schema::dropIfExists('core_models');
     }
 };

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Exercise;
-use App\Models\ExerciseResourceModel;
+use App\Models\Resource;
 use App\Models\Muscle;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -109,7 +109,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
 
         $this->withToken($token)->postJson('/api/v1/exercise/'.$exerciseId.'/resource', [
             'name' => 'Imagen tecnica',
-            'kind' => ExerciseResourceModel::kindImg,
+            'kind' => Resource::kindImg,
             'url' => 'images/leoncioCurl.png',
             'status' => 1,
         ])->assertCreated()

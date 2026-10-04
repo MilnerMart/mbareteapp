@@ -2,71 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\EntityStatus;
 use App\Http\Requests\MuscleRequest;
-use App\Http\Resources\MuscleResource;
 use App\Models\Muscle;
-use Exception;
 use Illuminate\Http\JsonResponse;
 
-class MuscleController extends Controller
-{
-    public function index(): JsonResponse
-    {
-        $musclesCollection = Muscle::all();
-        $muscleResource = MuscleResource::collection($musclesCollection);
-        return $this->successApiResponse($muscleResource);
+class MuscleController extends Controller {
+    public function index(): JsonResponse {
+        $dbconnector = $this->getDbConnector();   
+        $muscleList = Muscle::queryList($dbconnector);
+        $model=[];
+        foreach ($muscleList as $muscle) {
+            /**  @var Muscle $muscle */
+            $model[]= $muscle->buildApiModel();
+        }
+        return $this->successApiResponse($model);
     }
 
-    public function store(MuscleRequest $request)
-    {
+    public function store(MuscleRequest $request): JsonResponse {
         $validated = $request->validated();
-
+        $dbConnector = $this->getDbConnector();
         $muscle = Muscle::allocMuscle(
             $validated['name'],
             $validated['slug'],
             $validated['description'],
             $validated['recommended_rest_days'],
-            $validated['image_url']
         );
-        $muscle->save();
+        $muscle->writeToDb($dbConnector);
 
-        return $this->successApiResponse(MuscleResource::make($muscle), 201);
+        return $this->successApiResponse($muscle->buildApiModel(), 201);
     }
 
-    public function show(string $id)
-    {
-        $muscle = Muscle::find($id);
+    public function show(string $id): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $muscle = Muscle::queryByDbIdOrFail($dbConnector, $id);
 
-        if(!$muscle){
-            throw new Exception("No se verifica musculo con id: ". $id, 400);
+        return $this->successApiResponse($muscle->buildApiModel(), 200);
+    }
+
+    public function update(MuscleRequest $request, string $id): JsonResponse {   
+        $dbConnector = $this->getDbConnector();
+        $muscle = Muscle::queryByDbIdOrFail($dbConnector,$id);
+        $validated = $request->validated();
+        $dirty = false;
+        if($muscle->getName() !== $validated['name']){
+            $muscle->setName($validated['name']);
+            $dirty = true;
+        }
+        if($muscle->getSlug() !== $validated['slug']){
+            $muscle->setSlug($validated['slug']);
+            $dirty = true;
+        }
+        if($muscle->getRestDays() !== $validated['recommended_rest_days']){
+            $muscle->setRestDays($validated['recommended_rest_days']);
+            $dirty = true;
+        }
+        if($muscle->getDescription() !== $validated['description']){
+            $muscle->setDescription($validated['description']);
+            $dirty = true;
+        }
+        if($dirty){
+            $muscle->writeToDb($dbConnector);
         }
 
-        $muscleResource = MuscleResource::make($muscle);
-
-        return $this->successApiResponse($muscleResource, 200);
+        $model = $muscle->buildApiModel();
+        return $this->successApiResponse($model, 200);
     }
 
-    public function update(MuscleRequest $request, string $id)
-    {   
-        
-        $muscle = Muscle::findOrFail($id);
-        $muscle->fill($request->validated());
-        $muscle->save();
+    public function destroy(string $id): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $muscle = Muscle::queryByDbIdOrFail($dbConnector,$id);
 
-        $muscleResource = MuscleResource::make($muscle);
-
-        return $this->successApiResponse($muscleResource, 200);
-    }
-
-    public function destroy(string $id)
-    {
-        $muscle = Muscle::find($id);
-
-        if(!$muscle){
-            throw new Exception("No se verifica musculo con id: ". $id, 400);
-        }
-
-        $muscle->delete();
+        $muscle->setStatusId(EntityStatus::statusIdDeleted);
+        $muscle->writeToDb($dbConnector);
         return $this->successApiResponse(code: 200);
     }
+    
 }

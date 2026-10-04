@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->string('slug', 100);
-            $table->integer('frecuency');
+            $table->integer('frequency');
             $table->integer('rest_between_exercises');
             $table->text('data');
+            $table->integer('status');
             $table->timestamps();
         });
     }

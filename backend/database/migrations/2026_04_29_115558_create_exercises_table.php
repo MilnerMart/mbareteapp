@@ -18,9 +18,7 @@ return new class extends Migration
             $table->foreignId('muscle_id')->nullable()->references('id')->on('muscles')->nullOnDelete();
             $table->string('description', 255)->nullable();
             $table->integer('recommended_rest_time')->default(1);
-            $table->string('image', 200)->nullable();
-            $table->string('video', 200)->nullable();
-            $table->string('gif', 200)->nullable();
+            $table->integer('status');
             $table->timestamps();
         });
     }

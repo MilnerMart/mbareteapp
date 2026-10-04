@@ -2,59 +2,48 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\EntityStatus;
 use App\Http\Requests\ExerciseRequest;
 use App\Http\Requests\ResourceRequest;
 use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
-use App\Models\ExerciseResourceModel;
-use Exception;
+use App\Models\Resource;
+use App\PublicException;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ExerciseController extends Controller
 {
-    public function index()
-    {
+    public function index(): JsonResponse {
         return $this->successApiResponse(ExerciseResource::collection(Exercise::all()));
     }
 
-    public function store(ExerciseRequest $request)
-    {
+    public function store(ExerciseRequest $request): JsonResponse {
         $validated = $request->validated();
-
+        $dbConnector = $this->getDbConnector();
         $exercise = Exercise::allocNew(
             $validated['name'],
             $validated['slug'],
             $validated['muscle_id'],
             $validated['recommended_rest_time'],
             $validated['description'],
-            $validated['image'] ?? null,
-            $validated['video'] ?? null,
-            $validated['gif'] ?? null
         );
-        $exercise->save();
+        $exercise->writeToDb($dbConnector);
 
         return $this->successApiResponse(ExerciseResource::make($exercise), 201);
     }
 
-    public function show(string $id)
-    {
-        $exercise = Exercise::find($id);
-
-        if(!$exercise){
-            throw new Exception("No se verifica ejercicio con id: ". $id, 400);
-        }
+    public function show(string $id): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
 
         $exerciseResource = ExerciseResource::make($exercise);
 
         return $this->successApiResponse($exerciseResource, 200);
     }
 
-    public function update(ExerciseRequest $request, string $id)
-    {
-        $exercise = Exercise::find($id);
-
-        if(!$exercise){
-            throw new Exception("No se verifica ejercicio con id: ". $id, 404);
-        }
+    public function update(ExerciseRequest $request, string $id): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
 
         $exercise->fill($request->validated());
         $exercise->save();
@@ -62,39 +51,35 @@ class ExerciseController extends Controller
         return $this->successApiResponse(ExerciseResource::make($exercise));
     }
 
-    public function destroy(string $id)
-    {
-        $exercise = Exercise::find($id);
+    public function destroy(string $id): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
 
-        if(!$exercise){
-            throw new Exception("No se verifica ejercicio con id: ". $id, 400);
-        }
-
-        $exercise->delete();
+        $exercise->setStatusId(EntityStatus::statusIdDeleted);
+        $exercise->writeToDb($dbConnector);
         return $this->successApiResponse(code: 200);
     }
 
-    public function getExerciseGroup(int $muscleId){
+    public function getExerciseGroup(int $muscleId): JsonResponse{
         $exerciseGroup = Exercise::where('muscle_id', $muscleId)->get();
         $exerciseResource = ExerciseResource::collection($exerciseGroup);
         return $this->successApiResponse($exerciseResource);
     }
 
-    public function addResource(ResourceRequest $request, int $exerciseId){
-        $exercise = Exercise::find($exerciseId);
-        if(!$exercise){
-            throw new Exception("No se verifica ejercicio con id: ". $exerciseId, 400);
-        }
+    public function addResource(ResourceRequest $request, int $exerciseId): JsonResponse{
+        $dbConnector = $this->getDbConnector();
+        $exercise = Exercise::queryByDbIdOrFail($dbConnector,$exerciseId);
+
         
         $validated = $request->validated();
         $kindId = $validated['kind'];
         
-        $kind = ExerciseResourceModel::kindMap($kindId);
+        $kind = Resource::kindMap($kindId);
         if(!$kind){
-            throw new Exception("tipo de archivo no reconocido", 400);
+            throw PublicException::validationError("tipo de archivo no reconocido");
         }
 
-        $resource = ExerciseResourceModel::allocNew(
+        $resource = Resource::allocNew(
             $validated['name'],
             $kindId,
             $validated['url'],
@@ -106,15 +91,13 @@ class ExerciseController extends Controller
         return $this->successApiResponse(ExerciseResource::make($resource), 201);
     }
 
-    public function getResources(int $exerciseId){
+    public function getResources(int $exerciseId): JsonResponse{
 
-        $exercise = Exercise::find($exerciseId);
-        if(!$exercise){
-            throw new Exception("No se verifica ejercicio con id: ". $exerciseId, 400);
-        }
+        $dbConnector = $this->getDbConnector();
+        $exercise = Exercise::queryByDbIdOrFail($dbConnector,$exerciseId);
 
         $exerciseResources = ExerciseResource::collection(
-            ExerciseResourceModel::where('exercise_id', $exerciseId)->get()
+            Resource::where('exercise_id', $exerciseId)->get()
         );
 
         return $this->successApiResponse($exerciseResources);

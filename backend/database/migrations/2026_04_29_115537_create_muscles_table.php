@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('slug', 100);
             $table->integer('recommended_rest_days');
             $table->string('description', 255);
-            $table->string('image_url');
+            $table->integer('status');
             $table->timestamps();
         });
     }

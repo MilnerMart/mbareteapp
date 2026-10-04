@@ -2,19 +2,32 @@
 
 namespace App;
 
-use Exception;
 
-trait PublicException
-{
-    public function validationError(string $message, int $code = 400): void{
-        throw new Exception($message, $code);
+class PublicException extends BackendException{
+    public static function validationError(string $message,string $infoCode = 'validation_error',array $data = []): self {
+        return new self([
+            'text' => $message,
+            'infoCode' => $infoCode,
+            'httpCode' => 400,
+            'data' => $data,
+        ]);
     }
 
-    public function notFoundError(string $message = 'Recurso no encontrado'): void{
-        throw new Exception($message, 404);
+    public static function unauthorizedError(string $message = 'No autorizado',string $infoCode = 'unauthorized',array $data = []): self {
+        return new self([
+            'text' => $message,
+            'infoCode' => $infoCode,
+            'httpCode' => 401,
+            'data' => $data,
+        ]);
     }
 
-    public function unauthorizedError(string $message = 'No autorizado'): void{
-        throw new Exception($message, 401);
+    public static function internalError(string $message = 'Error interno del servidor',string $infoCode = 'internal_error',array $data = []): self {
+        return new self([
+            'text' => $message,
+            'infoCode' => $infoCode,
+            'httpCode' => 500,
+            'data' => $data,
+        ]);
     }
 }

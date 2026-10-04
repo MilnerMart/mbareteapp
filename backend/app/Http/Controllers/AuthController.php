@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\EntityStatus;
 use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use App\PublicException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
         $validated = $request->validated();
-
+        $validated['status'] = EntityStatus::statusIdActive;
         $user = User::create($validated);
         $token = $user->createToken($this->tokenName($request))->plainTextToken;
 
@@ -31,9 +32,7 @@ class AuthController extends Controller
         $user = User::where('email', $validated['email'])->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => 'Las credenciales ingresadas no son correctas.',
-            ]);
+            throw PublicException::validationError('Las credenciales ingresadas no son correctas');
         }
 
         $user->tokens()->where('name', $this->tokenName($request))->delete();

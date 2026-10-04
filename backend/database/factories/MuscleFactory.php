@@ -22,7 +22,6 @@ class MuscleFactory extends Factory
             'slug' => fake()->slug(2),
             'recommended_rest_days' => fake()->numberBetween(1, 3),
             'description' => fake()->sentence(),
-            'image_url' => fake()->imageUrl()
         ];
     }
 }
