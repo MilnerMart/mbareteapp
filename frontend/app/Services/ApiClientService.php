@@ -45,8 +45,8 @@ class ApiClientService
         return $this->get('/exercise/group/'.$muscleId);
     }
 
-    public function getExerciseResources(int $exerciseId){
-        return $this->get('/exercise/'.$exerciseId.'/resource');
+    public function getResource(int $resourceId){
+        return $this->get('/resource/'.$resourceId);
     }
 
     public function getUser(int $id){

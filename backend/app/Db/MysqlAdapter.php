@@ -38,4 +38,8 @@ class MysqlAdapter implements DbAdapter {
         $date = DateTimeImmutable::createFromFormat(self::dbDateFormat, $value, $this->utcTz);
         return $date ? $date->setTimezone($tz) : null;
     }
+
+    static function getInstanceForSite():DbConnector {
+        return new DbConnector();
+    }
 }

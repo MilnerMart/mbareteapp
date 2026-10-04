@@ -31,7 +31,7 @@ class ApiClientServiceTest extends TestCase
         $this->assertSame([['id' => 1]], $client->getMuscles());
         $this->assertSame([['id' => 2]], $client->getExercises());
         $this->assertSame([['id' => 4]], $client->getExerciseGroup(3));
-        $this->assertSame([['id' => 6]], $client->getExerciseResources(5));
+        $this->assertSame([['id' => 6]], $client->getResource(5));
 
         Http::assertSentCount(4);
         Http::assertSent(fn (Request $request) => $request->method() === 'GET'

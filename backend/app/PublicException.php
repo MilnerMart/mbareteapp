@@ -30,4 +30,13 @@ class PublicException extends BackendException{
             'data' => $data,
         ]);
     }
+
+    public static function notFoundError(string $message = 'No se encontro',string $infoCode = 'not_found',array $data = []): self {
+        return new self([
+            'text' => $message,
+            'infoCode' => $infoCode,
+            'httpCode' => 404,
+            'data' => $data,
+        ]);
+    }
 }

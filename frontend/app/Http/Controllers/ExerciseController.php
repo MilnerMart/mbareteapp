@@ -26,7 +26,7 @@ class ExerciseController extends Controller
     }
 
     public function getExerciseResource(int $exerciseId){
-        $resources = $this->apiClient->getExerciseResources($exerciseId);
+        $resources = $this->apiClient->getResource($exerciseId);
         $data['exerciseResources'] = $resources;
         return view('exercises.resources', compact('data'));
     }

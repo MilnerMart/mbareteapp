@@ -9,7 +9,6 @@ use App\Db\DbConnector;
 use App\Db\DbSchema;
 use App\Helpers\BaseHelper;
 use App\PublicException;
-use Dom\Entity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Query\Builder;
 use stdClass;
@@ -58,14 +57,6 @@ class Muscle extends BaseEntity {
 
     function getRestDays(): int{
         return $this->recommended_rest_days;
-    }
-
-    function setImg(string $image): void{
-        $this->image_url = $image;
-    }
-    
-    function getImg(): string{
-        return $this->image_url;
     }
 
     function setDescription(string $description): void{

@@ -28,9 +28,6 @@ class ExerciseRequest extends FormRequest
             'muscle_id' => 'required|exists:muscles,id',
             'description' => 'required|min:5|max:255',
             'recommended_rest_time' => 'required|integer|min:1',
-            'image' => 'nullable|string|max:200',
-            'video' => 'nullable|string|max:200',
-            'gif' => 'nullable|string|max:200',
         ];
     }
 }

@@ -13,6 +13,7 @@ return new class extends Migration
         $table->string('name');
         $table->integer('kind');
         $table->string('url');
+        $table->string('slug')->unique();
         $table->foreignId('owner_id')->nullable();
         $table->integer('model_id')->nullable();
         $table->foreign('model_id')->references('id')->on('core_models');

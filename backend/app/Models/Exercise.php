@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\CoreModel;
+use App\Core\EntityStatus;
 use App\Db\DbAdapter;
 use App\Db\DbConnector;
 use App\Db\DbSchema;
@@ -38,6 +39,22 @@ class Exercise extends BaseEntity {
         return CoreModel::exerciseModelId;
     }
 
+    function setName(string $name):void{
+        $this->name = $name;
+    }
+
+    function getName():string{
+        return $this->name; 
+    }
+
+    function setSlug(string $slug): void{
+        $this->slug = $slug;
+    }
+
+    function getSlug(): string{
+        return $this->slug;
+    }
+
     public function muscle(){
         return $this->belongsTo(Muscle::class);
     }
@@ -48,6 +65,18 @@ class Exercise extends BaseEntity {
 
     static function allocDbTable(DbConnector $dbConnect, ?string $alias = null): Builder{
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
+    }
+
+    public function buildApiModel(): array{
+        return [
+            'id' => $this->getEntityId(),
+            'name' =>  $this->getName(),
+            'slug' =>  $this->getSlug(),
+            'muscle_id' => $this->muscleId,
+            'description' => $this->description,
+            'recommended_rest_time' => $this->restTime,
+            'status' => $this->getStatusId()
+        ];
     }
 
     static function queryByDbId(DbConnector $dbConnect, int $dbId):?self{
@@ -61,6 +90,11 @@ class Exercise extends BaseEntity {
             throw PublicException::validationError('No se encuentra ejercicio con id: '.$dbId);
         }
         return $self;
+    }
+
+    static function queryListByMuscleId(DbConnector $dbConnect,  int $muscleId):array{
+        $query = self::allocDbTable($dbConnect)->where('muscle_id', $muscleId)->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        return $dbConnect->fetchAll($query, [self::class, 'row2Exercise']);
     }
 
     public function writeToDb(DbConnector $dbConnector): void{

@@ -19,7 +19,7 @@ class DbConnector implements DbAdapter{
         $this->adapter = new MysqlAdapter();
     }
 
-    function getEnvConecction(){
+    function getEnvConecction(): ConnectionInterface{
         return $this->_getConecction(self::EnvDb);
     }
 

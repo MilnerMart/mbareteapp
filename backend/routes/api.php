@@ -3,6 +3,7 @@
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MuscleController;
+use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,5 +35,11 @@ Route::prefix('/v1')->group(function(){
         Route::put('/exercise/{id}', [ExerciseController::class, 'update']);
         Route::delete('/exercise/{id}', [ExerciseController::class, 'destroy']);
         Route::post('/exercise/{id}/resource', [ExerciseController::class, 'addResource']);
+
+        Route::prefix('resources')->group(function(){
+            Route::get('/', [ResourceController::class, 'index']);
+            Route::post('/', [ResourceController::class, 'store']);
+            Route::get('/{id}', [ResourceController::class, 'show']);
+        });
     });
 });

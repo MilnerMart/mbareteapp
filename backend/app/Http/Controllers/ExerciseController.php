@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\ExerciseRequest;
 use App\Http\Requests\ResourceRequest;
@@ -61,9 +62,17 @@ class ExerciseController extends Controller
     }
 
     public function getExerciseGroup(int $muscleId): JsonResponse{
-        $exerciseGroup = Exercise::where('muscle_id', $muscleId)->get();
-        $exerciseResource = ExerciseResource::collection($exerciseGroup);
-        return $this->successApiResponse($exerciseResource);
+        $dbConnector = $this->getDbConnector();
+        $exerciseGroup = Exercise::queryListByMuscleId($dbConnector, $muscleId);
+        $model=[];
+        foreach ($exerciseGroup as $exercise) {
+            /**  @var Exercise $exercise */
+            $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
+            $exerciseModel = $exercise->buildApiModel();
+            $exerciseModel['image'] = $resource->getUrl();
+            $model[]= $exerciseModel;
+        }
+        return $this->successApiResponse($model);
     }
 
     public function addResource(ResourceRequest $request, int $exerciseId): JsonResponse{

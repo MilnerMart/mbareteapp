@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\MuscleRequest;
 use App\Models\Muscle;
+use App\Models\Resource;
 use Illuminate\Http\JsonResponse;
 
 class MuscleController extends Controller {
@@ -14,7 +16,10 @@ class MuscleController extends Controller {
         $model=[];
         foreach ($muscleList as $muscle) {
             /**  @var Muscle $muscle */
-            $model[]= $muscle->buildApiModel();
+            $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::muscleModelId, $muscle->getEntityId());
+            $muscleModel = $muscle->buildApiModel();
+            $muscleModel['image_url'] = $resource->getUrl();
+            $model[]= $muscleModel;
         }
         return $this->successApiResponse($model);
     }

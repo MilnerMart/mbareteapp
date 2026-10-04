@@ -24,6 +24,7 @@ class ResourceRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
+            'slug' => 'required|string|min:3|max:40',
             'kind' => 'required|integer|in:1,5,11',
             'url' => 'required|string|max:255',
             'status' => 'required|integer|min:1',
