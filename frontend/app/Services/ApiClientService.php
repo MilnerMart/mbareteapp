@@ -79,4 +79,8 @@ class ApiClientService
     public function me(){
         return $this->get('/auth/me');
     }
+
+    public function getRegisterRoles(){
+        return $this->get('/auth/register/roles');
+    }
 }

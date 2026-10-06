@@ -231,6 +231,30 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        <div class="register-grid-full">
+                            <label for="role_id" class="form-label">Rol</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa-solid fa-user-tag"></i>
+                                </span>
+                                <select
+                                    class="form-select @error('role_id') is-invalid @enderror"
+                                    id="role_id"
+                                    name="role_id"
+                                    required>
+                                    <option value="" disabled @selected(!old('role_id'))>Selecciona un rol</option>
+                                    @foreach ($roleList as $role)
+                                        <option value="{{ $role['id'] }}" @selected(old('role_id') == $role['id'])>
+                                            {{ $role['name'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('role_id')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100">

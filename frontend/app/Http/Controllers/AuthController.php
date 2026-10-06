@@ -40,7 +40,8 @@ class AuthController extends Controller
     }
 
     public function register(Request $request){
-        return view('login.register');
+        $roleList = $this->apiClient->getRegisterRoles() ?? [];
+        return view('login.register', compact('roleList'));
     }
 
     public function store(Request $request){
@@ -53,6 +54,7 @@ class AuthController extends Controller
             'age' => ['required', 'integer', 'min:12', 'max:100'],
             'height' => ['required', 'integer', 'min:100', 'max:230'],
             'weight' => ['required', 'integer', 'min:25', 'max:250'],
+            'role_id' => ['required', 'integer'],
         ]);
 
         $response = $this->apiClient->register($validated);

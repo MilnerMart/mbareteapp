@@ -95,6 +95,7 @@
 }
 
 .register-form .form-control,
+.register-form .form-select,
 .register-form .input-group-text {
     background-color: #0b0b0b;
     border-color: #303030;
@@ -105,9 +106,23 @@
     color: #777;
 }
 
-.register-form .form-control:focus {
+.register-form .form-control:focus,
+.register-form .form-select:focus {
     border-color: #c1121f;
     box-shadow: 0 0 0 .2rem rgba(193, 18, 31, .2);
+}
+
+.register-form .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23d8d8d8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.register-form .form-select:invalid {
+    color: #777;
+}
+
+.register-form .form-select option {
+    background-color: #0b0b0b;
+    color: #f5f5f5;
 }
 
 .register-form .btn-password-toggle {
