@@ -6,5 +6,8 @@ class DbSchema{
 
     const tableExercise = 'exercises',
     tableResources = 'resources',
-    tableMuscles = 'muscles';
+    tableMuscles = 'muscles',
+    tableGymEntity = 'gym_entities',
+    tableRoles = 'roles',
+    tablePermits = 'permits';
 }

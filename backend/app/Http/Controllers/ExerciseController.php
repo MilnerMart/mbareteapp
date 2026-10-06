@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\ExerciseRequest;
-use App\Http\Requests\ResourceRequest;
 use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use App\Models\Resource;
-use App\PublicException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ExerciseController extends Controller
@@ -73,31 +71,6 @@ class ExerciseController extends Controller
             $model[]= $exerciseModel;
         }
         return $this->successApiResponse($model);
-    }
-
-    public function addResource(ResourceRequest $request, int $exerciseId): JsonResponse{
-        $dbConnector = $this->getDbConnector();
-        $exercise = Exercise::queryByDbIdOrFail($dbConnector,$exerciseId);
-
-        
-        $validated = $request->validated();
-        $kindId = $validated['kind'];
-        
-        $kind = Resource::kindMap($kindId);
-        if(!$kind){
-            throw PublicException::validationError("tipo de archivo no reconocido");
-        }
-
-        $resource = Resource::allocNew(
-            $validated['name'],
-            $kindId,
-            $validated['url'],
-            $exerciseId,
-            $validated['status']
-        );
-        $resource->save();
-
-        return $this->successApiResponse(ExerciseResource::make($resource), 201);
     }
 
     public function getResources(int $exerciseId): JsonResponse{

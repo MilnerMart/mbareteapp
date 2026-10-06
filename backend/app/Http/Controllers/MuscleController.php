@@ -18,7 +18,7 @@ class MuscleController extends Controller {
             /**  @var Muscle $muscle */
             $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::muscleModelId, $muscle->getEntityId());
             $muscleModel = $muscle->buildApiModel();
-            $muscleModel['image_url'] = $resource->getUrl();
+            $muscleModel['image_url'] = $resource?->getUrl() ?? null;
             $model[]= $muscleModel;
         }
         return $this->successApiResponse($model);

@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('routines', function (Blueprint $table) {
+        Schema::create('gym_entities', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
             $table->string('slug', 100);
-            $table->integer('frequency');
             $table->foreignId('owner_id')->nullable();
-            $table->integer('rest_between_exercises');
-            $table->text('data');
+            $table->integer('alumns_count')->nullable();
             $table->integer('status');
             $table->timestamps();
         });
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('routines');
+        Schema::dropIfExists('gym_entities');
     }
 };

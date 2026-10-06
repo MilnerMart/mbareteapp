@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('routines', function (Blueprint $table) {
+        Schema::create('roles', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
-            $table->string('slug', 100);
-            $table->integer('frequency');
-            $table->foreignId('owner_id')->nullable();
-            $table->integer('rest_between_exercises');
-            $table->text('data');
-            $table->integer('status');
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->string('status');
+            $table->json('data')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('routines');
+        Schema::dropIfExists('roles');
     }
 };

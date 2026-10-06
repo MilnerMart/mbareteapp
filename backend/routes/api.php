@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GymEntityController;
 use App\Http\Controllers\MuscleController;
+use App\Http\Controllers\PermitController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +43,21 @@ Route::prefix('/v1')->group(function(){
             Route::get('/', [ResourceController::class, 'index']);
             Route::post('/', [ResourceController::class, 'store']);
             Route::get('/{id}', [ResourceController::class, 'show']);
+        });
+
+        Route::prefix('entities')->group(function(){
+            Route::post('/gym/', [GymEntityController::class, 'store']);
+            Route::get('/gym/', [GymEntityController::class, 'index']);
+        });
+
+        Route::prefix('roles')->group(function(){
+            Route::get('/', [RoleController::class, 'index']);
+            Route::post('/', [RoleController::class, 'store']);
+        });
+
+        Route::prefix('permits')->group(function(){
+            Route::get('/', [PermitController::class, 'index']);
+            Route::post('/', [PermitController::class, 'store']);
         });
     });
 });
