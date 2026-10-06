@@ -20,6 +20,8 @@ class Role extends BaseEntity {
 
     private const myTable = DbSchema::tableRoles;
 
+    public const publicRegisterSlugs = ['trainee-role', 'trainer-role'];
+
     private string $name, $slug;
     
     public static function allocNew(string $name, string $slug):self{
@@ -93,6 +95,16 @@ class Role extends BaseEntity {
         return $dbConnect->fetchAll($query, [self::class, 'row2Role']);
     }
 
+    static function queryPublicRegisterList(DbConnector $dbConnect):array{
+        $query = self::allocDbTable($dbConnect)->whereIn('slug', self::publicRegisterSlugs)
+        ->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        return $dbConnect->fetchAll($query, [self::class, 'row2Role']);
+    }
+
+    function isPublicRegisterRole():bool{
+        return in_array($this->slug, self::publicRegisterSlugs, true);
+    }
+
     static function queryByDbId(DbConnector $dbConnect, ?int $dbId):?self{
         $query = self::allocDbTable($dbConnect)->where('id', $dbId)
         ->where('status', '!=', EntityStatus::statusIdDeleted)->select();
@@ -102,7 +114,7 @@ class Role extends BaseEntity {
     static function queryByDbIdOrFail(DbConnector $dbConnect, int $dbId):?self{
         $self = self::queryByDbId($dbConnect, $dbId);
         if(!$self){
-            throw PublicException::validationError('No se encuentra musculo con id: '.$dbId);
+            throw PublicException::validationError('No se encuentra rol con id: '.$dbId);
         }
         return $self;
     }

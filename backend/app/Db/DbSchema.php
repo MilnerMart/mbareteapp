@@ -9,5 +9,7 @@ class DbSchema{
     tableMuscles = 'muscles',
     tableGymEntity = 'gym_entities',
     tableRoles = 'roles',
-    tablePermits = 'permits';
+    tablePermits = 'permits',
+    tableUserRoles = 'user_roles',
+    tableUsers = 'users';
 }
