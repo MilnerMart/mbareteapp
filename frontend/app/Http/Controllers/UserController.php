@@ -34,7 +34,8 @@ class UserController extends Controller{
         }
 
         if((int) session('auth_user.id') === $id){
-            $request->session()->put('auth_user', $response['data']);
+            // conserva roles y permisos que no vienen en la respuesta del perfil
+            $request->session()->put('auth_user', array_merge(session('auth_user', []), $response['data']));
         }
 
         return back()->with('profile_image_updated', 'Foto de perfil actualizada.');

@@ -6,6 +6,7 @@ use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Gym;
 use App\Models\Role;
 use App\Models\User;
 use App\PublicException;
@@ -24,10 +25,12 @@ class AuthController extends Controller
             throw PublicException::validationError('El rol seleccionado no esta disponible para el registro');
         }
 
-        $user = User::registerNew($dbConnector, $validated, $role);
+        $gym = $this->queryRegisterGymOrFail($validated['gym_code'] ?? null);
+
+        $user = User::registerNew($dbConnector, $validated, $role, $gym);
         $token = $user->createToken($this->tokenName($request))->plainTextToken;
 
-        return $this->successApiResponse(new AuthResource(UserResource::make($user), $token), 201);
+        return $this->successApiResponse(new AuthResource($this->buildAuthUserModel($user), $token), 201);
     }
 
     public function registerRoles(): JsonResponse
@@ -54,12 +57,12 @@ class AuthController extends Controller
         $user->tokens()->where('name', $this->tokenName($request))->delete();
         $token = $user->createToken($this->tokenName($request))->plainTextToken;
 
-        return $this->successApiResponse(new AuthResource(UserResource::make($user), $token));
+        return $this->successApiResponse(new AuthResource($this->buildAuthUserModel($user), $token));
     }
 
     public function me(Request $request): JsonResponse
     {
-        return $this->successApiResponse(UserResource::make($request->user()));
+        return $this->successApiResponse($this->buildAuthUserModel($request->user()));
     }
 
     public function logout(Request $request): JsonResponse
@@ -69,8 +72,28 @@ class AuthController extends Controller
         return $this->successApiResponse(code: 200);
     }
 
-    private function tokenName(Request $request): string
-    {
+
+    private function queryRegisterGymOrFail(?string $gymCode): Gym {
+        $dbConnector = $this->getDbConnector();
+        if($gymCode){
+            return Gym::queryBySlug($dbConnector, $gymCode)
+                ?? throw PublicException::validationError('No existe un gimnasio con el codigo: '.$gymCode);
+        }
+
+        return Gym::queryBySlug($dbConnector, Gym::baseGymSlug)
+            ?? throw PublicException::internalError('No se encuentra el gimnasio base');
+    }
+
+    
+    private function buildAuthUserModel(User $user): array {
+        $dbConnector = $this->getDbConnector();
+        $model = UserResource::make($user)->resolve();
+        $model['roles'] = array_map(fn(Role $role) => $role->getSlug(), $user->queryRoleList($dbConnector));
+        $model['permits'] = $user->queryPermitList($dbConnector);
+        return $model;
+    }
+
+    private function tokenName(Request $request): string {
         return $request->userAgent() ?: 'mbarete-app';
     }
 }

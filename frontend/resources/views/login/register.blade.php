@@ -233,23 +233,43 @@
                         </div>
 
                         <div class="register-grid-full">
-                            <label for="role_id" class="form-label">Rol</label>
+                            <label for="gym_code" class="form-label">Codigo de gimnasio</label>
                             <div class="input-group">
                                 <span class="input-group-text">
-                                    <i class="fa-solid fa-user-tag"></i>
+                                    <i class="fa-solid fa-dumbbell"></i>
                                 </span>
-                                <select
-                                    class="form-select @error('role_id') is-invalid @enderror"
-                                    id="role_id"
-                                    name="role_id"
-                                    required>
-                                    <option value="" disabled @selected(!old('role_id'))>Selecciona un rol</option>
-                                    @foreach ($roleList as $role)
-                                        <option value="{{ $role['id'] }}" @selected(old('role_id') == $role['id'])>
-                                            {{ $role['name'] }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <input
+                                    type="text"
+                                    class="form-control @error('gym_code') is-invalid @enderror"
+                                    id="gym_code"
+                                    name="gym_code"
+                                    value="{{ old('gym_code') }}"
+                                    placeholder="Opcional"
+                                    maxlength="50">
+                            </div>
+                            <small class="register-hint">Pedile el código a tu entrenador, sino igual podes continuar sin uno.</small>
+                            @error('gym_code')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="register-grid-full">
+                            <span class="form-label d-block" id="role_id_label">Soy</span>
+                            <div class="register-role-options" role="radiogroup" aria-labelledby="role_id_label">
+                                @foreach ($roleList as $role)
+                                    <input
+                                        type="radio"
+                                        class="btn-check @error('role_id') is-invalid @enderror"
+                                        name="role_id"
+                                        id="role_id_{{ $role['id'] }}"
+                                        value="{{ $role['id'] }}"
+                                        autocomplete="off"
+                                        @checked(old('role_id') == $role['id'])
+                                        required>
+                                    <label class="btn register-role-option" for="role_id_{{ $role['id'] }}">
+                                        {{ $role['name'] }}
+                                    </label>
+                                @endforeach
                             </div>
                             @error('role_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>

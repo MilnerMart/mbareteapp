@@ -20,6 +20,8 @@ class Permit extends BaseEntity {
 
     private const myTable = DbSchema::tablePermits;
 
+    const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity';
+
     private string $name, $slug;
 
     private ?int $roleId; //permito nullable para mas adelante hacer como otp interno, para que no este si o si ligado a un role el permiso

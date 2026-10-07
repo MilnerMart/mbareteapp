@@ -24,6 +24,12 @@
                         <a class="nav-link" href="#">Rutinas</a>
                     </li>
 
+                    @if(\App\Support\AuthPermits::canManageGyms())
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('gym.index') }}">Gimnasios</a>
+                        </li>
+                    @endif
+
                     @if(session('auth_user'))
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('user.profile', session('auth_user.id')) }}">Perfil</a>

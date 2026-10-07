@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class AuthResource extends JsonResource
 {
-    public function __construct(private readonly UserResource $user, private readonly string $token)
+    public function __construct(private readonly array $user, private readonly string $token)
     {
         parent::__construct(null);
     }

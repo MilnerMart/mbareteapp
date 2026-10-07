@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class GymEntityRequest extends FormRequest
 {
@@ -24,9 +25,8 @@ class GymEntityRequest extends FormRequest
     {
         return [
             'name' => 'required|min:5|max:200',
-            'slug' => 'required|min:5|max:50',
-            'owner_id' => ['required', 'integer'],
-            'alumns_count' => ['required', 'integer'],
+            'slug' => ['required', 'min:5', 'max:50', 'alpha_dash', Rule::unique('gym_entities', 'slug')->ignore($this->route('id'))],
+            'owner_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

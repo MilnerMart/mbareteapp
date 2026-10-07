@@ -95,6 +95,14 @@ class Role extends BaseEntity {
         return $dbConnect->fetchAll($query, [self::class, 'row2Role']);
     }
 
+    static function queryListByUserId(DbConnector $dbConnect, int $userId):array{
+        $query = self::allocDbTable($dbConnect, 'r')
+        ->join(DbSchema::tableUserRoles.' as ur', 'ur.role_id', '=', 'r.id')
+        ->where('ur.user_id', $userId)
+        ->where('r.status', '!=', EntityStatus::statusIdDeleted)->select('r.*');
+        return $dbConnect->fetchAll($query, [self::class, 'row2Role']);
+    }
+
     static function queryPublicRegisterList(DbConnector $dbConnect):array{
         $query = self::allocDbTable($dbConnect)->whereIn('slug', self::publicRegisterSlugs)
         ->where('status', '!=', EntityStatus::statusIdDeleted)->select();

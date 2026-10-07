@@ -19,16 +19,19 @@ class Gym extends BaseEntity {
 
     const leoncioGymSlug = 'leoncion-gym';
 
+    const baseGymSlug = self::leoncioGymSlug;
+
     private string $name, $slug;
 
-    private ?int $ownerId, $alumnsCount;
+    private ?int $ownerId;
+
+    private int $alumnsCount = 0;
     
-    public static function allocNew(string $name, string $slug, int $ownerId, ?int $alumnsCount):self{
+    public static function allocNew(string $name, string $slug, int $ownerId):self{
         $self = new self();
         $self->name = $name;
         $self->slug = $slug;
         $self->ownerId = $ownerId;
-        $self->alumnsCount = $alumnsCount;
 
         return $self;
     }
@@ -53,15 +56,26 @@ class Gym extends BaseEntity {
         return $this->slug;
     }
 
+    function setOwnerId(int $ownerId): void{
+        $this->ownerId = $ownerId;
+    }
+
     function getOwnerId():int{
         return $this->ownerId;
+    }
+
+    function getAlumnsCount():int{
+        return $this->alumnsCount;
+    }
+
+    function isOwnedBy(int $userId):bool{
+        return $this->ownerId === $userId;
     }
     private function gym2Row(DbAdapter $dbAdapter): stdClass{
         $row = $this->allocDbRow($dbAdapter);
         $row->name = $this->name;
         $row->slug = $this->slug;
         $row->owner_id = $this->ownerId;
-        $row->alumns_count = $this->alumnsCount;
         return $row;
     }
 
@@ -71,7 +85,7 @@ class Gym extends BaseEntity {
         $gym->name = $row->name;
         $gym->slug = $row->slug;
         $gym->ownerId = $row->owner_id;
-        $gym->alumnsCount = $row->alumns_count;
+        $gym->alumnsCount = (int)($row->alumns_count ?? 0);
         return $gym;
     }
 
@@ -89,21 +103,38 @@ class Gym extends BaseEntity {
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
     }
 
+    private static function allocSelectQuery(DbConnector $dbConnect): Builder{
+        $alumnsCountQuery = GymUser::allocDbTable($dbConnect, 'gu')
+        ->selectRaw('count(*)')->whereColumn('gu.gym_id', 'g.id');
+        return self::allocDbTable($dbConnect, 'g')
+        ->where('g.status', '!=', EntityStatus::statusIdDeleted)
+        ->select('g.*')->selectSub($alumnsCountQuery, 'alumns_count');
+    }
+
     static function queryList(DbConnector $dbConnect):array{
-        $query = self::allocDbTable($dbConnect)->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        $query = self::allocSelectQuery($dbConnect);
+        return $dbConnect->fetchAll($query, [self::class, 'row2Gym']);
+    }
+
+    static function queryListByOwnerId(DbConnector $dbConnect, int $ownerId):array{
+        $query = self::allocSelectQuery($dbConnect)->where('g.owner_id', $ownerId);
         return $dbConnect->fetchAll($query, [self::class, 'row2Gym']);
     }
 
     static function queryByDbId(DbConnector $dbConnect, ?int $dbId):?self{
-        $query = self::allocDbTable($dbConnect)->where('id', $dbId)
-        ->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        $query = self::allocSelectQuery($dbConnect)->where('g.id', $dbId);
+        return $dbConnect->fetchSingle($query, [self::class ,'row2Gym']);
+    }
+
+    static function queryBySlug(DbConnector $dbConnect, string $slug):?self{
+        $query = self::allocSelectQuery($dbConnect)->where('g.slug', $slug);
         return $dbConnect->fetchSingle($query, [self::class ,'row2Gym']);
     }
 
     static function queryByDbIdOrFail(DbConnector $dbConnect, int $dbId):?self{
         $self = self::queryByDbId($dbConnect, $dbId);
         if(!$self){
-            throw PublicException::validationError('No se encuentra musculo con id: '.$dbId);
+            throw PublicException::validationError('No se encuentra gimnasio con id: '.$dbId);
         }
         return $self;
     }

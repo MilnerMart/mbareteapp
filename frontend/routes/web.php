@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\GymController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -30,4 +31,12 @@ Route::middleware('frontend.auth')->group(function () {
     Route::post('/profile/{id}/image', [UserController::class, 'updateProfileImage'])->name('user.profile.image');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
+
+    Route::middleware('frontend.gym')->prefix('/gym')->group(function () {
+        Route::get('/', [GymController::class, 'index'])->name('gym.index');
+        Route::get('/create', [GymController::class, 'create'])->name('gym.create');
+        Route::post('/', [GymController::class, 'store'])->name('gym.store');
+        Route::get('/{id}/edit', [GymController::class, 'edit'])->name('gym.edit');
+        Route::put('/{id}', [GymController::class, 'update'])->name('gym.update');
+    });
 });

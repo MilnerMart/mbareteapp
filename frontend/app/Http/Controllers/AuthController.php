@@ -55,6 +55,7 @@ class AuthController extends Controller
             'height' => ['required', 'integer', 'min:100', 'max:230'],
             'weight' => ['required', 'integer', 'min:25', 'max:250'],
             'role_id' => ['required', 'integer'],
+            'gym_code' => ['nullable', 'string', 'max:50'],
         ]);
 
         $response = $this->apiClient->register($validated);
@@ -84,6 +85,10 @@ class AuthController extends Controller
 
     private function errorMessage(?array $response, string $fallback): string
     {
+        if(isset($response['error']['message'])){
+            return $response['error']['message'];
+        }
+
         if(isset($response['message'])){
             return $response['message'];
         }

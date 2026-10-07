@@ -29,6 +29,7 @@ class RegisterRequest extends FormRequest
             'height' => ['required', 'integer', 'min:100', 'max:230'],
             'weight' => ['required', 'integer', 'min:25', 'max:250'],
             'role_id' => ['required', 'integer'],
+            'gym_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

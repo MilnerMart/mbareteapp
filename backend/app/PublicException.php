@@ -22,6 +22,15 @@ class PublicException extends BackendException{
         ]);
     }
 
+    public static function forbiddenError(string $message = 'No tienes permisos para realizar esta accion',string $infoCode = 'forbidden',array $data = []): self {
+        return new self([
+            'text' => $message,
+            'infoCode' => $infoCode,
+            'httpCode' => 403,
+            'data' => $data,
+        ]);
+    }
+
     public static function internalError(string $message = 'Error interno del servidor',string $infoCode = 'internal_error',array $data = []): self {
         return new self([
             'text' => $message,

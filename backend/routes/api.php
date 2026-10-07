@@ -49,6 +49,8 @@ Route::prefix('/v1')->group(function(){
         Route::prefix('entities')->group(function(){
             Route::post('/gym/', [GymEntityController::class, 'store']);
             Route::get('/gym/', [GymEntityController::class, 'index']);
+            Route::get('/gym/{id}', [GymEntityController::class, 'show']);
+            Route::put('/gym/{id}', [GymEntityController::class, 'update']);
         });
 
         Route::prefix('roles')->group(function(){

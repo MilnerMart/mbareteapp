@@ -33,6 +33,11 @@ class ApiClientService
         return $this->request()->post($this->baseUrl . $endpoint, $data)->json();
     }
 
+    private function put($endpoint, $data = [])
+    {
+        return $this->request()->put($this->baseUrl . $endpoint, $data)->json();
+    }
+
     public function getMuscles(){
         return $this->get('/muscle');
     }
@@ -78,6 +83,22 @@ class ApiClientService
 
     public function me(){
         return $this->get('/auth/me');
+    }
+
+    public function getGyms(){
+        return $this->get('/entities/gym');
+    }
+
+    public function getGym(int $id){
+        return $this->get('/entities/gym/'.$id);
+    }
+
+    public function createGym(array $params){
+        return $this->post('/entities/gym', $params);
+    }
+
+    public function updateGym(int $id, array $params){
+        return $this->put('/entities/gym/'.$id, $params);
     }
 
     public function getRegisterRoles(){

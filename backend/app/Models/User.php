@@ -41,19 +41,50 @@ class User extends Authenticatable
         ];
     }
 
+    private ?array $permitListCache = null;
+
+    function queryRoleList(DbConnector $dbConnector): array{
+        return Role::queryListByUserId($dbConnector, $this->id);
+    }
+
+    function queryPermitList(DbConnector $dbConnector): array{
+        if($this->permitListCache === null){
+            $permitList = [];
+            foreach ($this->queryRoleList($dbConnector) as $role) {
+                /**  @var Role $role */
+                $permitList = array_merge($permitList, $role->getRolePermits());
+            }
+            $this->permitListCache = array_values(array_unique($permitList));
+        }
+        return $this->permitListCache;
+    }
+
+    /**
+     * El permiso total del admin habilita cualquier otro permiso.
+     */
+    function hasPermit(DbConnector $dbConnector, string $permitSlug): bool{
+        $permitList = $this->queryPermitList($dbConnector);
+        return in_array(Permit::seeAllPermitSlug, $permitList, true) || in_array($permitSlug, $permitList, true);
+    }
+
+    function hasSeeAllPermit(DbConnector $dbConnector): bool{
+        return $this->hasPermit($dbConnector, Permit::seeAllPermitSlug);
+    }
+
     static function allocDbTable(DbConnector $dbConnect, ?string $alias = null): Builder{
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
     }
 
     /**
-     * Da de alta el usuario junto a su rol en una sola transaccion
+     * Da de alta el usuario junto a su rol y su gimnasio en una sola transaccion
      * y devuelve el modelo autenticable (necesario para Sanctum).
      */
-    static function registerNew(DbConnector $dbConnector, array $userData, Role $role): self{
-        $userId = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $userData, $role){
+    static function registerNew(DbConnector $dbConnector, array $userData, Role $role, Gym $gym): self{
+        $userId = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $userData, $role, $gym){
             $writeArray = (array)self::user2Row($dbConnector, $userData);
             $userId = self::allocDbTable($dbConnector)->insertGetId($writeArray);
             UserRole::addNewUserRole($dbConnector, $userId, $role->getEntityId());
+            GymUser::addNewGymUser($dbConnector, $gym->getEntityId(), $userId);
             return $userId;
         });
 
