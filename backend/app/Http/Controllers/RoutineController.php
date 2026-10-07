@@ -57,7 +57,7 @@ class RoutineController extends Controller
             Str::slug($validated['name']).'-'.Str::lower(Str::random(6)),
             $request->user()->id,
             $validated['frequency'],
-            $validated['rest_time'],
+            Routine::minutesToSeconds($validated['rest_minutes']),
         );
         $routine->setDescription($validated['description'] ?? null);
         $routine->writeToDb($dbConnector);
@@ -79,6 +79,9 @@ class RoutineController extends Controller
         $routineModel['canEdit'] = $this->canEditRoutine($user, $routine);
         $routineModel['exercises'] = RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId());
         $routineModel['refs']['owner'] = $owner ? UserResource::make($owner) : null;
+        if($user->hasSeeAllPermit($dbConnector)){
+            $routineModel['assignedUsers'] = $this->buildAssignedUserList($routine);
+        }
         return $this->successApiResponse($routineModel);
     }
 
@@ -88,7 +91,7 @@ class RoutineController extends Controller
         $validated = $request->validated();
         $routine->setName($validated['name']);
         $routine->setFrequency($validated['frequency']);
-        $routine->setRestTime($validated['rest_time']);
+        $routine->setRestTime(Routine::minutesToSeconds($validated['rest_minutes']));
         $routine->setDescription($validated['description'] ?? null);
         $routine->writeToDb($dbConnector);
 
@@ -153,6 +156,22 @@ class RoutineController extends Controller
             throw PublicException::notFoundError('La rutina no esta asignada a este alumno');
         }
         return $this->successApiResponse(code: 200);
+    }
+
+    /**
+     * Usuarios con la rutina asignada y los gimnasios a los que pertenecen.
+     */
+    private function buildAssignedUserList(Routine $routine): array {
+        $dbConnector = $this->getDbConnector();
+        $userIdList = UserRoutine::queryUserIdListByRoutineId($dbConnector, $routine->getEntityId());
+        $gymNameMap = GymUser::queryGymNameMapByUserIds($dbConnector, $userIdList);
+        $model = [];
+        foreach (User::whereIn('id', $userIdList)->orderBy('name')->get() as $assignedUser) {
+            $userModel = UserResource::make($assignedUser)->resolve();
+            $userModel['gyms'] = $gymNameMap[$assignedUser->id] ?? [];
+            $model[] = $userModel;
+        }
+        return $model;
     }
 
     private function canEditRoutine(User $user, Routine $routine): bool {

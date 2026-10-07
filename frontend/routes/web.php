@@ -33,6 +33,9 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
 
+    Route::get('/my-gym', [GymController::class, 'memberIndex'])->name('gym.member');
+    Route::put('/my-gym/{id}/visibility', [GymController::class, 'updateMemberVisibility'])->name('gym.member.visibility');
+
     Route::prefix('/routine')->group(function () {
         Route::get('/', [RoutineController::class, 'index'])->name('routine.index');
         Route::get('/create', [RoutineController::class, 'create'])->name('routine.create');
@@ -42,6 +45,7 @@ Route::middleware('frontend.auth')->group(function () {
         Route::get('/{id}/edit', [RoutineController::class, 'edit'])->name('routine.edit');
         Route::put('/{id}', [RoutineController::class, 'update'])->name('routine.update');
         Route::delete('/{id}', [RoutineController::class, 'destroy'])->name('routine.destroy');
+        Route::put('/{id}/exercises/{exerciseId}', [RoutineController::class, 'updateExercise'])->name('routine.exercises.update');
         Route::delete('/{id}/exercises/{exerciseId}', [RoutineController::class, 'removeExercise'])->name('routine.exercises.remove');
         Route::post('/assign', [RoutineController::class, 'assign'])->name('routine.assign');
         Route::delete('/{id}/assign/{userId}', [RoutineController::class, 'unassign'])->name('routine.unassign');

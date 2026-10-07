@@ -125,6 +125,19 @@ class ApiClientService
             ->json();
     }
 
+    public function getMemberGyms(){
+        return $this->get('/me/gyms');
+    }
+
+    public function updateMemberGymVisibility(int $id, bool $isPublic){
+        return $this->put('/me/gyms/'.$id.'/visibility', ['is_public' => $isPublic]);
+    }
+
+    public function updateRoutineExercise(int $id, int $exerciseId, array $params){
+        // el backend agrega o actualiza series y repeticiones del ejercicio
+        return $this->post('/routines/'.$id.'/exercises', ['exercise_id' => $exerciseId] + $params);
+    }
+
     public function getRoutines(){
         return $this->get('/routines');
     }

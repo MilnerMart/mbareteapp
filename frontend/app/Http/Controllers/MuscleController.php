@@ -16,7 +16,7 @@ class MuscleController extends Controller
     public function index(){
         $muscleList = $this->apiClient->getMuscles();
         $data['muscles'] = $muscleList;
-        return view('muscles.index', compact('data'));
+        return $this->renderView('muscles.index', compact('data'));
     }
     
 }

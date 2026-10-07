@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Core\EntityStatus;
 use App\Http\Requests\GymEntityRequest;
 use App\Http\Requests\GymImageRequest;
+use App\Http\Requests\GymVisibilityRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Gym;
 use App\Models\GymUser;
@@ -139,6 +140,39 @@ class GymEntityController extends Controller {
         }
 
         return $this->successApiResponse(code: 200);
+    }
+
+    /**
+     * Gimnasios a los que pertenece el usuario. No expone el codigo del gimnasio,
+     * y de los alumnos solo los que eligieron mostrarse.
+     */
+    public function memberIndex(Request $request): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $model = [];
+        foreach (GymUser::queryMembershipListByUserId($dbConnector, $request->user()->id) as $membership) {
+            $gym = Gym::queryByDbId($dbConnector, $membership['gym_id']);
+            if(!$gym){
+                continue;
+            }
+            $gymModel = $this->buildGymModel($gym);
+            unset($gymModel['slug']);
+            $owner = User::find($gym->getOwnerId());
+            $gymModel['refs']['owner'] = $owner?->buildPublicApiModel();
+            $gymModel['isPublic'] = $membership['is_public'];
+            $publicUserIdList = GymUser::queryPublicUserIdListByGymId($dbConnector, $gym->getEntityId());
+            $gymModel['publicStudents'] = User::whereIn('id', $publicUserIdList)->orderBy('name')->get()
+                ->map(fn(User $student) => $student->buildPublicApiModel())->all();
+            $model[] = $gymModel;
+        }
+        return $this->successApiResponse($model);
+    }
+
+    public function updateMemberVisibility(GymVisibilityRequest $request, string $id): JsonResponse {
+        $isPublic = (bool)$request->validated()['is_public'];
+        if(!GymUser::updateVisibility($this->getDbConnector(), (int)$id, $request->user()->id, $isPublic)){
+            throw PublicException::notFoundError('No perteneces a este gimnasio');
+        }
+        return $this->successApiResponse(['isPublic' => $isPublic]);
     }
 
     private function buildGymModel(Gym $gym): array {

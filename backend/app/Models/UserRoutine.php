@@ -34,6 +34,11 @@ class UserRoutine {
         return self::allocDbTable($dbConnect)->where('user_id', $userId)->where('routine_id', $routineId)->delete() > 0;
     }
 
+    static function queryUserIdListByRoutineId(DbConnector $dbConnect, int $routineId): array{
+        return self::allocDbTable($dbConnect)->where('routine_id', $routineId)
+        ->orderBy('created_at')->pluck('user_id')->all();
+    }
+
     static function isAssigned(DbConnector $dbConnect, int $userId, int $routineId): bool{
         return self::allocDbTable($dbConnect)->where('user_id', $userId)->where('routine_id', $routineId)->exists();
     }

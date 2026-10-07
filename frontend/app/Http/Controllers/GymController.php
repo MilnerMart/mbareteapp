@@ -19,13 +19,34 @@ class GymController extends Controller
     public function index(): View{
         $data['gyms'] = $this->apiClient->getGyms() ?? [];
         $data['isAdmin'] = AuthPermits::isAdmin();
-        return view('gyms.index', compact('data'));
+        return $this->renderView('gyms.index', compact('data'));
+    }
+
+    public function memberIndex(): View{
+        $data['gyms'] = $this->apiClient->getMemberGyms() ?? [];
+        return $this->renderView('gyms.member', compact('data'));
+    }
+
+    public function updateMemberVisibility(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'is_public' => ['required', 'boolean'],
+        ]);
+
+        $response = $this->apiClient->updateMemberGymVisibility($id, (bool) $validated['is_public']);
+
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['is_public' => $this->apiErrorMessage($response, 'No pudimos guardar tu preferencia.')]);
+        }
+
+        return back()->with('gym_saved', $validated['is_public']
+            ? 'Ahora apareces en la lista de alumnos.'
+            : 'Ya no apareces en la lista de alumnos.');
     }
 
     public function create(): View{
         $data['gym'] = null;
         $data['isAdmin'] = AuthPermits::isAdmin();
-        return view('gyms.form', compact('data'));
+        return $this->renderView('gyms.form', compact('data'));
     }
 
     public function store(Request $request): RedirectResponse{
@@ -58,7 +79,7 @@ class GymController extends Controller
                 fn($routine) => $data['isAdmin'] || $routine['ownerId'] === $userId
             ))
             : [];
-        return view('gyms.show', compact('data'));
+        return $this->renderView('gyms.show', compact('data'));
     }
 
     public function updateImage(Request $request, int $id): RedirectResponse{
@@ -97,7 +118,7 @@ class GymController extends Controller
 
         $data['gym'] = $gym;
         $data['isAdmin'] = AuthPermits::isAdmin();
-        return view('gyms.form', compact('data'));
+        return $this->renderView('gyms.form', compact('data'));
     }
 
     public function update(Request $request, int $id): RedirectResponse{

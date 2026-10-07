@@ -2,8 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AuthPermits;
+use Illuminate\View\View;
+
 abstract class Controller
 {
+    /**
+     * Renderiza la vista con los permisos que necesita el menu del layout.
+     */
+    protected function renderView(string $view, array $data = []): View
+    {
+        return view($view, $data + [
+            'canManageGyms' => AuthPermits::canManageGyms(),
+        ]);
+    }
+
     protected function apiErrorMessage(?array $response, string $fallback): string
     {
         if(isset($response['error']['message'])){

@@ -68,15 +68,16 @@
                             required>
                     </div>
                     <div>
-                        <label for="rest_time" class="form-label">Descanso entre ejercicios (seg)</label>
+                        <label for="rest_minutes" class="form-label">Descanso entre ejercicios (min)</label>
                         <input
                             type="number"
-                            class="form-control @error('rest_time') is-invalid @enderror"
-                            id="rest_time"
-                            name="rest_time"
-                            value="{{ old('rest_time', $routine['restTime'] ?? 60) }}"
+                            class="form-control @error('rest_minutes') is-invalid @enderror"
+                            id="rest_minutes"
+                            name="rest_minutes"
+                            value="{{ old('rest_minutes', $routine['restMinutes'] ?? 1) }}"
                             min="0"
-                            max="600"
+                            max="30"
+                            step="0.5"
                             required>
                     </div>
                 </div>

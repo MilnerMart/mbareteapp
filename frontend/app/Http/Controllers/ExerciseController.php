@@ -16,16 +16,21 @@ class ExerciseController extends Controller
     public function index(){
         $exerciseList = $this->apiClient->getExercises();
         $data['exercises'] = $exerciseList;
-        return view('exercises.index', compact('data'));
+        return $this->renderView('exercises.index', compact('data'));
     }
 
     public function getExerciseGroup(int $muscleId){
         $exerciseGroup = $this->apiClient->getExerciseGroup($muscleId);
         $data['exerciseGroup'] = $exerciseGroup;
-        return view('exercises.group', compact('data'));
+        return $this->renderView('exercises.group', compact('data'));
     }
 
     public function getExerciseResource(int $exerciseId){
+        if(!session('auth_user')){
+            return redirect()->route('user.login')
+                ->with('login_notice', 'Registrate o inicia sesion para ver el ejercicio y sumarlo a tus rutinas.');
+        }
+
         $resources = $this->apiClient->getResource($exerciseId);
         $data['exerciseResources'] = $resources;
         $data['exerciseId'] = $exerciseId;
@@ -33,7 +38,7 @@ class ExerciseController extends Controller
         $data['editableRoutines'] = session('auth_user')
             ? array_values(array_filter($this->apiClient->getRoutines() ?? [], fn($routine) => $routine['canEdit']))
             : [];
-        return view('exercises.resources', compact('data'));
+        return $this->renderView('exercises.resources', compact('data'));
     }
     
 }

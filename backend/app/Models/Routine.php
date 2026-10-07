@@ -21,7 +21,7 @@ class Routine extends BaseEntity {
 
     private string $name, $slug;
 
-    // frequency: dias por semana, restTime: segundos de descanso entre ejercicios
+    // frequency: dias por semana, restTime: segundos de descanso entre ejercicios (la API lo expone en minutos)
     private int $frequency, $restTime, $ownerId;
 
     public static function allocNew(string $name, string $slug, int $ownerId, int $frequency, int $restTime):self{
@@ -65,6 +65,14 @@ class Routine extends BaseEntity {
 
     function getRestTime():int{
         return $this->restTime;
+    }
+
+    static function minutesToSeconds(float $minutes):int{
+        return (int)round($minutes * 60);
+    }
+
+    function getRestMinutes():float{
+        return round($this->restTime / 60, 1);
     }
 
     function getOwnerId():int{
@@ -113,7 +121,7 @@ class Routine extends BaseEntity {
             'slug' => $this->slug,
             'description' => $this->getDescription(),
             'frequency' => $this->frequency,
-            'restTime' => $this->restTime,
+            'restMinutes' => $this->getRestMinutes(),
             'ownerId' => $this->ownerId,
         ];
     }

@@ -47,7 +47,7 @@
                                 @endif
                                 <span class="routine-meta">
                                     <span><i class="fa-regular fa-calendar"></i> {{ $routine['frequency'] }} dias/semana</span>
-                                    <span><i class="fa-regular fa-clock"></i> {{ $routine['restTime'] }}s descanso</span>
+                                    <span><i class="fa-regular fa-clock"></i> {{ $routine['restMinutes'] }} min descanso</span>
                                 </span>
                             </a>
                         @endforeach

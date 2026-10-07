@@ -23,12 +23,12 @@ class RoutineController extends Controller
         $data['ownRoutines'] = array_filter($routineList, fn($routine) => $routine['ownerId'] === $userId);
         $data['assignedRoutines'] = array_filter($routineList, fn($routine) => $routine['ownerId'] !== $userId && $routine['isAssigned']);
         $data['otherRoutines'] = array_filter($routineList, fn($routine) => $routine['ownerId'] !== $userId && !$routine['isAssigned']);
-        return view('routines.index', compact('data'));
+        return $this->renderView('routines.index', compact('data'));
     }
 
     public function create(): View{
         $data['routine'] = null;
-        return view('routines.form', compact('data'));
+        return $this->renderView('routines.form', compact('data'));
     }
 
     public function store(Request $request): RedirectResponse{
@@ -51,7 +51,7 @@ class RoutineController extends Controller
         }
 
         $data['routine'] = $routine;
-        return view('routines.show', compact('data'));
+        return $this->renderView('routines.show', compact('data'));
     }
 
     public function edit(int $id): RedirectResponse|View{
@@ -61,7 +61,7 @@ class RoutineController extends Controller
         }
 
         $data['routine'] = $routine;
-        return view('routines.form', compact('data'));
+        return $this->renderView('routines.form', compact('data'));
     }
 
     public function update(Request $request, int $id): RedirectResponse{
@@ -107,6 +107,24 @@ class RoutineController extends Controller
         return back()->with('routine_saved', 'Ejercicio agregado a la rutina.');
     }
 
+    public function updateExercise(Request $request, int $id, int $exerciseId): RedirectResponse{
+        $validated = $request->validate([
+            'sets' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $response = $this->apiClient->updateRoutineExercise($id, $exerciseId, [
+            'sets' => $validated['sets'] ?? null,
+            'reps' => $validated['reps'] ?? null,
+        ]);
+
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['routine' => $this->apiErrorMessage($response, 'No pudimos actualizar el ejercicio.')]);
+        }
+
+        return back()->with('routine_saved', 'Series y repeticiones actualizadas.');
+    }
+
     public function removeExercise(int $id, int $exerciseId): RedirectResponse{
         $response = $this->apiClient->removeRoutineExercise($id, $exerciseId);
 
@@ -139,7 +157,7 @@ class RoutineController extends Controller
             return back()->withErrors(['routine' => $this->apiErrorMessage($response, 'No pudimos quitar la rutina.')]);
         }
 
-        return back()->with('gym_saved', 'Rutina quitada.');
+        return back()->with(['gym_saved' => 'Rutina quitada.', 'routine_saved' => 'Usuario quitado de la rutina.']);
     }
 
     private function validateRoutine(Request $request): array
@@ -148,7 +166,7 @@ class RoutineController extends Controller
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'description' => ['nullable', 'string', 'max:255'],
             'frequency' => ['required', 'integer', 'min:1', 'max:7'],
-            'rest_time' => ['required', 'integer', 'min:0', 'max:600'],
+            'rest_minutes' => ['required', 'numeric', 'min:0', 'max:30'],
         ]);
     }
 }

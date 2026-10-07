@@ -17,7 +17,7 @@ class UserController extends Controller{
 
         $data['profileInfo'] = $userInfo;
 
-        return view('users.profile', compact('data'));
+        return $this->renderView('users.profile', compact('data'));
     }
 
     public function updateProfileImage(Request $request, int $id){

@@ -20,11 +20,19 @@
                         <a class="nav-link active" href="{{ route('muscle.index') }}">Inicio</a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ session('auth_user') ? route('routine.index') : route('user.login') }}">Rutinas</a>
-                    </li>
+                    @if(session('auth_user'))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('routine.index') }}">Rutinas</a>
+                        </li>
+                    @endif
 
-                    @if(\App\Support\AuthPermits::canManageGyms())
+                    @if(session('auth_user') && !($canManageGyms ?? false))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('gym.member') }}">Mi gimnasio</a>
+                        </li>
+                    @endif
+
+                    @if($canManageGyms ?? false)
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('gym.index') }}">Gimnasios</a>
                         </li>

@@ -36,6 +36,55 @@ class GymUser {
         return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('user_id', $userId)->delete() > 0;
     }
 
+    /**
+     * Gimnasios del usuario con su preferencia de visibilidad: [['gym_id'=>, 'is_public'=>], ...]
+     */
+    static function queryMembershipListByUserId(DbConnector $dbConnect, int $userId): array{
+        return self::allocDbTable($dbConnect, 'gu')
+        ->join(DbSchema::tableGymEntity.' as g', 'g.id', '=', 'gu.gym_id')
+        ->where('gu.user_id', $userId)
+        ->where('g.status', '!=', EntityStatus::statusIdDeleted)
+        ->orderBy('gu.created_at')
+        ->get(['gu.gym_id', 'gu.is_public'])
+        ->map(fn(stdClass $row) => ['gym_id' => (int)$row->gym_id, 'is_public' => (bool)$row->is_public])
+        ->all();
+    }
+
+    static function queryPublicUserIdListByGymId(DbConnector $dbConnect, int $gymId): array{
+        return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('is_public', true)
+        ->orderBy('created_at')->pluck('user_id')->all();
+    }
+
+    static function updateVisibility(DbConnector $dbConnect, int $gymId, int $userId, bool $isPublic): bool{
+        $query = self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('user_id', $userId);
+        if(!$query->exists()){
+            return false;
+        }
+        $query->update(['is_public' => $isPublic, 'updated_at' => $dbConnect->toDbDate(BaseHelper::utcNow())]);
+        return true;
+    }
+
+    /**
+     * Nombres de los gimnasios agrupados por usuario: [userId => ['Gym A', 'Gym B']]
+     */
+    static function queryGymNameMapByUserIds(DbConnector $dbConnect, array $userIdList): array{
+        if(!$userIdList){
+            return [];
+        }
+        $rowList = self::allocDbTable($dbConnect, 'gu')
+        ->join(DbSchema::tableGymEntity.' as g', 'g.id', '=', 'gu.gym_id')
+        ->whereIn('gu.user_id', $userIdList)
+        ->where('g.status', '!=', EntityStatus::statusIdDeleted)
+        ->orderBy('g.name')
+        ->get(['gu.user_id', 'g.name']);
+
+        $gymNameMap = [];
+        foreach ($rowList as $row) {
+            $gymNameMap[$row->user_id][] = $row->name;
+        }
+        return $gymNameMap;
+    }
+
     static function isUserInGymOwnedBy(DbConnector $dbConnect, int $userId, int $ownerId): bool{
         return self::allocDbTable($dbConnect, 'gu')
         ->join(DbSchema::tableGymEntity.' as g', 'g.id', '=', 'gu.gym_id')

@@ -71,6 +71,18 @@ class User extends Authenticatable
         return $this->hasPermit($dbConnector, Permit::seeAllPermitSlug);
     }
 
+    /**
+     * Datos visibles para otros usuarios: sin email ni medidas.
+     */
+    function buildPublicApiModel(): array{
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'last_name' => $this->last_name,
+            'profile_image_url' => $this->profile_image_url ? asset($this->profile_image_url) : null,
+        ];
+    }
+
     static function allocDbTable(DbConnector $dbConnect, ?string $alias = null): Builder{
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
     }

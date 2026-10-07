@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class RoutineRequest extends FormRequest
+class GymVisibilityRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,10 +20,7 @@ class RoutineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:100'],
-            'description' => ['nullable', 'string', 'max:255'],
-            'frequency' => ['required', 'integer', 'min:1', 'max:7'],
-            'rest_minutes' => ['required', 'numeric', 'min:0', 'max:30'],
+            'is_public' => ['required', 'boolean'],
         ];
     }
 }

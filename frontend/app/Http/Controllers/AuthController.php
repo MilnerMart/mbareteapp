@@ -15,7 +15,7 @@ class AuthController extends Controller
     }
 
     public function login(Request $request){
-        return view('login.login');
+        return $this->renderView('login.login');
     }
 
     public function authenticate(Request $request){
@@ -41,7 +41,7 @@ class AuthController extends Controller
 
     public function register(Request $request){
         $roleList = $this->apiClient->getRegisterRoles() ?? [];
-        return view('login.register', compact('roleList'));
+        return $this->renderView('login.register', compact('roleList'));
     }
 
     public function store(Request $request){

@@ -294,3 +294,119 @@
 .routine-add-panel {
     margin-top: 1rem;
 }
+
+.routine-exercise-toggle {
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.routine-exercise.is-highlighted {
+    background-color: rgba(193, 18, 31, .18);
+    border-color: #c1121f;
+}
+
+.routine-exercise.is-highlighted .routine-exercise-name {
+    color: #ff4d5a;
+}
+
+.routine-exercise-edit {
+    flex: 1 1 260px;
+}
+
+.routine-exercise-edit summary {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+    list-style: none;
+}
+
+.routine-exercise-edit summary::-webkit-details-marker {
+    display: none;
+}
+
+.routine-exercise-edit summary .routine-exercise-name {
+    flex: 1 1 160px;
+}
+
+.routine-exercise-edit summary .fa-pen {
+    color: #8f8f8f;
+    font-size: .75rem;
+    margin-left: .35rem;
+}
+
+.routine-exercise-edit summary:hover .routine-exercise-name {
+    color: #ff4d5a;
+}
+
+.routine-exercise-form {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+.routine-exercise-form > div {
+    flex: 1 1 110px;
+}
+
+.routine-exercise-form .form-label {
+    font-size: .85rem;
+    margin-bottom: .25rem;
+}
+
+.routine-user-list {
+    display: grid;
+    gap: .6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.routine-user {
+    align-items: center;
+    background-color: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: .75rem 1rem;
+}
+
+.routine-user form {
+    margin: 0;
+}
+
+.routine-user-avatar {
+    border: 2px solid #c1121f;
+    border-radius: 50%;
+    height: 44px;
+    object-fit: cover;
+    width: 44px;
+}
+
+.routine-user-info {
+    display: flex;
+    flex: 1 1 200px;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.routine-user-info strong {
+    color: #ffffff;
+}
+
+.routine-user-info span {
+    color: #8f8f8f;
+    font-size: .85rem;
+}
+
+.routine-user-gyms i {
+    color: #ff4d5a;
+    margin-right: .2rem;
+}

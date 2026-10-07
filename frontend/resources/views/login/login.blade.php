@@ -40,6 +40,13 @@
                         </div>
                     </div>
 
+                    @if (session('login_notice'))
+                        <div class="alert alert-warning">
+                            {{ session('login_notice') }}
+                            <a href="{{ route('user.register') }}" class="alert-link">Crear cuenta</a>
+                        </div>
+                    @endif
+
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             {{ $errors->first() }}

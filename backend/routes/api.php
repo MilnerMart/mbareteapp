@@ -47,6 +47,9 @@ Route::prefix('/v1')->group(function(){
             Route::get('/{id}', [ResourceController::class, 'show']);
         });
 
+        Route::get('/me/gyms', [GymEntityController::class, 'memberIndex']);
+        Route::put('/me/gyms/{id}/visibility', [GymEntityController::class, 'updateMemberVisibility']);
+
         Route::prefix('entities')->group(function(){
             Route::post('/gym/', [GymEntityController::class, 'store']);
             Route::get('/gym/', [GymEntityController::class, 'index']);
