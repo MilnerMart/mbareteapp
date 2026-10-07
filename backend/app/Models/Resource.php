@@ -8,6 +8,7 @@ use App\Db\DbAdapter;
 use App\Db\DbConnector;
 use App\Db\DbSchema;
 use App\Helpers\BaseHelper;
+use Illuminate\Support\Facades\File;
 use \Illuminate\Database\Query\Builder;
 use stdClass;
 
@@ -57,6 +58,14 @@ class Resource extends BaseEntity {
 
     function getUrl():string{
         return $this->url;
+    }
+
+    /**
+     * Los archivos subidos al backend se devuelven con url absoluta. Los recursos viejos
+     * apuntan a imagenes del front y se devuelven tal cual para que el front los resuelva.
+     */
+    function getPublicUrl():string{
+        return File::exists(public_path($this->url)) ? asset($this->url) : $this->url;
     }
     function getModelId():int{
         return CoreModel::resourceModelId;
@@ -124,6 +133,12 @@ class Resource extends BaseEntity {
         $query = Self::allocDbTable($dbConnect)->where('model_id', $modelId)
         ->where('owner_id', $muscleId);
         return $dbConnect->fetchSingle($query, [self::class ,'row2Resource']);
+    }
+
+    static function queryListByOwnerAndModelId(DbConnector $dbConnect, int $modelId, int $ownerId):array{
+        $query = self::allocDbTable($dbConnect)->where('model_id', $modelId)->where('owner_id', $ownerId)
+        ->where('status', '!=', EntityStatus::statusIdDeleted)->orderBy('id');
+        return $dbConnect->fetchAll($query, [self::class, 'row2Resource']);
     }
 
     static function queryList(DbConnector $dbConnect):array{

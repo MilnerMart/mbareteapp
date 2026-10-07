@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureCanManageGyms;
 use App\Http\Middleware\EnsureFrontendAuthenticated;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'frontend.auth' => EnsureFrontendAuthenticated::class,
             'frontend.gym' => EnsureCanManageGyms::class,
+            'frontend.admin' => EnsureIsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

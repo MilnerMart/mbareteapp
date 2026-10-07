@@ -7,7 +7,10 @@ use App\Core\EntityStatus;
 use App\Http\Requests\MuscleRequest;
 use App\Models\Muscle;
 use App\Models\Resource;
+use App\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class MuscleController extends Controller {
     public function index(): JsonResponse {
@@ -18,24 +21,28 @@ class MuscleController extends Controller {
             /**  @var Muscle $muscle */
             $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::muscleModelId, $muscle->getEntityId());
             $muscleModel = $muscle->buildApiModel();
-            $muscleModel['image_url'] = $resource?->getUrl() ?? null;
+            $muscleModel['image_url'] = $resource?->getPublicUrl();
             $model[]= $muscleModel;
         }
         return $this->successApiResponse($model);
     }
 
     public function store(MuscleRequest $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $validated = $request->validated();
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::allocMuscle(
             $validated['name'],
-            $validated['slug'],
+            $validated['slug'] ?? Str::slug($validated['name']),
             $validated['description'],
             $validated['recommended_rest_days'],
         );
         $muscle->writeToDb($dbConnector);
+        $resource = $this->saveMuscleImage($request, $muscle);
 
-        return $this->successApiResponse($muscle->buildApiModel(), 201);
+        $model = $muscle->buildApiModel();
+        $model['image_url'] = $resource?->getPublicUrl();
+        return $this->successApiResponse($model, 201);
     }
 
     public function show(string $id): JsonResponse {
@@ -46,6 +53,7 @@ class MuscleController extends Controller {
     }
 
     public function update(MuscleRequest $request, string $id): JsonResponse {   
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::queryByDbIdOrFail($dbConnector,$id);
         $validated = $request->validated();
@@ -54,7 +62,7 @@ class MuscleController extends Controller {
             $muscle->setName($validated['name']);
             $dirty = true;
         }
-        if($muscle->getSlug() !== $validated['slug']){
+        if(!empty($validated['slug']) && $muscle->getSlug() !== $validated['slug']){
             $muscle->setSlug($validated['slug']);
             $dirty = true;
         }
@@ -69,12 +77,14 @@ class MuscleController extends Controller {
         if($dirty){
             $muscle->writeToDb($dbConnector);
         }
+        $this->saveMuscleImage($request, $muscle);
 
         $model = $muscle->buildApiModel();
         return $this->successApiResponse($model, 200);
     }
 
-    public function destroy(string $id): JsonResponse {
+    public function destroy(Request $request, string $id): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::queryByDbIdOrFail($dbConnector,$id);
 
@@ -82,5 +92,13 @@ class MuscleController extends Controller {
         $muscle->writeToDb($dbConnector);
         return $this->successApiResponse(code: 200);
     }
-    
+
+    private function saveMuscleImage(MuscleRequest $request, Muscle $muscle): ?Resource {
+        if(!$request->hasFile('image')){
+            return null;
+        }
+        $service = new ResourceService($this->getDbConnector());
+        return $service->saveEntityImage($request->file('image'), 'images/muscles', CoreModel::muscleModelId,
+            $muscle->getEntityId(), $muscle->getName(), $muscle->getSlug());
+    }
 }

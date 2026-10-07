@@ -23,10 +23,12 @@ class MuscleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|min:5|max:50',
-            'slug' => 'required|min:5|max:50',
+            'name' => 'required|min:3|max:50',
+            'slug' => 'nullable|min:3|max:50|alpha_dash',
             'description' => 'required|min:5|max:255',
-            'recommended_rest_days' => 'required|integer|min:1',
+            'recommended_rest_days' => 'required|integer|min:1|max:14',
+            // la imagen es obligatoria al crear, al editar es opcional
+            'image' => [$this->isMethod('post') ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ];
     }
 }

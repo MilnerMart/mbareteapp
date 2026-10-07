@@ -38,6 +38,14 @@ class ApiClientService
         return $this->request()->put($this->baseUrl . $endpoint, $data)->json();
     }
 
+    private function postWithImage($endpoint, array $data, string $field, UploadedFile $image)
+    {
+        return $this->request()
+            ->attach($field, fopen($image->getRealPath(), 'r'), $image->getClientOriginalName())
+            ->post($this->baseUrl . $endpoint, $data)
+            ->json();
+    }
+
     private function delete($endpoint)
     {
         return $this->request()->delete($this->baseUrl . $endpoint)->json();
@@ -47,16 +55,32 @@ class ApiClientService
         return $this->get('/muscle');
     }
 
+    public function getMuscle(int $id){
+        return $this->get('/muscle/'.$id);
+    }
+
+    public function createMuscle(array $params, UploadedFile $image){
+        return $this->postWithImage('/muscle', $params, 'image', $image);
+    }
+
+    public function getExercise(int $id){
+        return $this->get('/exercise/'.$id);
+    }
+
+    public function getExerciseResources(int $id){
+        return $this->get('/exercise/'.$id.'/resource');
+    }
+
+    public function createExercise(array $params, UploadedFile $image){
+        return $this->postWithImage('/exercise', $params, 'image', $image);
+    }
+
     public function getExercises(){
         return $this->get('/exercise');
     }
 
     public function getExerciseGroup(int $muscleId){
         return $this->get('/exercise/group/'.$muscleId);
-    }
-
-    public function getResource(int $resourceId){
-        return $this->get('/resource/'.$resourceId);
     }
 
     public function getUser(int $id){

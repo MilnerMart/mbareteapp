@@ -1,14 +1,24 @@
 @php
     $exerciseResources = $data['exerciseResources'];
     $editableRoutines = $data['editableRoutines'];
+    $exercise = $data['exercise'];
 @endphp
 @extends('layouts.layout')
 @section('css')
-    @vite(['resources/css/resource.css', 'resources/css/routine.css'])
+    @vite(['resources/css/resource.css', 'resources/css/routine.css', 'resources/css/catalog.css'])
 @endsection
 @section('content')
-    <div class="mb-2">
-        <a href="{{ route('muscle.index') }}"><i class="fa-solid fa-left-long fa-2xl" style="color: rgb(194, 19, 31);"></i></a>
+    <a href="{{ route('exercise.group', $exercise['muscle_id']) }}" class="catalog-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Ejercicios</span>
+    </a>
+    <div class="catalog-header">
+        <div>
+            <h1>{{ $exercise['name'] }}</h1>
+            @if (!empty($exercise['description']))
+                <p>{{ $exercise['description'] }}</p>
+            @endif
+        </div>
     </div>
     @if (session('routine_saved'))
         <div class="alert alert-success">{{ session('routine_saved') }}</div>

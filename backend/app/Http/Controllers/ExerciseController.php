@@ -8,6 +8,9 @@ use App\Http\Requests\ExerciseRequest;
 use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use App\Models\Resource;
+use App\Services\ResourceService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ExerciseController extends Controller
@@ -17,30 +20,39 @@ class ExerciseController extends Controller
     }
 
     public function store(ExerciseRequest $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $validated = $request->validated();
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::allocNew(
             $validated['name'],
-            $validated['slug'],
+            $validated['slug'] ?? Str::slug($validated['name']),
             $validated['muscle_id'],
             $validated['recommended_rest_time'],
             $validated['description'],
         );
         $exercise->writeToDb($dbConnector);
 
-        return $this->successApiResponse(ExerciseResource::make($exercise), 201);
+        $service = new ResourceService($dbConnector);
+        $resource = $service->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
+            $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
+
+        $model = $exercise->buildApiModel();
+        $model['image_url'] = $resource->getPublicUrl();
+        return $this->successApiResponse($model, 201);
     }
 
     public function show(string $id): JsonResponse {
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
+        $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
 
-        $exerciseResource = ExerciseResource::make($exercise);
-
-        return $this->successApiResponse($exerciseResource, 200);
+        $model = $exercise->buildApiModel();
+        $model['image_url'] = $resource?->getPublicUrl();
+        return $this->successApiResponse($model, 200);
     }
 
     public function update(ExerciseRequest $request, string $id): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
 
@@ -50,7 +62,8 @@ class ExerciseController extends Controller
         return $this->successApiResponse(ExerciseResource::make($exercise));
     }
 
-    public function destroy(string $id): JsonResponse {
+    public function destroy(Request $request, string $id): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
 
@@ -67,7 +80,7 @@ class ExerciseController extends Controller
             /**  @var Exercise $exercise */
             $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
             $exerciseModel = $exercise->buildApiModel();
-            $exerciseModel['image'] = $resource->getUrl();
+            $exerciseModel['image'] = $resource?->getPublicUrl();
             $model[]= $exerciseModel;
         }
         return $this->successApiResponse($model);
@@ -78,10 +91,13 @@ class ExerciseController extends Controller
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector,$exerciseId);
 
-        $exerciseResources = ExerciseResource::collection(
-            Resource::where('exercise_id', $exerciseId)->get()
-        );
-
-        return $this->successApiResponse($exerciseResources);
+        $model = [];
+        foreach (Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId()) as $resource) {
+            /**  @var Resource $resource */
+            $resourceModel = $resource->buildApiModel();
+            $resourceModel['url'] = $resource->getPublicUrl();
+            $model[] = $resourceModel;
+        }
+        return $this->successApiResponse($model);
     }
 }

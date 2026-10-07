@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Core\CoreModel;
 use App\Http\Controllers\Controller;
-use App\Core\EntityStatus;
 use App\Http\Requests\GymEntityRequest;
 use App\Http\Requests\GymImageRequest;
 use App\Http\Requests\GymVisibilityRequest;
@@ -16,10 +15,9 @@ use App\Models\Resource;
 use App\Models\User;
 use App\Models\UserRoutine;
 use App\PublicException;
+use App\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 class GymEntityController extends Controller {
 
@@ -87,33 +85,9 @@ class GymEntityController extends Controller {
         $dbConnector = $this->getDbConnector();
         $gym = $this->queryAccessibleGymOrFail($request, $id);
 
-        $directory = public_path('images/gyms');
-        File::ensureDirectoryExists($directory);
-
-        $file = $request->file('gym_image');
-        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-        $url = 'images/gyms/'.$filename;
-
-        $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::gymEntityModelId, $gym->getEntityId());
-        if($resource){
-            $previousPath = public_path($resource->getUrl());
-            if(File::exists($previousPath)){
-                File::delete($previousPath);
-            }
-            $resource->setUrl($url);
-        } else {
-            $resource = Resource::allocNew(
-                $gym->getName(),
-                $gym->getSlug().'-image',
-                Resource::kindImg,
-                CoreModel::gymEntityModelId,
-                $gym->getEntityId(),
-                $url,
-                EntityStatus::statusIdActive,
-            );
-        }
-        $resource->writeToDb($dbConnector);
+        $service = new ResourceService($dbConnector);
+        $service->saveEntityImage($request->file('gym_image'), 'images/gyms', CoreModel::gymEntityModelId,
+            $gym->getEntityId(), $gym->getName(), $gym->getSlug());
 
         return $this->successApiResponse($this->buildGymModel($gym), 200);
     }
@@ -180,7 +154,7 @@ class GymEntityController extends Controller {
         $userOwner = User::find($gym->getOwnerId());
         $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::gymEntityModelId, $gym->getEntityId());
         $gymModel = $gym->buildApiModel();
-        $gymModel['image_url'] = $resource ? asset($resource->getUrl()) : null;
+        $gymModel['image_url'] = $resource?->getPublicUrl();
         $gymModel['refs']['owner'] = $userOwner ? UserResource::make($userOwner) : null;
         return $gymModel;
     }

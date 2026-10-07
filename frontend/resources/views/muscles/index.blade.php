@@ -1,8 +1,24 @@
 @php
     $muscles = $data['muscles'];
+    $isAdmin = $data['isAdmin'];
 @endphp
 @extends('layouts.layout')
+@section('css')
+    @vite('resources/css/catalog.css')
+@endsection
 @section('content')
+    @if (session('catalog_saved'))
+        <div class="alert alert-success">{{ session('catalog_saved') }}</div>
+    @endif
+    @if ($isAdmin)
+        <div class="catalog-header">
+            <h1>Musculos</h1>
+            <a href="{{ route('muscle.create') }}" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i>
+                <span>Agregar musculo</span>
+            </a>
+        </div>
+    @endif
     @if (!empty($muscles))
         <div class="row justify-content-center">
             @foreach ($muscles as $muscle)
