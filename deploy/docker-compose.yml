@@ -28,8 +28,7 @@ services:
   backend:
     build:
       context: ..
-      dockerfile: deploy/Dockerfile
-      target: backend
+      dockerfile: deploy/Dockerfile.backend
     image: muscleapp-backend
     restart: unless-stopped
     depends_on:
@@ -65,8 +64,7 @@ services:
   frontend:
     build:
       context: ..
-      dockerfile: deploy/Dockerfile
-      target: frontend
+      dockerfile: deploy/Dockerfile.frontend
     image: muscleapp-frontend
     restart: unless-stopped
     depends_on:

@@ -42,6 +42,44 @@ docker compose exec db mariadb -u"$DB_USERNAME" -p muscleApp
 
 `docker compose down -v` borra todo eso.
 
+## Back4App Containers (u otro hosting de un contenedor por app)
+
+Ahi no hay docker-compose ni `.env`: se crean 2 apps desde el repo de GitHub y las variables se cargan en el panel.
+La base MySQL/MariaDB tiene que ser externa (Back4App Containers no la incluye).
+
+| | Backend | Frontend |
+|---|---|---|
+| Root directory | `/` | `/` |
+| Dockerfile path | `deploy/Dockerfile.backend` | `deploy/Dockerfile.frontend` |
+| Puerto | 80 | 80 |
+
+Variables del **backend**:
+
+```
+APP_KEY=base64:...            # echo "base64:$(openssl rand -base64 32)"
+APP_URL=https://<url-del-backend>
+ASSET_URL=https://<url-del-backend>
+DB_HOST=...
+DB_PORT=3306
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
+ADMIN_EMAIL=...
+ADMIN_PASSWORD=...
+# solo si la base exige SSL:
+MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt
+```
+
+Variables del **frontend**:
+
+```
+APP_KEY=base64:...            # otra distinta a la del backend
+APP_URL=https://<url-del-frontend>
+BACKEND_API_URL=https://<url-del-backend>/api/v1
+```
+
+Las imagenes subidas se guardan en el disco del contenedor y se pierden en cada redeploy si el hosting no da volumen persistente.
+
 ## HTTPS
 
 Poner un proxy inverso (Caddy, Nginx, Traefik) delante de los puertos 8080 y 8000 y usar `https://` en las urls publicas del `.env`.

@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Detras del proxy HTTPS del hosting: sin esto Laravel arma urls http://.
+        $middleware->trustProxies(at: '*');
         $middleware->redirectGuestsTo(function (Request $request) {
             return $request->is('api/*') ? null : route('login');
         });

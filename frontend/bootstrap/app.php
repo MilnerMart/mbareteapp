@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Detras del proxy HTTPS del hosting: sin esto Laravel arma urls http:// (css y forms bloqueados).
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'frontend.auth' => EnsureFrontendAuthenticated::class,
             'frontend.gym' => EnsureCanManageGyms::class,

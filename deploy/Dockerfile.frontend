@@ -1,0 +1,48 @@
+# Frontend (Blade + Vite). El contexto de build es la raiz del repo.
+FROM node:22-alpine AS assets
+WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN rm -f public/hot && npm run build
+
+FROM php:8.4-fpm-alpine
+
+RUN apk add --no-cache nginx supervisor su-exec icu-libs libzip ca-certificates \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath intl zip opcache \
+    && apk del .build-deps
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY deploy/docker/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+COPY deploy/docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY deploy/docker/supervisord.conf /etc/supervisord.conf
+COPY deploy/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /var/www/html
+
+COPY frontend/composer.json frontend/composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
+
+COPY frontend/ ./
+COPY --from=assets /app/public/build ./public/build
+RUN rm -f .env public/hot \
+    && composer dump-autoload --optimize --no-dev \
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+ENV APP_ROLE=frontend \
+    APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    LOG_LEVEL=warning \
+    DB_CONNECTION=sqlite \
+    SESSION_DRIVER=file \
+    SESSION_LIFETIME=1440 \
+    CACHE_STORE=file \
+    QUEUE_CONNECTION=sync
+
+EXPOSE 80
+ENTRYPOINT ["entrypoint.sh"]
