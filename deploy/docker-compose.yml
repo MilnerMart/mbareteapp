@@ -1,0 +1,95 @@
+name: muscleapp
+
+x-laravel-env: &laravel-env
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_LOCALE: es
+  APP_FALLBACK_LOCALE: es
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: warning
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: backend
+    image: muscleapp-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *laravel-env
+      APP_NAME: MuscleApp API
+      APP_KEY: ${BACKEND_APP_KEY}
+      APP_URL: ${BACKEND_PUBLIC_URL}
+      ASSET_URL: ${BACKEND_PUBLIC_URL}
+      DB_CONNECTION: mariadb
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: sync
+      SANCTUM_EXPIRATION: 1440
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-MuscleApp}
+      BASE_GYM_NAME: ${BASE_GYM_NAME:-Leoncio Gym}
+    volumes:
+      - backend-images:/var/www/html/public/images
+      - backend-storage:/var/www/html/storage
+    ports:
+      - "${BACKEND_PORT:-8000}:80"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: frontend
+    image: muscleapp-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      <<: *laravel-env
+      APP_NAME: MuscleApp
+      APP_KEY: ${FRONTEND_APP_KEY}
+      APP_URL: ${FRONTEND_PUBLIC_URL}
+      # Llamadas servidor a servidor por la red interna de docker.
+      BACKEND_API_URL: http://backend/api/v1
+      DB_CONNECTION: sqlite
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: 1440
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - frontend-storage:/var/www/html/storage
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  db-data:
+  backend-images:
+  backend-storage:
+  frontend-storage:
