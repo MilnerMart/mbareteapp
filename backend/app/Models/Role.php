@@ -20,7 +20,8 @@ class Role extends BaseEntity {
 
     private const myTable = DbSchema::tableRoles;
 
-    public const publicRegisterSlugs = ['trainee-role', 'trainer-role'];
+    // trainer-role bloqueado temporalmente: los entrenadores nuevos no pueden registrarse solos.
+    public const publicRegisterSlugs = ['trainee-role'];
 
     private string $name, $slug;
     
