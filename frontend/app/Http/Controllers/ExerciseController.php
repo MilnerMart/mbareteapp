@@ -28,6 +28,11 @@ class ExerciseController extends Controller
     public function getExerciseResource(int $exerciseId){
         $resources = $this->apiClient->getResource($exerciseId);
         $data['exerciseResources'] = $resources;
+        $data['exerciseId'] = $exerciseId;
+        // solo las rutinas que el usuario puede modificar
+        $data['editableRoutines'] = session('auth_user')
+            ? array_values(array_filter($this->apiClient->getRoutines() ?? [], fn($routine) => $routine['canEdit']))
+            : [];
         return view('exercises.resources', compact('data'));
     }
     

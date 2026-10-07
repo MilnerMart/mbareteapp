@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/css/profile.css',
                 'resources/css/register.css',
                 'resources/css/resource.css',
+                'resources/css/routine.css',
                 'resources/js/app.js',
             ],
             refresh: true,

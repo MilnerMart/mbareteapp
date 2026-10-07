@@ -51,6 +51,10 @@ class Resource extends BaseEntity {
         return $this->slug;
     }
 
+    function setUrl(string $url): void{
+        $this->url = $url;
+    }
+
     function getUrl():string{
         return $this->url;
     }

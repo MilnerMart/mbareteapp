@@ -12,5 +12,8 @@ class DbSchema{
     tablePermits = 'permits',
     tableUserRoles = 'user_roles',
     tableGymUsers = 'gym_users',
+    tableRoutines = 'routines',
+    tableRoutineExercises = 'routine_exercises',
+    tableUserRoutines = 'user_routines',
     tableUsers = 'users';
 }

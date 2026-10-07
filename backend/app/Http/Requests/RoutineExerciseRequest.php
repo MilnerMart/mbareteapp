@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class RoutineRequest extends FormRequest
+class RoutineExerciseRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,10 +20,9 @@ class RoutineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:100'],
-            'description' => ['nullable', 'string', 'max:255'],
-            'frequency' => ['required', 'integer', 'min:1', 'max:7'],
-            'rest_time' => ['required', 'integer', 'min:0', 'max:600'],
+            'exercise_id' => ['required', 'integer', 'exists:exercises,id'],
+            'sets' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
 }

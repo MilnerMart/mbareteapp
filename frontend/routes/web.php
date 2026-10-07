@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\GymController;
+use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -32,11 +33,28 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
 
+    Route::prefix('/routine')->group(function () {
+        Route::get('/', [RoutineController::class, 'index'])->name('routine.index');
+        Route::get('/create', [RoutineController::class, 'create'])->name('routine.create');
+        Route::post('/', [RoutineController::class, 'store'])->name('routine.store');
+        Route::post('/exercise', [RoutineController::class, 'addExercise'])->name('routine.exercises.add');
+        Route::get('/{id}', [RoutineController::class, 'show'])->whereNumber('id')->name('routine.show');
+        Route::get('/{id}/edit', [RoutineController::class, 'edit'])->name('routine.edit');
+        Route::put('/{id}', [RoutineController::class, 'update'])->name('routine.update');
+        Route::delete('/{id}', [RoutineController::class, 'destroy'])->name('routine.destroy');
+        Route::delete('/{id}/exercises/{exerciseId}', [RoutineController::class, 'removeExercise'])->name('routine.exercises.remove');
+        Route::post('/assign', [RoutineController::class, 'assign'])->name('routine.assign');
+        Route::delete('/{id}/assign/{userId}', [RoutineController::class, 'unassign'])->name('routine.unassign');
+    });
+
     Route::middleware('frontend.gym')->prefix('/gym')->group(function () {
         Route::get('/', [GymController::class, 'index'])->name('gym.index');
         Route::get('/create', [GymController::class, 'create'])->name('gym.create');
         Route::post('/', [GymController::class, 'store'])->name('gym.store');
+        Route::get('/{id}', [GymController::class, 'show'])->whereNumber('id')->name('gym.show');
         Route::get('/{id}/edit', [GymController::class, 'edit'])->name('gym.edit');
         Route::put('/{id}', [GymController::class, 'update'])->name('gym.update');
+        Route::post('/{id}/image', [GymController::class, 'updateImage'])->name('gym.image');
+        Route::delete('/{id}/users/{userId}', [GymController::class, 'removeUser'])->name('gym.users.remove');
     });
 });

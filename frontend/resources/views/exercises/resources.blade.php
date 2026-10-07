@@ -1,14 +1,21 @@
 @php
     $exerciseResources = $data['exerciseResources'];
+    $editableRoutines = $data['editableRoutines'];
 @endphp
 @extends('layouts.layout')
 @section('css')
-    @vite('resources/css/resource.css')
+    @vite(['resources/css/resource.css', 'resources/css/routine.css'])
 @endsection
 @section('content')
     <div class="mb-2">
         <a href="{{ route('muscle.index') }}"><i class="fa-solid fa-left-long fa-2xl" style="color: rgb(194, 19, 31);"></i></a>
     </div>
+    @if (session('routine_saved'))
+        <div class="alert alert-success">{{ session('routine_saved') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">{{ $errors->first() }}</div>
+    @endif
     @if (!empty($exerciseResources))
         <div class="row justify-content-center">
             @foreach ($exerciseResources as $resource)
@@ -20,6 +27,44 @@
                     </div>
                 </div>
             @endforeach
+        </div>
+    @endif
+
+    @if (session('auth_user'))
+        <div class="routine-form-panel routine-add-panel">
+            <h2 class="routine-subtitle">Agregar a una rutina</h2>
+            @if (empty($editableRoutines))
+                <p class="routine-hint mb-0">
+                    Todavia no tienes rutinas. <a href="{{ route('routine.create') }}">Crea una</a> y vuelve para agregar este ejercicio.
+                </p>
+            @else
+                <form method="POST" action="{{ route('routine.exercises.add') }}" class="routine-form">
+                    @csrf
+                    <input type="hidden" name="exercise_id" value="{{ $data['exerciseId'] }}">
+                    <div class="mb-3">
+                        <label for="routine_id" class="form-label">Rutina</label>
+                        <select id="routine_id" name="routine_id" class="form-select" required>
+                            @foreach ($editableRoutines as $routine)
+                                <option value="{{ $routine['id'] }}" @selected(old('routine_id') == $routine['id'])>{{ $routine['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="routine-form-row mb-3">
+                        <div>
+                            <label for="sets" class="form-label">Series</label>
+                            <input type="number" id="sets" name="sets" class="form-control" value="{{ old('sets', 3) }}" min="1" max="20">
+                        </div>
+                        <div>
+                            <label for="reps" class="form-label">Repeticiones</label>
+                            <input type="number" id="reps" name="reps" class="form-control" value="{{ old('reps', 12) }}" min="1" max="100">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-plus me-2"></i>
+                        Agregar a la rutina
+                    </button>
+                </form>
+            @endif
         </div>
     @endif
 @endsection

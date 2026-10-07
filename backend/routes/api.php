@@ -7,6 +7,7 @@ use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\PermitController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +52,21 @@ Route::prefix('/v1')->group(function(){
             Route::get('/gym/', [GymEntityController::class, 'index']);
             Route::get('/gym/{id}', [GymEntityController::class, 'show']);
             Route::put('/gym/{id}', [GymEntityController::class, 'update']);
+            Route::post('/gym/{id}/image', [GymEntityController::class, 'updateImage']);
+            Route::get('/gym/{id}/users', [GymEntityController::class, 'users']);
+            Route::delete('/gym/{id}/users/{userId}', [GymEntityController::class, 'removeUser']);
+        });
+
+        Route::prefix('routines')->group(function(){
+            Route::get('/', [RoutineController::class, 'index']);
+            Route::post('/', [RoutineController::class, 'store']);
+            Route::get('/{id}', [RoutineController::class, 'show']);
+            Route::put('/{id}', [RoutineController::class, 'update']);
+            Route::delete('/{id}', [RoutineController::class, 'destroy']);
+            Route::post('/{id}/exercises', [RoutineController::class, 'addExercise']);
+            Route::delete('/{id}/exercises/{exerciseId}', [RoutineController::class, 'removeExercise']);
+            Route::post('/{id}/assign', [RoutineController::class, 'assign']);
+            Route::delete('/{id}/assign/{userId}', [RoutineController::class, 'unassign']);
         });
 
         Route::prefix('roles')->group(function(){

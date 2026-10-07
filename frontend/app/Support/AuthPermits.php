@@ -8,7 +8,7 @@ namespace App\Support;
  */
 class AuthPermits
 {
-    const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity';
+    const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity', assignRoutinesPermitSlug = 'Assing-routines';
 
     static function hasPermit(string $permitSlug): bool
     {
@@ -24,5 +24,10 @@ class AuthPermits
     static function canManageGyms(): bool
     {
         return self::hasPermit(self::createGymEntityPermitSlug);
+    }
+
+    static function canAssignRoutines(): bool
+    {
+        return self::hasPermit(self::assignRoutinesPermitSlug);
     }
 }

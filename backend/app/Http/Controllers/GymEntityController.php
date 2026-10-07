@@ -4,15 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Core\CoreModel;
 use App\Http\Controllers\Controller;
+use App\Core\EntityStatus;
 use App\Http\Requests\GymEntityRequest;
+use App\Http\Requests\GymImageRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Gym;
+use App\Models\GymUser;
 use App\Models\Permit;
 use App\Models\Resource;
 use App\Models\User;
+use App\Models\UserRoutine;
 use App\PublicException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class GymEntityController extends Controller {
 
@@ -76,12 +82,71 @@ class GymEntityController extends Controller {
         return $this->successApiResponse($this->buildGymModel($gym), 200);
     }
 
+    public function updateImage(GymImageRequest $request, string $id): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $gym = $this->queryAccessibleGymOrFail($request, $id);
+
+        $directory = public_path('images/gyms');
+        File::ensureDirectoryExists($directory);
+
+        $file = $request->file('gym_image');
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $file->move($directory, $filename);
+        $url = 'images/gyms/'.$filename;
+
+        $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::gymEntityModelId, $gym->getEntityId());
+        if($resource){
+            $previousPath = public_path($resource->getUrl());
+            if(File::exists($previousPath)){
+                File::delete($previousPath);
+            }
+            $resource->setUrl($url);
+        } else {
+            $resource = Resource::allocNew(
+                $gym->getName(),
+                $gym->getSlug().'-image',
+                Resource::kindImg,
+                CoreModel::gymEntityModelId,
+                $gym->getEntityId(),
+                $url,
+                EntityStatus::statusIdActive,
+            );
+        }
+        $resource->writeToDb($dbConnector);
+
+        return $this->successApiResponse($this->buildGymModel($gym), 200);
+    }
+
+    public function users(Request $request, string $id): JsonResponse {
+        $gym = $this->queryAccessibleGymOrFail($request, $id);
+        $userIdList = GymUser::queryUserIdListByGymId($this->getDbConnector(), $gym->getEntityId());
+        $userList = User::whereIn('id', $userIdList)->get()->sortBy(fn(User $user) => array_search($user->id, $userIdList));
+        $routineMap = UserRoutine::queryRoutineMapByUserIds($this->getDbConnector(), $userIdList);
+
+        $model = [];
+        foreach ($userList as $user) {
+            $userModel = UserResource::make($user)->resolve();
+            $userModel['routines'] = $routineMap[$user->id] ?? [];
+            $model[] = $userModel;
+        }
+        return $this->successApiResponse($model);
+    }
+
+    public function removeUser(Request $request, string $id, string $userId): JsonResponse {
+        $gym = $this->queryAccessibleGymOrFail($request, $id);
+        if(!GymUser::removeGymUser($this->getDbConnector(), $gym->getEntityId(), (int)$userId)){
+            throw PublicException::notFoundError('El alumno no pertenece a este gimnasio');
+        }
+
+        return $this->successApiResponse(code: 200);
+    }
+
     private function buildGymModel(Gym $gym): array {
         $dbconnector = $this->getDbConnector();
         $userOwner = User::find($gym->getOwnerId());
         $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::gymEntityModelId, $gym->getEntityId());
         $gymModel = $gym->buildApiModel();
-        $gymModel['image_url'] = $resource?->getUrl() ?? null;
+        $gymModel['image_url'] = $resource ? asset($resource->getUrl()) : null;
         $gymModel['refs']['owner'] = $userOwner ? UserResource::make($userOwner) : null;
         return $gymModel;
     }

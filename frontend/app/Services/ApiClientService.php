@@ -38,6 +38,11 @@ class ApiClientService
         return $this->request()->put($this->baseUrl . $endpoint, $data)->json();
     }
 
+    private function delete($endpoint)
+    {
+        return $this->request()->delete($this->baseUrl . $endpoint)->json();
+    }
+
     public function getMuscles(){
         return $this->get('/muscle');
     }
@@ -99,6 +104,61 @@ class ApiClientService
 
     public function updateGym(int $id, array $params){
         return $this->put('/entities/gym/'.$id, $params);
+    }
+
+    public function getGymUsers(int $id){
+        return $this->get('/entities/gym/'.$id.'/users');
+    }
+
+    public function removeGymUser(int $id, int $userId){
+        return $this->delete('/entities/gym/'.$id.'/users/'.$userId);
+    }
+
+    public function updateGymImage(int $id, UploadedFile $image){
+        return $this->request()
+            ->attach(
+                'gym_image',
+                fopen($image->getRealPath(), 'r'),
+                $image->getClientOriginalName()
+            )
+            ->post($this->baseUrl.'/entities/gym/'.$id.'/image')
+            ->json();
+    }
+
+    public function getRoutines(){
+        return $this->get('/routines');
+    }
+
+    public function getRoutine(int $id){
+        return $this->get('/routines/'.$id);
+    }
+
+    public function createRoutine(array $params){
+        return $this->post('/routines', $params);
+    }
+
+    public function updateRoutine(int $id, array $params){
+        return $this->put('/routines/'.$id, $params);
+    }
+
+    public function deleteRoutine(int $id){
+        return $this->delete('/routines/'.$id);
+    }
+
+    public function addRoutineExercise(int $id, array $params){
+        return $this->post('/routines/'.$id.'/exercises', $params);
+    }
+
+    public function removeRoutineExercise(int $id, int $exerciseId){
+        return $this->delete('/routines/'.$id.'/exercises/'.$exerciseId);
+    }
+
+    public function assignRoutine(int $id, int $userId){
+        return $this->post('/routines/'.$id.'/assign', ['user_id' => $userId]);
+    }
+
+    public function unassignRoutine(int $id, int $userId){
+        return $this->delete('/routines/'.$id.'/assign/'.$userId);
     }
 
     public function getRegisterRoles(){

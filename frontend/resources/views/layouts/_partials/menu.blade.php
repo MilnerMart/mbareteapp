@@ -21,7 +21,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Rutinas</a>
+                        <a class="nav-link" href="{{ session('auth_user') ? route('routine.index') : route('user.login') }}">Rutinas</a>
                     </li>
 
                     @if(\App\Support\AuthPermits::canManageGyms())

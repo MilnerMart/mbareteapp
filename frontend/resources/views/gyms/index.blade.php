@@ -40,8 +40,13 @@
                         $ownerName = $owner ? trim(($owner['name'] ?? '') . ' ' . ($owner['last_name'] ?? '')) : null;
                     @endphp
                     <article class="gym-card">
+                        @if (!empty($gym['image_url']))
+                            <img src="{{ $gym['image_url'] }}" alt="" class="gym-card-img">
+                        @endif
                         <div class="gym-card-body">
-                            <h2>{{ $gym['name'] }}</h2>
+                            <h2>
+                                <a href="{{ route('gym.show', $gym['id']) }}" class="stretched-link gym-card-link">{{ $gym['name'] }}</a>
+                            </h2>
                             <span class="gym-slug">{{ $gym['slug'] }}</span>
                             <dl>
                                 <div>

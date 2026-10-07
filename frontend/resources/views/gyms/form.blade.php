@@ -14,7 +14,7 @@
 @section('content')
     <section class="gym-page">
         <div class="gym-form-panel">
-            <a href="{{ route('gym.index') }}" class="gym-back-link">
+            <a href="{{ $isEdit ? route('gym.show', $gym['id']) : route('gym.index') }}" class="gym-back-link">
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Volver</span>
             </a>
