@@ -8,6 +8,43 @@ window.$ = window.jQuery = $;
 
 window.Swal = Swal;
 
+// Formularios con data-confirm-name: piden escribir ese nombre antes de enviarse.
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('form[data-confirm-name]');
+
+    if (!form || form.dataset.confirmed === 'true') {
+        return;
+    }
+
+    event.preventDefault();
+    const name = form.dataset.confirmName;
+
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: form.dataset.confirmTitle || 'Confirmar eliminacion',
+        html: `${form.dataset.confirmText || ''}<br>Escribi <b></b> para confirmar.`,
+        input: 'text',
+        inputPlaceholder: name,
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#780000',
+        didOpen: (popup) => {
+            popup.querySelector('.swal2-html-container b').textContent = name;
+        },
+        inputValidator: (value) => {
+            if (value.trim() !== name) {
+                return 'El nombre no coincide.';
+            }
+        },
+    });
+
+    if (result.isConfirmed) {
+        form.dataset.confirmed = 'true';
+        form.submit();
+    }
+});
+
 document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-password-toggle]');
 

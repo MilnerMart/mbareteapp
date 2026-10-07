@@ -10,6 +10,9 @@
     @if (session('catalog_saved'))
         <div class="alert alert-success">{{ session('catalog_saved') }}</div>
     @endif
+    @if ($errors->has('muscle'))
+        <div class="alert alert-danger">{{ $errors->first('muscle') }}</div>
+    @endif
     @if ($isAdmin)
         <div class="catalog-header">
             <h1>Musculos</h1>
@@ -28,6 +31,25 @@
                         <div class="card-body">
                             <h5 class="card-title text-center">{{ $muscle['name'] }}</h5>
                             <p class="card-text justify-content-center">{{ $muscle['description'] }}</p>
+                            @if ($isAdmin)
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('muscle.edit', $muscle['id']) }}" class="btn btn-outline-secondary btn-sm flex-fill">
+                                        <i class="fa-solid fa-pen"></i>
+                                        <span>Editar</span>
+                                    </a>
+                                    <form method="POST" action="{{ route('muscle.destroy', $muscle['id']) }}" class="flex-fill"
+                                        data-confirm-name="{{ $muscle['name'] }}"
+                                        data-confirm-title="Eliminar musculo"
+                                        data-confirm-text="El musculo dejara de mostrarse. Solo se puede eliminar si no tiene ejercicios.">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                            <i class="fa-solid fa-trash"></i>
+                                            <span>Eliminar</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

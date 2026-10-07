@@ -21,7 +21,7 @@ class Resource extends BaseEntity {
 
     private string $name, $url, $slug;
 
-    private int $kind, $status, $ownerId, $modelId;
+    private int $kind, $ownerId, $modelId;
 
 
     public static function allocNew(string $name, string $slug,  int $kind, int $modelId, int $ownerId, string $url, int $statusId):self{
@@ -32,7 +32,7 @@ class Resource extends BaseEntity {
         $self->ownerId = $ownerId;
         $self->kind = $kind;
         $self->url = $url;
-        $self->status = $statusId;
+        $self->setStatusId($statusId);
         return $self;
     }
 
@@ -104,7 +104,6 @@ class Resource extends BaseEntity {
         $resource->ownerId = $row->owner_id;
         $resource->kind = $row->kind;
         $resource->url = $row->url;
-        $resource->status = $row->status;
         return $resource;
     }
 
@@ -116,7 +115,6 @@ class Resource extends BaseEntity {
         $row->owner_id = $this->ownerId;
         $row->kind = $this->kind;
         $row->url = $this->url ;
-        $row->status = $this->status;
         return $row;
     }
 

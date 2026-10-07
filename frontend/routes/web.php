@@ -3,12 +3,16 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\GymController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'login'])->name('home');
+
+// Imagenes subidas al backend, servidas desde el dominio del front
+Route::get('/images/{path}', [MediaController::class, 'show'])->where('path', '.*')->name('media.show');
 
 Route::get('/login', [AuthController::class, 'login'])->name('user.login');
 
@@ -36,8 +40,14 @@ Route::middleware('frontend.auth')->group(function () {
     Route::middleware('frontend.admin')->group(function () {
         Route::get('/muscle/create', [MuscleController::class, 'create'])->name('muscle.create');
         Route::post('/muscle', [MuscleController::class, 'store'])->name('muscle.store');
+        Route::get('/muscle/{id}/edit', [MuscleController::class, 'edit'])->whereNumber('id')->name('muscle.edit');
+        Route::put('/muscle/{id}', [MuscleController::class, 'update'])->whereNumber('id')->name('muscle.update');
+        Route::delete('/muscle/{id}', [MuscleController::class, 'destroy'])->whereNumber('id')->name('muscle.destroy');
         Route::get('/muscle/{id}/exercise/create', [ExerciseController::class, 'create'])->name('exercise.create');
         Route::post('/exercise', [ExerciseController::class, 'store'])->name('exercise.store');
+        Route::get('/exercise/{id}/edit', [ExerciseController::class, 'edit'])->whereNumber('id')->name('exercise.edit');
+        Route::put('/exercise/{id}', [ExerciseController::class, 'update'])->whereNumber('id')->name('exercise.update');
+        Route::delete('/exercise/{id}', [ExerciseController::class, 'destroy'])->whereNumber('id')->name('exercise.destroy');
     });
 
     Route::get('/my-gym', [GymController::class, 'memberIndex'])->name('gym.member');

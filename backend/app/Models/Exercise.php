@@ -55,6 +55,30 @@ class Exercise extends BaseEntity {
         return $this->slug;
     }
 
+    function setMuscleId(int $muscleId): void{
+        $this->muscleId = $muscleId;
+    }
+
+    function getMuscleId(): int{
+        return $this->muscleId;
+    }
+
+    function setRestTime(int $restTime): void{
+        $this->restTime = $restTime;
+    }
+
+    function getRestTime(): int{
+        return $this->restTime;
+    }
+
+    function setDescription(?string $description): void{
+        $this->description = $description;
+    }
+
+    function getDescription(): ?string{
+        return $this->description;
+    }
+
     public function muscle(){
         return $this->belongsTo(Muscle::class);
     }
@@ -80,8 +104,13 @@ class Exercise extends BaseEntity {
     }
 
     static function queryByDbId(DbConnector $dbConnect, int $dbId):?self{
-        $query = self::allocDbTable($dbConnect)->where('id', $dbId);
+        $query = self::allocDbTable($dbConnect)->where('id', $dbId)->where('status', EntityStatus::statusIdActive);
         return $dbConnect->fetchSingle($query, [self::class ,'row2Exercise']);
+    }
+
+    static function queryList(DbConnector $dbConnect):array{
+        $query = self::allocDbTable($dbConnect)->where('status', EntityStatus::statusIdActive)->select();
+        return $dbConnect->fetchAll($query, [self::class, 'row2Exercise']);
     }
 
     static function queryByDbIdOrFail(DbConnector $dbConnect, int $dbId):?self{
@@ -93,7 +122,7 @@ class Exercise extends BaseEntity {
     }
 
     static function queryListByMuscleId(DbConnector $dbConnect,  int $muscleId):array{
-        $query = self::allocDbTable($dbConnect)->where('muscle_id', $muscleId)->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        $query = self::allocDbTable($dbConnect)->where('muscle_id', $muscleId)->where('status', EntityStatus::statusIdActive)->select();
         return $dbConnect->fetchAll($query, [self::class, 'row2Exercise']);
     }
 

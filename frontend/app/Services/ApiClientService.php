@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\MediaController;
 use Illuminate\Http\UploadedFile;
 
 class ApiClientService
@@ -24,31 +25,62 @@ class ApiClientService
 
     private function get($endpoint, $params = [])
     {   
-        $response = $this->request()->get($this->baseUrl . $endpoint, $params)->json();
+        $response = $this->localizeImageUrls($this->request()->get($this->baseUrl . $endpoint, $params)->json());
         return $response['data'] ?? null;
     }
 
     private function post($endpoint, $data = [])
     {
-        return $this->request()->post($this->baseUrl . $endpoint, $data)->json();
+        return $this->localizeImageUrls($this->request()->post($this->baseUrl . $endpoint, $data)->json());
     }
 
     private function put($endpoint, $data = [])
     {
-        return $this->request()->put($this->baseUrl . $endpoint, $data)->json();
+        return $this->localizeImageUrls($this->request()->put($this->baseUrl . $endpoint, $data)->json());
     }
 
     private function postWithImage($endpoint, array $data, string $field, UploadedFile $image)
     {
-        return $this->request()
+        $response = $this->request()
             ->attach($field, fopen($image->getRealPath(), 'r'), $image->getClientOriginalName())
             ->post($this->baseUrl . $endpoint, $data)
             ->json();
+        return $this->localizeImageUrls($response);
+    }
+
+    /**
+     * PHP no parsea archivos en un PUT real: con imagen se manda POST + _method=PUT.
+     */
+    private function putWithOptionalImage($endpoint, array $data, string $field, ?UploadedFile $image)
+    {
+        if(!$image){
+            return $this->put($endpoint, $data);
+        }
+
+        return $this->postWithImage($endpoint, $data + ['_method' => 'PUT'], $field, $image);
+    }
+
+    /**
+     * Las urls de imagenes del backend (http://backend/images/...) pasan a /images/... para que el
+     * navegador las pida al front, que las sirve via MediaController.
+     */
+    private function localizeImageUrls($value)
+    {
+        if(is_array($value)){
+            return array_map(fn($item) => $this->localizeImageUrls($item), $value);
+        }
+
+        $prefix = MediaController::backendOrigin().'/images/';
+        if(is_string($value) && str_starts_with($value, $prefix)){
+            return '/images/'.substr($value, strlen($prefix));
+        }
+
+        return $value;
     }
 
     private function delete($endpoint)
     {
-        return $this->request()->delete($this->baseUrl . $endpoint)->json();
+        return $this->localizeImageUrls($this->request()->delete($this->baseUrl . $endpoint)->json());
     }
 
     public function getMuscles(){
@@ -63,6 +95,14 @@ class ApiClientService
         return $this->postWithImage('/muscle', $params, 'image', $image);
     }
 
+    public function updateMuscle(int $id, array $params, ?UploadedFile $image = null){
+        return $this->putWithOptionalImage('/muscle/'.$id, $params, 'image', $image);
+    }
+
+    public function deleteMuscle(int $id){
+        return $this->delete('/muscle/'.$id);
+    }
+
     public function getExercise(int $id){
         return $this->get('/exercise/'.$id);
     }
@@ -73,6 +113,14 @@ class ApiClientService
 
     public function createExercise(array $params, UploadedFile $image){
         return $this->postWithImage('/exercise', $params, 'image', $image);
+    }
+
+    public function updateExercise(int $id, array $params, ?UploadedFile $image = null){
+        return $this->putWithOptionalImage('/exercise/'.$id, $params, 'image', $image);
+    }
+
+    public function deleteExercise(int $id){
+        return $this->delete('/exercise/'.$id);
     }
 
     public function getExercises(){
@@ -88,14 +136,7 @@ class ApiClientService
     }
 
     public function updateProfileImage(int $id, UploadedFile $image){
-        return $this->request()
-            ->attach(
-                'profile_image',
-                fopen($image->getRealPath(), 'r'),
-                $image->getClientOriginalName()
-            )
-            ->post($this->baseUrl.'/user/'.$id.'/profile-image')
-            ->json();
+        return $this->postWithImage('/user/'.$id.'/profile-image', [], 'profile_image', $image);
     }
 
     public function login(array $params){
@@ -139,14 +180,7 @@ class ApiClientService
     }
 
     public function updateGymImage(int $id, UploadedFile $image){
-        return $this->request()
-            ->attach(
-                'gym_image',
-                fopen($image->getRealPath(), 'r'),
-                $image->getClientOriginalName()
-            )
-            ->post($this->baseUrl.'/entities/gym/'.$id.'/image')
-            ->json();
+        return $this->postWithImage('/entities/gym/'.$id.'/image', [], 'gym_image', $image);
     }
 
     public function getMemberGyms(){

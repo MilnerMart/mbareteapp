@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\ExerciseRequest;
-use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use App\Models\Resource;
 use App\Services\ResourceService;
@@ -16,7 +15,16 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class ExerciseController extends Controller
 {
     public function index(): JsonResponse {
-        return $this->successApiResponse(ExerciseResource::collection(Exercise::all()));
+        $dbConnector = $this->getDbConnector();
+        $model = [];
+        foreach (Exercise::queryList($dbConnector) as $exercise) {
+            /**  @var Exercise $exercise */
+            $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
+            $exerciseModel = $exercise->buildApiModel();
+            $exerciseModel['image'] = $resource?->getPublicUrl();
+            $model[] = $exerciseModel;
+        }
+        return $this->successApiResponse($model);
     }
 
     public function store(ExerciseRequest $request): JsonResponse {
@@ -55,11 +63,28 @@ class ExerciseController extends Controller
         $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
+        $validated = $request->validated();
 
-        $exercise->fill($request->validated());
-        $exercise->save();
+        $exercise->setName($validated['name']);
+        if(!empty($validated['slug'])){
+            $exercise->setSlug($validated['slug']);
+        }
+        $exercise->setMuscleId((int)$validated['muscle_id']);
+        $exercise->setDescription($validated['description']);
+        $exercise->setRestTime((int)$validated['recommended_rest_time']);
+        $exercise->writeToDb($dbConnector);
 
-        return $this->successApiResponse(ExerciseResource::make($exercise));
+        $resource = null;
+        if($request->hasFile('image')){
+            $service = new ResourceService($dbConnector);
+            $resource = $service->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
+                $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
+        }
+        $resource ??= Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
+
+        $model = $exercise->buildApiModel();
+        $model['image_url'] = $resource?->getPublicUrl();
+        return $this->successApiResponse($model);
     }
 
     public function destroy(Request $request, string $id): JsonResponse {
@@ -67,7 +92,7 @@ class ExerciseController extends Controller
         $dbConnector = $this->getDbConnector();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector,$id);
 
-        $exercise->setStatusId(EntityStatus::statusIdDeleted);
+        $exercise->setStatusId(EntityStatus::statusIdInactive);
         $exercise->writeToDb($dbConnector);
         return $this->successApiResponse(code: 200);
     }

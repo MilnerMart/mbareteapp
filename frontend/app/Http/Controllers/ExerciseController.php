@@ -60,17 +60,63 @@ class ExerciseController extends Controller
         }
 
         $data['muscle'] = $muscle;
+        $data['exercise'] = null;
+        $data['muscles'] = [];
         return $this->renderView('exercises.form', compact('data'));
     }
 
-    public function store(Request $request): RedirectResponse{
-        $validated = $request->validate([
+    public function edit(int $id): RedirectResponse|View{
+        $exercise = $this->apiClient->getExercise($id);
+        $muscle = $exercise ? $this->apiClient->getMuscle($exercise['muscle_id']) : null;
+        if(!$exercise || !$muscle){
+            return redirect()->route('muscle.index');
+        }
+
+        $data['muscle'] = $muscle;
+        $data['exercise'] = $exercise;
+        $data['muscles'] = $this->apiClient->getMuscles() ?? [];
+        return $this->renderView('exercises.form', compact('data'));
+    }
+
+    public function update(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate($this->exerciseRules(false));
+
+        $image = $validated['image'] ?? null;
+        unset($validated['image']);
+        $response = $this->apiClient->updateExercise($id, $validated, $image);
+
+        if(!$this->isApiSuccess($response)){
+            return back()
+                ->withErrors(['name' => $this->apiErrorMessage($response, 'No pudimos actualizar el ejercicio.')])
+                ->withInput();
+        }
+
+        return redirect()->route('exercise.group', $validated['muscle_id'])->with('catalog_saved', 'Ejercicio actualizado.');
+    }
+
+    public function destroy(int $id): RedirectResponse{
+        $response = $this->apiClient->deleteExercise($id);
+
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['exercise' => $this->apiErrorMessage($response, 'No pudimos eliminar el ejercicio.')]);
+        }
+
+        return back()->with('catalog_saved', 'Ejercicio eliminado.');
+    }
+
+    // la imagen es obligatoria al crear, al editar es opcional
+    private function exerciseRules(bool $imageRequired): array{
+        return [
             'muscle_id' => ['required', 'integer'],
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'description' => ['required', 'string', 'min:5', 'max:255'],
             'recommended_rest_time' => ['required', 'integer', 'min:1', 'max:600'],
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
-        ]);
+            'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+        ];
+    }
+
+    public function store(Request $request): RedirectResponse{
+        $validated = $request->validate($this->exerciseRules(true));
 
         $image = $validated['image'];
         unset($validated['image']);

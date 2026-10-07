@@ -107,7 +107,7 @@ class Muscle extends BaseEntity {
 
     static function queryByDbId(DbConnector $dbConnect, ?int $dbId):?self{
         $query = self::allocDbTable($dbConnect)->where('id', $dbId)
-        ->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        ->where('status', EntityStatus::statusIdActive)->select();
         return $dbConnect->fetchSingle($query, [self::class ,'row2Muscle']);
     }
 
@@ -120,7 +120,7 @@ class Muscle extends BaseEntity {
     }
 
     static function queryList(DbConnector $dbConnect):array{
-        $query = self::allocDbTable($dbConnect)->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        $query = self::allocDbTable($dbConnect)->where('status', EntityStatus::statusIdActive)->select();
         return $dbConnect->fetchAll($query, [self::class, 'row2Muscle']);
     }
 

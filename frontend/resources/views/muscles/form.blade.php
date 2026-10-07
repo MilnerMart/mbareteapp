@@ -1,6 +1,10 @@
+@php
+    $muscle = $data['muscle'] ?? null;
+    $isEdit = (bool) $muscle;
+@endphp
 @extends('layouts.layout')
 
-@section('title', 'Nuevo musculo | Mbarete App')
+@section('title', ($isEdit ? 'Editar musculo' : 'Nuevo musculo').' | Mbarete App')
 
 @section('css')
     @vite('resources/css/catalog.css')
@@ -13,14 +17,17 @@
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Inicio</span>
             </a>
-            <h1>Nuevo musculo</h1>
+            <h1>{{ $isEdit ? 'Editar '.$muscle['name'] : 'Nuevo musculo' }}</h1>
 
             @if ($errors->any())
                 <div class="alert alert-danger">{{ $errors->first() }}</div>
             @endif
 
-            <form method="POST" action="{{ route('muscle.store') }}" enctype="multipart/form-data" class="catalog-form">
+            <form method="POST" action="{{ $isEdit ? route('muscle.update', $muscle['id']) : route('muscle.store') }}" enctype="multipart/form-data" class="catalog-form">
                 @csrf
+                @if ($isEdit)
+                    @method('PUT')
+                @endif
 
                 <div class="mb-3">
                     <label for="name" class="form-label">Nombre</label>
@@ -29,7 +36,7 @@
                         class="form-control @error('name') is-invalid @enderror"
                         id="name"
                         name="name"
-                        value="{{ old('name') }}"
+                        value="{{ old('name', $muscle['name'] ?? '') }}"
                         placeholder="Pecho"
                         minlength="3"
                         maxlength="50"
@@ -45,7 +52,7 @@
                         rows="3"
                         minlength="5"
                         maxlength="255"
-                        required>{{ old('description') }}</textarea>
+                        required>{{ old('description', $muscle['description'] ?? '') }}</textarea>
                 </div>
 
                 <div class="mb-3">
@@ -55,7 +62,7 @@
                         class="form-control @error('recommended_rest_days') is-invalid @enderror"
                         id="recommended_rest_days"
                         name="recommended_rest_days"
-                        value="{{ old('recommended_rest_days', 2) }}"
+                        value="{{ old('recommended_rest_days', $muscle['recommended_rest_days'] ?? 2) }}"
                         min="1"
                         max="14"
                         required>
@@ -63,17 +70,22 @@
 
                 <div class="mb-4">
                     <label for="image" class="form-label">Imagen</label>
+                    @if ($isEdit && !empty($muscle['image_url']))
+                        <img src="{{ asset($muscle['image_url']) }}" alt="{{ $muscle['name'] }}" class="d-block mb-2 rounded" style="max-height: 120px;">
+                    @endif
                     <input
                         type="file"
                         class="form-control @error('image') is-invalid @enderror"
                         id="image"
                         name="image"
                         accept="image/jpeg,image/png,image/webp,image/gif"
-                        required>
-                    <small class="catalog-hint">Se muestra en la tarjeta del musculo en Inicio. Maximo 4 MB.</small>
+                        @required(!$isEdit)>
+                    <small class="catalog-hint">
+                        {{ $isEdit ? 'Deja vacio para mantener la imagen actual.' : 'Se muestra en la tarjeta del musculo en Inicio.' }} Maximo 4 MB.
+                    </small>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Crear musculo</button>
+                <button type="submit" class="btn btn-primary w-100">{{ $isEdit ? 'Guardar cambios' : 'Crear musculo' }}</button>
             </form>
         </div>
     </section>

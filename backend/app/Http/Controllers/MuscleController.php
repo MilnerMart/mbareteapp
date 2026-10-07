@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\MuscleRequest;
+use App\Models\Exercise;
 use App\Models\Muscle;
 use App\Models\Resource;
+use App\PublicException;
 use App\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,8 +50,11 @@ class MuscleController extends Controller {
     public function show(string $id): JsonResponse {
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::queryByDbIdOrFail($dbConnector, $id);
+        $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::muscleModelId, $muscle->getEntityId());
 
-        return $this->successApiResponse($muscle->buildApiModel(), 200);
+        $model = $muscle->buildApiModel();
+        $model['image_url'] = $resource?->getPublicUrl();
+        return $this->successApiResponse($model, 200);
     }
 
     public function update(MuscleRequest $request, string $id): JsonResponse {   
@@ -88,7 +93,12 @@ class MuscleController extends Controller {
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::queryByDbIdOrFail($dbConnector,$id);
 
-        $muscle->setStatusId(EntityStatus::statusIdDeleted);
+        $exerciseCount = count(Exercise::queryListByMuscleId($dbConnector, $muscle->getEntityId()));
+        if($exerciseCount > 0){
+            throw PublicException::validationError('No se puede eliminar '.$muscle->getName().' porque tiene '.$exerciseCount.' ejercicio(s). Elimina primero sus ejercicios.');
+        }
+
+        $muscle->setStatusId(EntityStatus::statusIdInactive);
         $muscle->writeToDb($dbConnector);
         return $this->successApiResponse(code: 200);
     }
