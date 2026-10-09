@@ -6,6 +6,7 @@ use App\Http\Controllers\GymController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\MuscleController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,8 +51,13 @@ Route::middleware('frontend.auth')->group(function () {
         Route::delete('/exercise/{id}', [ExerciseController::class, 'destroy'])->whereNumber('id')->name('exercise.destroy');
     });
 
-    Route::get('/my-gym', [GymController::class, 'memberIndex'])->name('gym.member');
-    Route::put('/my-gym/{id}/visibility', [GymController::class, 'updateMemberVisibility'])->name('gym.member.visibility');
+    Route::middleware('frontend.member')->prefix('/my-gym')->group(function () {
+        Route::get('/', [GymController::class, 'memberIndex'])->name('gym.member');
+        Route::put('/{id}/visibility', [GymController::class, 'updateMemberVisibility'])->name('gym.member.visibility');
+    });
+
+    Route::get('/my-requests/{id}', [TicketController::class, 'show'])->whereNumber('id')->name('ticket.show');
+    Route::post('/my-requests/{id}/resubmit', [TicketController::class, 'resubmit'])->whereNumber('id')->name('ticket.resubmit');
 
     Route::prefix('/routine')->group(function () {
         Route::get('/', [RoutineController::class, 'index'])->name('routine.index');
@@ -77,5 +83,11 @@ Route::middleware('frontend.auth')->group(function () {
         Route::put('/{id}', [GymController::class, 'update'])->name('gym.update');
         Route::post('/{id}/image', [GymController::class, 'updateImage'])->name('gym.image');
         Route::delete('/{id}/users/{userId}', [GymController::class, 'removeUser'])->name('gym.users.remove');
+    });
+
+    Route::middleware('frontend.gym')->prefix('/tickets')->group(function () {
+        Route::get('/', [TicketController::class, 'index'])->name('ticket.index');
+        Route::post('/{id}/approve', [TicketController::class, 'approve'])->whereNumber('id')->name('ticket.approve');
+        Route::post('/{id}/reject', [TicketController::class, 'reject'])->whereNumber('id')->name('ticket.reject');
     });
 });

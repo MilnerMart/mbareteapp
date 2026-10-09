@@ -50,7 +50,10 @@
                         <i class="fa-solid fa-pen"></i>
                         <span>Editar</span>
                     </a>
-                    <form method="POST" action="{{ route('routine.destroy', $routine['id']) }}" onsubmit="return confirm('¿Eliminar esta rutina?')">
+                    <form method="POST" action="{{ route('routine.destroy', $routine['id']) }}"
+                          data-confirm-delete
+                          data-confirm-title="Eliminar rutina"
+                          data-confirm-text="La rutina dejara de mostrarse.">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn routine-remove-btn">

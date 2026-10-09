@@ -247,7 +247,7 @@
                                     placeholder="Opcional"
                                     maxlength="50">
                             </div>
-                            <small class="register-hint">Pedile el código a tu entrenador, sino igual podes continuar sin uno.</small>
+                            <small class="register-hint">Pedile el código a tu entrenador, sino igual podes continuar sin uno. Con código, tu entrenador tiene que aceptarte.</small>
                             @error('gym_code')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -271,6 +271,7 @@
                                     </label>
                                 @endforeach
                             </div>
+                            <small class="register-hint">Si elegis entrenador, empezas como alumno hasta que un administrador apruebe tu solicitud.</small>
                             @error('role_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror

@@ -16,10 +16,42 @@ class GymController extends Controller
         $this->apiClient = $apiClient;
     }
 
-    public function index(): View{
-        $data['gyms'] = $this->apiClient->getGyms() ?? [];
+    /**
+     * Gimnasios que gestiona el usuario. Con el deslizador activo (?member_gyms=1, se recuerda en sesion)
+     * se suman a la lista los gimnasios a los que pertenece como alumno (ej. el gimnasio base).
+     * Con ?member={id} muestra el detalle de uno de esos gimnasios.
+     */
+    public function index(Request $request): View{
+        if($request->has('member_gyms')){
+            $request->session()->put('gyms_show_member', $request->boolean('member_gyms'));
+        }
+        $memberGyms = AuthPermits::canBelongToGym() ? ($this->apiClient->getMemberGyms() ?? []) : [];
+        $data['memberGymNames'] = array_column($memberGyms, 'name');
+        $data['showMemberGyms'] = (bool) session('gyms_show_member', false);
+        $data['memberGym'] = collect($memberGyms)->firstWhere('id', (int) $request->query('member'));
+        $data['gyms'] = $data['memberGym'] ? [] : $this->mergeMemberGyms(
+            $this->apiClient->getGyms() ?? [],
+            $data['showMemberGyms'] ? $memberGyms : []
+        );
         $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('gyms.index', compact('data'));
+    }
+
+    /**
+     * Los gimnasios donde es alumno van como uno mas de la lista; si ademas lo gestiona (ej. el admin
+     * con el gimnasio base) no se duplica, solo se le agrega la membresia.
+     */
+    private function mergeMemberGyms(array $gyms, array $memberGyms): array{
+        $gyms = array_map(fn($gym) => $gym + ['isManaged' => true, 'membership' => null], $gyms);
+        foreach ($memberGyms as $memberGym) {
+            $index = array_search($memberGym['id'], array_column($gyms, 'id'), true);
+            if($index === false){
+                $gyms[] = $memberGym + ['isManaged' => false, 'membership' => $memberGym];
+            } else {
+                $gyms[$index]['membership'] = $memberGym;
+            }
+        }
+        return $gyms;
     }
 
     public function memberIndex(): View{

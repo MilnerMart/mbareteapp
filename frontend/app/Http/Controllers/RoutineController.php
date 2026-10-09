@@ -26,12 +26,15 @@ class RoutineController extends Controller
         return $this->renderView('routines.index', compact('data'));
     }
 
-    public function create(): View{
+    public function create(Request $request): View{
         $data['routine'] = null;
+        // si se crea desde un ejercicio, se agrega a la rutina al guardarla
+        $data['exerciseId'] = $request->integer('exercise_id') ?: null;
         return $this->renderView('routines.form', compact('data'));
     }
 
     public function store(Request $request): RedirectResponse{
+        $exerciseId = $request->validate(['exercise_id' => ['nullable', 'integer']])['exercise_id'] ?? null;
         $response = $this->apiClient->createRoutine($this->validateRoutine($request));
 
         if(!$this->isApiSuccess($response)){
@@ -40,8 +43,26 @@ class RoutineController extends Controller
                 ->withInput();
         }
 
-        return redirect()->route('routine.show', $response['data']['id'])
-            ->with('routine_saved', 'Rutina creada. Agrega ejercicios desde Inicio.');
+        $routineId = $response['data']['id'];
+
+        if(!$exerciseId){
+            return redirect()->route('routine.show', $routineId)
+                ->with('routine_saved', 'Rutina creada. Agrega ejercicios desde Inicio.');
+        }
+
+        $exerciseResponse = $this->apiClient->addRoutineExercise($routineId, [
+            'exercise_id' => $exerciseId,
+            'sets' => null,
+            'reps' => null,
+        ]);
+
+        if(!$this->isApiSuccess($exerciseResponse)){
+            return redirect()->route('routine.show', $routineId)
+                ->withErrors(['routine' => $this->apiErrorMessage($exerciseResponse, 'Rutina creada, pero no pudimos agregar el ejercicio.')]);
+        }
+
+        return redirect()->route('routine.show', $routineId)
+            ->with('routine_saved', 'Rutina creada con el ejercicio agregado.');
     }
 
     public function show(int $id): RedirectResponse|View{

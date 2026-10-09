@@ -16,6 +16,13 @@ class UserController extends Controller{
         $userInfo = $this->apiClient->getUser($id);
 
         $data['profileInfo'] = $userInfo;
+        $data['isOwnProfile'] = (int) session('auth_user.id') === $id;
+        $data['tickets'] = $data['isOwnProfile'] ? ($this->apiClient->getMyTickets() ?? []) : [];
+
+        if($data['isOwnProfile'] && ($authUser = $this->apiClient->me())){
+            // si le aprobaron el alta de entrenador, los permisos nuevos se reflejan sin volver a loguearse
+            session()->put('auth_user', array_merge(session('auth_user', []), $authUser));
+        }
 
         return $this->renderView('users.profile', compact('data'));
     }

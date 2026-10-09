@@ -4,14 +4,30 @@ namespace App\Helpers;
 use App\PublicException;
 use DateTimeZone;
 use DateTimeImmutable;
+use DateTimeInterface;
 
 abstract class BaseHelper {
 
-    private static ?DateTimeZone $utcTz = null;
+    // zona horaria en la que se muestran las fechas al usuario (en la base todo queda en UTC)
+    const displayTimezone = 'America/Asuncion';
+
+    private static ?DateTimeZone $utcTz = null, $displayTz = null;
 
     static public function UtcNow() {
         self::$utcTz ??= new DateTimeZone('UTC');
         return new DateTimeImmutable('now', self::$utcTz);
+    }
+
+    /**
+     * Fecha para la API en hora de Paraguay, ej: 2026-10-08T07:00:00-03:00
+     */
+    static function toDisplayDate(DateTimeInterface|string|null $date): ?string {
+        if( !$date ){
+            return null;
+        }
+        self::$displayTz ??= new DateTimeZone(self::displayTimezone);
+        $date = is_string($date) ? new DateTimeImmutable($date) : DateTimeImmutable::createFromInterface($date);
+        return $date->setTimezone(self::$displayTz)->format(DATE_ATOM);
     }
 
     static function fromDbJson(?string $json):?array {

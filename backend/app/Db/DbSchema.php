@@ -15,5 +15,6 @@ class DbSchema{
     tableRoutines = 'routines',
     tableRoutineExercises = 'routine_exercises',
     tableUserRoutines = 'user_routines',
+    tableTickets = 'tickets',
     tableUsers = 'users';
 }

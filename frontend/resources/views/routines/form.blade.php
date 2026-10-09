@@ -1,6 +1,12 @@
 @php
     $routine = $data['routine'];
     $isEdit = $routine !== null;
+    $exerciseId = $data['exerciseId'] ?? null;
+    $backUrl = match (true) {
+        $isEdit => route('routine.show', $routine['id']),
+        $exerciseId !== null => route('exercise.resource', $exerciseId),
+        default => route('routine.index'),
+    };
 @endphp
 @extends('layouts.layout')
 
@@ -13,7 +19,7 @@
 @section('content')
     <section class="routine-page">
         <div class="routine-form-panel">
-            <a href="{{ $isEdit ? route('routine.show', $routine['id']) : route('routine.index') }}" class="routine-back-link">
+            <a href="{{ $backUrl }}" class="routine-back-link">
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Volver</span>
             </a>
@@ -27,6 +33,9 @@
                 @csrf
                 @if ($isEdit)
                     @method('PUT')
+                @endif
+                @if ($exerciseId)
+                    <input type="hidden" name="exercise_id" value="{{ $exerciseId }}">
                 @endif
 
                 <div class="mb-3">

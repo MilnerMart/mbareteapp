@@ -20,8 +20,10 @@ class Role extends BaseEntity {
 
     private const myTable = DbSchema::tableRoles;
 
-    // trainer-role bloqueado temporalmente: los entrenadores nuevos no pueden registrarse solos.
-    public const publicRegisterSlugs = ['trainee-role'];
+    const adminRoleSlug = 'admin-role', traineeRoleSlug = 'trainee-role', trainerRoleSlug = 'trainer-role';
+
+    // quien elige entrenador se registra como alumno y queda pendiente de que el admin apruebe su ticket.
+    public const publicRegisterSlugs = [self::traineeRoleSlug, self::trainerRoleSlug];
 
     private string $name, $slug;
     
@@ -112,6 +114,21 @@ class Role extends BaseEntity {
 
     function isPublicRegisterRole():bool{
         return in_array($this->slug, self::publicRegisterSlugs, true);
+    }
+
+    function isTrainerRole():bool{
+        return $this->slug === self::trainerRoleSlug;
+    }
+
+    static function queryBySlug(DbConnector $dbConnect, string $slug):?self{
+        $query = self::allocDbTable($dbConnect)->where('slug', $slug)
+        ->where('status', '!=', EntityStatus::statusIdDeleted)->select();
+        return $dbConnect->fetchSingle($query, [self::class ,'row2Role']);
+    }
+
+    static function queryBySlugOrFail(DbConnector $dbConnect, string $slug):self{
+        return self::queryBySlug($dbConnect, $slug)
+            ?? throw PublicException::internalError('No se encuentra el rol: '.$slug);
     }
 
     static function queryByDbId(DbConnector $dbConnect, ?int $dbId):?self{

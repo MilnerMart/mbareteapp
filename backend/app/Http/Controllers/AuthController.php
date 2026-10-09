@@ -8,6 +8,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\Gym;
 use App\Models\Role;
+use App\Models\Ticket;
 use App\Models\User;
 use App\PublicException;
 use Illuminate\Http\JsonResponse;
@@ -25,12 +26,21 @@ class AuthController extends Controller
             throw PublicException::validationError('El rol seleccionado no esta disponible para el registro');
         }
 
-        $gym = $this->queryRegisterGymOrFail($validated['gym_code'] ?? null);
+        $baseGym = Gym::queryBySlug($dbConnector, Gym::baseGymSlug)
+            ?? throw PublicException::internalError('No se encuentra el gimnasio base');
+        // todos entran al gimnasio base; con codigo de otro gimnasio, ademas, el dueño tiene que aceptarlo
+        $requestedGym = $this->queryRequestedGymOrFail($validated['gym_code'] ?? null);
+        if($requestedGym?->getEntityId() === $baseGym->getEntityId()){
+            $requestedGym = null;
+        }
+        $traineeRole = Role::queryBySlugOrFail($dbConnector, Role::traineeRoleSlug);
 
-        $user = User::registerNew($dbConnector, $validated, $role, $gym);
+        $user = User::registerNew($dbConnector, $validated, $traineeRole, $baseGym, $requestedGym, $role->isTrainerRole());
         $token = $user->createToken($this->tokenName($request))->plainTextToken;
 
-        return $this->successApiResponse(new AuthResource($this->buildAuthUserModel($user), $token), 201);
+        $ticketModel = Ticket::buildApiModelList($dbConnector, Ticket::queryListByRequesterId($dbConnector, $user->id));
+
+        return $this->successApiResponse(new AuthResource($this->buildAuthUserModel($user), $token, $ticketModel), 201);
     }
 
     public function registerRoles(): JsonResponse
@@ -73,15 +83,12 @@ class AuthController extends Controller
     }
 
 
-    private function queryRegisterGymOrFail(?string $gymCode): Gym {
-        $dbConnector = $this->getDbConnector();
-        if($gymCode){
-            return Gym::queryBySlug($dbConnector, $gymCode)
-                ?? throw PublicException::validationError('No existe un gimnasio con el codigo: '.$gymCode);
+    private function queryRequestedGymOrFail(?string $gymCode): ?Gym {
+        if(!$gymCode){
+            return null;
         }
-
-        return Gym::queryBySlug($dbConnector, Gym::baseGymSlug)
-            ?? throw PublicException::internalError('No se encuentra el gimnasio base');
+        return Gym::queryBySlug($this->getDbConnector(), $gymCode)
+            ?? throw PublicException::validationError('No existe un gimnasio con el codigo: '.$gymCode);
     }
 
     

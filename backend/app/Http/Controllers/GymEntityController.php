@@ -118,10 +118,12 @@ class GymEntityController extends Controller {
 
     /**
      * Gimnasios a los que pertenece el usuario. No expone el codigo del gimnasio,
-     * y de los alumnos solo los que eligieron mostrarse.
+     * de los alumnos solo los que eligieron mostrarse, y la cantidad de alumnos solo al admin.
      */
     public function memberIndex(Request $request): JsonResponse {
         $dbConnector = $this->getDbConnector();
+        $user = $this->belongsToGymOrFail($request);
+        $isAdmin = $user->hasSeeAllPermit($dbConnector);
         $model = [];
         foreach (GymUser::queryMembershipListByUserId($dbConnector, $request->user()->id) as $membership) {
             $gym = Gym::queryByDbId($dbConnector, $membership['gym_id']);
@@ -130,6 +132,9 @@ class GymEntityController extends Controller {
             }
             $gymModel = $this->buildGymModel($gym);
             unset($gymModel['slug']);
+            if(!$isAdmin){
+                unset($gymModel['alumnsCount']);
+            }
             $owner = User::find($gym->getOwnerId());
             $gymModel['refs']['owner'] = $owner?->buildPublicApiModel();
             $gymModel['isPublic'] = $membership['is_public'];
@@ -142,6 +147,7 @@ class GymEntityController extends Controller {
     }
 
     public function updateMemberVisibility(GymVisibilityRequest $request, string $id): JsonResponse {
+        $this->belongsToGymOrFail($request);
         $isPublic = (bool)$request->validated()['is_public'];
         if(!GymUser::updateVisibility($this->getDbConnector(), (int)$id, $request->user()->id, $isPublic)){
             throw PublicException::notFoundError('No perteneces a este gimnasio');
@@ -164,6 +170,18 @@ class GymEntityController extends Controller {
         $user = $request->user();
         if(!$user->hasPermit($this->getDbConnector(), Permit::createGymEntityPermitSlug)){
             throw PublicException::forbiddenError('No tienes permisos para gestionar gimnasios');
+        }
+        return $user;
+    }
+
+    /**
+     * Alumnos y entrenadores ven los gimnasios a los que pertenecen.
+     */
+    private function belongsToGymOrFail(Request $request): User {
+        /**  @var User $user */
+        $user = $request->user();
+        if(!$user->hasPermit($this->getDbConnector(), Permit::belongsToGymPermitSlug)){
+            throw PublicException::forbiddenError('No tienes permisos para ver tus gimnasios');
         }
         return $user;
     }

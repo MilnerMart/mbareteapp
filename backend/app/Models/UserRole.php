@@ -26,6 +26,10 @@ class UserRole {
         $self->writeToDb($dbConnect);
     }
 
+    static function hasUserRole(DbConnector $dbConnect, int $userId, int $roleId): bool{
+        return self::allocDbTable($dbConnect)->where('user_id', $userId)->where('role_id', $roleId)->exists();
+    }
+
     static private function allocDbTable(DbConnector $dbConnect, ?string $alias = null): Builder{
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
     }

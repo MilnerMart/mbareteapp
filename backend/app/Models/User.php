@@ -90,13 +90,22 @@ class User extends Authenticatable
     /**
      * Da de alta el usuario junto a su rol y su gimnasio en una sola transaccion
      * y devuelve el modelo autenticable (necesario para Sanctum).
+     * Siempre entra como alumno y al gimnasio base. Si pidio ser entrenador se abre un ticket para el admin,
+     * y si se registro con el codigo de otro gimnasio se abre un ticket para el dueño de ese gimnasio.
      */
-    static function registerNew(DbConnector $dbConnector, array $userData, Role $role, Gym $gym): self{
-        $userId = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $userData, $role, $gym){
+    static function registerNew(DbConnector $dbConnector, array $userData, Role $traineeRole, Gym $baseGym,
+        ?Gym $requestedGym, bool $requestsTrainerRole): self{
+        $userId = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $userData, $traineeRole, $baseGym, $requestedGym, $requestsTrainerRole){
             $writeArray = (array)self::user2Row($dbConnector, $userData);
             $userId = self::allocDbTable($dbConnector)->insertGetId($writeArray);
-            UserRole::addNewUserRole($dbConnector, $userId, $role->getEntityId());
-            GymUser::addNewGymUser($dbConnector, $gym->getEntityId(), $userId);
+            UserRole::addNewUserRole($dbConnector, $userId, $traineeRole->getEntityId());
+            GymUser::addNewGymUser($dbConnector, $baseGym->getEntityId(), $userId);
+            if($requestedGym){
+                Ticket::addNewTicket($dbConnector, Ticket::typeIdGymJoin, $userId, $requestedGym->getEntityId());
+            }
+            if($requestsTrainerRole){
+                Ticket::addNewTicket($dbConnector, Ticket::typeIdTrainerRequest, $userId);
+            }
             return $userId;
         });
 

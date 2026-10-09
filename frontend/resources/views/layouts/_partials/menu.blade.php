@@ -26,7 +26,8 @@
                         </li>
                     @endif
 
-                    @if(session('auth_user') && !($canManageGyms ?? false))
+                    {{-- quien gestiona gimnasios ve los suyos como alumno desde el selector de "Gimnasios" --}}
+                    @if(($canBelongToGym ?? false) && !($canManageGyms ?? false))
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('gym.member') }}">Mi gimnasio</a>
                         </li>
@@ -35,6 +36,10 @@
                     @if($canManageGyms ?? false)
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('gym.index') }}">Gimnasios</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('ticket.index') }}">Solicitudes</a>
                         </li>
                     @endif
 

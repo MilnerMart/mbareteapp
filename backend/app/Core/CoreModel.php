@@ -8,7 +8,7 @@ use App\Models\Role;
 
 class CoreModel{
 
-    const exerciseModelId = 10, resourceModelId = 20, muscleModelId = 40, gymEntityModelId = 50, roleModelId = 60, routineModelId = 70;
+    const exerciseModelId = 10, resourceModelId = 20, muscleModelId = 40, gymEntityModelId = 50, roleModelId = 60, routineModelId = 70, ticketModelId = 80;
 
     private const _modelInfoMap = [
         self::exerciseModel => [

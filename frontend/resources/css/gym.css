@@ -27,6 +27,13 @@
     margin: 0;
 }
 
+.gym-header-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
 .gym-header .btn,
 .gym-edit-btn {
     align-items: center;
@@ -70,10 +77,31 @@
     text-decoration: none;
 }
 
-/* el boton editar queda por encima del link que cubre la card */
-.gym-card .gym-edit-btn {
+/* el boton editar y el deslizador quedan por encima del link que cubre la card */
+.gym-card .gym-edit-btn,
+.gym-card-visibility {
     position: relative;
     z-index: 2;
+}
+
+.gym-card-visibility {
+    margin-bottom: 1rem;
+}
+
+.gym-card-member {
+    border-style: dashed;
+}
+
+.gym-member-badge {
+    background-color: rgba(193, 18, 31, .15);
+    border: 1px solid #5a1a1f;
+    border-radius: 999px;
+    color: #ff4d5a;
+    display: inline-block;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-bottom: .5rem;
+    padding: .1rem .6rem;
 }
 
 .gym-card h2 {

@@ -45,7 +45,7 @@
             <h2 class="routine-subtitle">Agregar a una rutina</h2>
             @if (empty($editableRoutines))
                 <p class="routine-hint mb-0">
-                    Todavia no tienes rutinas. <a href="{{ route('routine.create') }}">Crea una</a> y vuelve para agregar este ejercicio.
+                    Todavia no tienes rutinas. <a href="{{ route('routine.create', ['exercise_id' => $data['exerciseId']]) }}">Crea una</a> con este ejercicio.
                 </p>
             @else
                 <form method="POST" action="{{ route('routine.exercises.add') }}" class="routine-form">
@@ -74,6 +74,9 @@
                         Agregar a la rutina
                     </button>
                 </form>
+                <p class="routine-hint mt-3 mb-0">
+                    O <a href="{{ route('routine.create', ['exercise_id' => $data['exerciseId']]) }}">crea una rutina nueva</a> con este ejercicio.
+                </p>
             @endif
         </div>
     @endif

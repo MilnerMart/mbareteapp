@@ -1,11 +1,13 @@
+@use('App\Support\TicketLabels')
 @php
+    $tickets = $data['tickets'] ?? [];
     $userProfile = $data['profileInfo'] ?? null;
     $fullName = trim(($userProfile['name'] ?? '') . ' ' . ($userProfile['last_name'] ?? ''));
     $profileImage = $userProfile['profile_image_url'] ?? asset('images/leoncioBiceps.png');
 @endphp
 @extends('layouts.layout')
 @section('css')
-    @vite('resources/css/profile.css')
+    @vite(['resources/css/profile.css', 'resources/css/ticket.css'])
 @endsection
 @section('content')
     <div class="container mt-4">
@@ -16,6 +18,11 @@
                         <i class="fa-solid fa-pen"></i>
                     </button>
                 </div>
+                @if (session('register_tickets'))
+                    <div class="alert alert-info profile-alert">
+                        {{ session('register_tickets') }}
+                    </div>
+                @endif
                 @if (session('profile_image_updated'))
                     <div class="alert alert-success profile-alert">
                         {{ session('profile_image_updated') }}
@@ -67,6 +74,32 @@
 
             </div>
         </div>
+        @if (!empty($tickets))
+            <div class="card profile-card">
+                <div class="card-header">
+                    <div class="row text-center">
+                        <p><strong>Mis solicitudes</strong></p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="profile-ticket-list">
+                        @foreach ($tickets as $ticket)
+                            <li class="profile-ticket">
+                                <a href="{{ route('ticket.show', $ticket['id']) }}" class="ticket-number stretched-link">{{ $ticket['number'] }}</a>
+                                <span class="profile-ticket-summary">{{ TicketLabels::requesterSummary($ticket) }}</span>
+                                <span class="ticket-state ticket-state-{{ $ticket['state'] }}">{{ TicketLabels::stateLabel($ticket['state']) }}</span>
+                                @if (!empty($ticket['resolutionNote']))
+                                    <span class="profile-ticket-note">“{{ $ticket['resolutionNote'] }}”</span>
+                                @endif
+                                @if ($ticket['canResubmit'] ?? false)
+                                    <span class="profile-ticket-note profile-ticket-cta">Podes volver a enviarla una vez</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
         <div class="card profile-card">
             <div class="card-header">
                 <div class="row text-center">

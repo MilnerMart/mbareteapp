@@ -14,6 +14,7 @@ abstract class Controller
     {
         return view($view, $data + [
             'canManageGyms' => AuthPermits::canManageGyms(),
+            'canBelongToGym' => AuthPermits::canBelongToGym(),
         ]);
     }
 

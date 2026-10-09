@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class AuthResource extends JsonResource
 {
-    public function __construct(private readonly array $user, private readonly string $token)
+    public function __construct(private readonly array $user, private readonly string $token, private readonly ?array $tickets = null)
     {
         parent::__construct(null);
     }
@@ -23,6 +23,6 @@ class AuthResource extends JsonResource
             'user' => $this->user,
             'token' => $this->token,
             'token_type' => 'Bearer',
-        ];
+        ] + ($this->tickets !== null ? ['tickets' => $this->tickets] : []);
     }
 }

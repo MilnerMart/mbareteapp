@@ -232,6 +232,30 @@ class ApiClientService
         return $this->delete('/routines/'.$id.'/assign/'.$userId);
     }
 
+    public function getTickets(string $scope, string $state){
+        return $this->get('/tickets', ['scope' => $scope, 'state' => $state]);
+    }
+
+    public function getTicket(int $id){
+        return $this->get('/tickets/'.$id);
+    }
+
+    public function resubmitTicket(int $id, string $note){
+        return $this->post('/tickets/'.$id.'/resubmit', ['note' => $note]);
+    }
+
+    public function getMyTickets(){
+        return $this->get('/me/tickets');
+    }
+
+    public function approveTicket(int $id, ?string $note){
+        return $this->post('/tickets/'.$id.'/approve', ['note' => $note]);
+    }
+
+    public function rejectTicket(int $id, ?string $note){
+        return $this->post('/tickets/'.$id.'/reject', ['note' => $note]);
+    }
+
     public function getRegisterRoles(){
         return $this->get('/auth/register/roles');
     }

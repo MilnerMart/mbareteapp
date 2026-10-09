@@ -8,39 +8,68 @@ window.$ = window.jQuery = $;
 
 window.Swal = Swal;
 
-// Formularios con data-confirm-name: piden escribir ese nombre antes de enviarse.
+// Formularios con data-confirm-delete: piden escribir "eliminar" antes de enviarse.
+const CONFIRM_DELETE_WORD = 'eliminar';
+
 document.addEventListener('submit', async (event) => {
-    const form = event.target.closest('form[data-confirm-name]');
+    const form = event.target.closest('form[data-confirm-delete]');
 
     if (!form || form.dataset.confirmed === 'true') {
         return;
     }
 
     event.preventDefault();
-    const name = form.dataset.confirmName;
 
     const result = await Swal.fire({
         icon: 'warning',
         title: form.dataset.confirmTitle || 'Confirmar eliminacion',
         html: `${form.dataset.confirmText || ''}<br>Escribi <b></b> para confirmar.`,
         input: 'text',
-        inputPlaceholder: name,
+        inputPlaceholder: CONFIRM_DELETE_WORD,
         showCancelButton: true,
         confirmButtonText: 'Eliminar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#780000',
         didOpen: (popup) => {
-            popup.querySelector('.swal2-html-container b').textContent = name;
+            popup.querySelector('.swal2-html-container b').textContent = CONFIRM_DELETE_WORD;
         },
         inputValidator: (value) => {
-            if (value.trim() !== name) {
-                return 'El nombre no coincide.';
+            if (value.trim().toLowerCase() !== CONFIRM_DELETE_WORD) {
+                return `Escribi "${CONFIRM_DELETE_WORD}" para confirmar.`;
             }
         },
     });
 
     if (result.isConfirmed) {
         form.dataset.confirmed = 'true';
+        form.submit();
+    }
+});
+
+// Botones con data-confirm-reject: confirman el rechazo de una solicitud antes de enviar su formaction.
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-confirm-reject]');
+
+    if (!button) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Rechazar solicitud',
+        text: `Rechazaras la solicitud ${button.dataset.ticketNumber} de ${button.dataset.requesterName}. ¿Estas seguro?`,
+        showCancelButton: true,
+        confirmButtonText: 'Rechazar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#780000',
+        focusCancel: true,
+    });
+
+    if (result.isConfirmed) {
+        const form = button.form;
+        form.action = button.formAction;
         form.submit();
     }
 });

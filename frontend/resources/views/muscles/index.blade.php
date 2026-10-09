@@ -38,7 +38,7 @@
                                         <span>Editar</span>
                                     </a>
                                     <form method="POST" action="{{ route('muscle.destroy', $muscle['id']) }}" class="flex-fill"
-                                        data-confirm-name="{{ $muscle['name'] }}"
+                                        data-confirm-delete
                                         data-confirm-title="Eliminar musculo"
                                         data-confirm-text="El musculo dejara de mostrarse. Solo se puede eliminar si no tiene ejercicios.">
                                         @csrf

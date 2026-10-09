@@ -8,6 +8,7 @@ use App\Http\Controllers\PermitController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RoutineController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,15 @@ Route::prefix('/v1')->group(function(){
 
         Route::get('/me/gyms', [GymEntityController::class, 'memberIndex']);
         Route::put('/me/gyms/{id}/visibility', [GymEntityController::class, 'updateMemberVisibility']);
+        Route::get('/me/tickets', [TicketController::class, 'myIndex']);
+
+        Route::prefix('tickets')->group(function(){
+            Route::get('/', [TicketController::class, 'index']);
+            Route::get('/{id}', [TicketController::class, 'show']);
+            Route::post('/{id}/approve', [TicketController::class, 'approve']);
+            Route::post('/{id}/reject', [TicketController::class, 'reject']);
+            Route::post('/{id}/resubmit', [TicketController::class, 'resubmit']);
+        });
 
         Route::prefix('entities')->group(function(){
             Route::post('/gym/', [GymEntityController::class, 'store']);

@@ -70,6 +70,13 @@ class AuthController extends Controller
         $request->session()->put('auth_user', $response['data']['user']);
         $request->session()->put('auth_token', $response['data']['token']);
 
+        // si quedo alguna solicitud pendiente (entrenador o gimnasio) lo llevamos al perfil para que vea su ticket
+        $ticketNumbers = array_column($response['data']['tickets'] ?? [], 'number');
+        if($ticketNumbers){
+            return redirect()->route('user.profile', $response['data']['user']['id'])
+                ->with('register_tickets', 'Cuenta creada. Tu solicitud quedo pendiente de revision: '.implode(', ', $ticketNumbers).'.');
+        }
+
         return redirect()->route('muscle.index');
     }
 

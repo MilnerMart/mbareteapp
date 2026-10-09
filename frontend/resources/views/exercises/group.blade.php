@@ -45,7 +45,7 @@
                                     <span>Editar</span>
                                 </a>
                                 <form method="POST" action="{{ route('exercise.destroy', $exercise['id']) }}" class="flex-fill"
-                                    data-confirm-name="{{ $exercise['name'] }}"
+                                    data-confirm-delete
                                     data-confirm-title="Eliminar ejercicio"
                                     data-confirm-text="El ejercicio dejara de mostrarse.">
                                     @csrf
