@@ -7,6 +7,15 @@
     $isMine = $routine['ownerId'] === (int) session('auth_user.id');
     // solo llega cuando quien mira es admin
     $assignedUsers = $routine['assignedUsers'] ?? null;
+    // imagenes y descripcion de cada ejercicio para abrirlo desde la rutina
+    $exerciseDetailMap = collect($exercises)->keyBy('id')->map(fn($exercise) => [
+        'name' => $exercise['name'],
+        'description' => $exercise['description'] ?? null,
+        'resources' => $exercise['resources'] ?? [],
+        'sets' => $exercise['sets'] ?? null,
+        'reps' => $exercise['reps'] ?? null,
+        'restSeconds' => $exercise['recommended_rest_time'] ?? null,
+    ]);
 @endphp
 @extends('layouts.layout')
 
@@ -104,14 +113,22 @@
                                 </form>
                             </details>
                         @else
-                            <button type="button" class="routine-exercise-name routine-exercise-toggle" aria-pressed="false">
+                            <button type="button" class="routine-exercise-name routine-exercise-open" data-exercise-detail="{{ $exercise['id'] }}">
                                 {{ $exercise['name'] }}
                             </button>
                             <span class="routine-exercise-volume">
                                 {{ $exercise['sets'] ?? '-' }} series × {{ $exercise['reps'] ?? '-' }} reps
                             </span>
+                            <button type="button" class="btn routine-icon-btn routine-exercise-toggle" aria-pressed="false"
+                                title="Marcar como hecho" aria-label="Marcar {{ $exercise['name'] }} como hecho">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
                         @endif
                         @if ($canEdit)
+                            <button type="button" class="btn routine-icon-btn" data-exercise-detail="{{ $exercise['id'] }}"
+                                title="Ver ejercicio" aria-label="Ver {{ $exercise['name'] }}">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
                             <form method="POST" action="{{ route('routine.exercises.remove', [$routine['id'], $exercise['id']]) }}">
                                 @csrf
                                 @method('DELETE')
@@ -124,7 +141,7 @@
                 @endforeach
             </ol>
             @if (!$canEdit)
-                <p class="routine-hint">Toca un ejercicio para marcarlo mientras entrenas.</p>
+                <p class="routine-hint">Toca un ejercicio para ver como se hace y marcalo con <i class="fa-solid fa-check"></i> mientras entrenas.</p>
             @endif
             @if ($canEdit)
                 <p class="routine-hint">Para agregar mas ejercicios entra a un musculo desde <a href="{{ route('muscle.index') }}">acá</a>.</p>
@@ -171,14 +188,45 @@
 @endsection
 
 @section('js')
-    <script>
-        // en rutinas asignadas el ejercicio solo se resalta, no se puede modificar
-        document.querySelectorAll('.routine-exercise-toggle').forEach((button) => {
-            button.addEventListener('click', () => {
-                const isOn = button.getAttribute('aria-pressed') !== 'true';
-                button.setAttribute('aria-pressed', String(isOn));
-                button.closest('.routine-exercise').classList.toggle('is-highlighted', isOn);
+    <script type="application/json" id="routineExerciseData">@json($exerciseDetailMap)</script>
+    {{-- module: corre despues de app.js, que es quien expone jQuery y Swal --}}
+    <script type="module">
+        const routineExerciseData = JSON.parse($('#routineExerciseData').text());
+
+        // .text() y .attr() escapan: la descripcion la escribe un usuario
+        const buildExerciseDetail = (exercise) => {
+            const $container = $('<div>', { class: 'routine-exercise-detail' });
+            $.each(exercise.resources, (index, url) => {
+                $('<img>', { src: url, alt: exercise.name }).appendTo($container);
             });
+            $('<p>', { class: 'routine-exercise-detail-meta' })
+                .text(`${exercise.sets ?? '-'} series × ${exercise.reps ?? '-'} reps`
+                    + (exercise.restSeconds ? ` · ${exercise.restSeconds} s de descanso` : ''))
+                .appendTo($container);
+            $('<p>').text(exercise.description || 'Este ejercicio no tiene descripcion.').appendTo($container);
+            return $container.get(0);
+        };
+
+        $('[data-exercise-detail]').on('click', function () {
+            const exercise = routineExerciseData[$(this).data('exerciseDetail')];
+            if (!exercise) {
+                return;
+            }
+            Swal.fire({
+                title: exercise.name,
+                html: buildExerciseDetail(exercise),
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#780000',
+                customClass: { popup: 'routine-exercise-popup' },
+            });
+        });
+
+        // en rutinas asignadas el ejercicio solo se resalta, no se puede modificar
+        $('.routine-exercise-toggle').on('click', function () {
+            const $button = $(this);
+            const isOn = $button.attr('aria-pressed') !== 'true';
+            $button.attr('aria-pressed', String(isOn));
+            $button.closest('.routine-exercise').toggleClass('is-highlighted', isOn);
         });
     </script>
 @endsection

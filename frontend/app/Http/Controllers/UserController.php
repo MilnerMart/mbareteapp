@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
+use App\Support\AuthPermits;
 use Illuminate\Http\Request;
 
 class UserController extends Controller{
@@ -17,12 +18,13 @@ class UserController extends Controller{
 
         $data['profileInfo'] = $userInfo;
         $data['isOwnProfile'] = (int) session('auth_user.id') === $id;
-        $data['tickets'] = $data['isOwnProfile'] ? ($this->apiClient->getMyTickets() ?? []) : [];
 
         if($data['isOwnProfile'] && ($authUser = $this->apiClient->me())){
             // si le aprobaron el alta de entrenador, los permisos nuevos se reflejan sin volver a loguearse
             session()->put('auth_user', array_merge(session('auth_user', []), $authUser));
         }
+        // el entrenador ve sus solicitudes en Solicitudes > Enviadas, en el perfil solo las ve el alumno
+        $data['tickets'] = $data['isOwnProfile'] && !AuthPermits::canManageGyms() ? ($this->apiClient->getMyTickets() ?? []) : [];
 
         return $this->renderView('users.profile', compact('data'));
     }

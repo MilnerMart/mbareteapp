@@ -25,7 +25,7 @@
                 <p>{{ $muscle['description'] }}</p>
             @endif
         </div>
-        @if ($isAdmin)
+        @if ($canCreateCatalog ?? false)
             <a href="{{ route('exercise.create', $muscle['id']) }}" class="btn btn-primary">
                 <i class="fa-solid fa-plus"></i>
                 <span>Agregar ejercicio</span>
@@ -37,6 +37,9 @@
             @foreach ($exerciseGroup as $exercise)
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex justify-content-center mb-4">
                     <div class="card" style="width: 25rem; border-radius: 10%;">
+                        @if (!($exercise['isPublic'] ?? true))
+                            <span class="catalog-private-badge catalog-private-badge-floating"><i class="fa-solid fa-lock"></i> Privado</span>
+                        @endif
                         <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}" class="card-img-top" style="border-radius: 10%;"></a>
                         @if ($isAdmin)
                             <div class="card-body d-flex gap-2">

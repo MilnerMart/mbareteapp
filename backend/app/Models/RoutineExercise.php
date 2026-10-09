@@ -47,10 +47,11 @@ class RoutineExercise {
         ->where('re.routine_id', $routineId)
         ->where('e.status', '!=', EntityStatus::statusIdDeleted)
         ->orderBy('re.id')
-        ->get(['e.id', 'e.name', 'e.muscle_id', 'e.recommended_rest_time', 're.sets', 're.reps'])
+        ->get(['e.id', 'e.name', 'e.description', 'e.muscle_id', 'e.recommended_rest_time', 're.sets', 're.reps'])
         ->map(fn(stdClass $row) => [
             'id' => $row->id,
             'name' => $row->name,
+            'description' => $row->description,
             'muscle_id' => $row->muscle_id,
             'recommended_rest_time' => $row->recommended_rest_time,
             'sets' => $row->sets,

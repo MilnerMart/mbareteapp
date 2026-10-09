@@ -9,7 +9,7 @@ namespace App\Support;
 class AuthPermits
 {
     const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity', assignRoutinesPermitSlug = 'Assing-routines',
-        belongsToGymPermitSlug = 'belongs-to-gym';
+        belongsToGymPermitSlug = 'belongs-to-gym', createCatalogEntityPermitSlug = 'create-catalog-entity';
 
     static function hasPermit(string $permitSlug): bool
     {
@@ -30,6 +30,14 @@ class AuthPermits
     static function canBelongToGym(): bool
     {
         return self::hasPermit(self::belongsToGymPermitSlug);
+    }
+
+    /**
+     * Proponer musculos y ejercicios (el admin los publica directo).
+     */
+    static function canCreateCatalog(): bool
+    {
+        return self::hasPermit(self::createCatalogEntityPermitSlug);
     }
 
     static function canAssignRoutines(): bool

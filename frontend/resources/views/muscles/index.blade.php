@@ -13,7 +13,7 @@
     @if ($errors->has('muscle'))
         <div class="alert alert-danger">{{ $errors->first('muscle') }}</div>
     @endif
-    @if ($isAdmin)
+    @if ($canCreateCatalog ?? false)
         <div class="catalog-header">
             <h1>Musculos</h1>
             <a href="{{ route('muscle.create') }}" class="btn btn-primary">
@@ -30,6 +30,11 @@
                         <a href="{{ route('exercise.group', $muscle['id']) }}"><img src="{{ asset($muscle['image_url']??null) }}" class="card-img-top"></a>
                         <div class="card-body">
                             <h5 class="card-title text-center">{{ $muscle['name'] }}</h5>
+                            @if (!($muscle['isPublic'] ?? true))
+                                <div class="text-center mb-2">
+                                    <span class="catalog-private-badge"><i class="fa-solid fa-lock"></i> Privado</span>
+                                </div>
+                            @endif
                             <p class="card-text justify-content-center">{{ $muscle['description'] }}</p>
                             @if ($isAdmin)
                                 <div class="d-flex gap-2">

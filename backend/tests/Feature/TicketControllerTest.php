@@ -4,25 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Gym;
 use App\Models\User;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Tests\Feature\Concerns\InteractsWithMuscleApi;
 use Tests\TestCase;
 
 class TicketControllerTest extends TestCase
 {
-    private const adminEmail = 'admin@example.com', password = 'password123';
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // los modelos usan la conexion muscleDb (mysql): en el test comparte el sqlite en memoria
-        config(['database.connections.muscleDb' => config('database.connections.sqlite')]);
-        DB::purge('muscleDb');
-        DB::connection('muscleDb')->setPdo(DB::connection()->getPdo());
-        putenv('ADMIN_EMAIL='.self::adminEmail);
-        putenv('ADMIN_PASSWORD='.self::password);
-        Artisan::call('migrate', ['--force' => true]);
-    }
+    use InteractsWithMuscleApi;
 
     public function test_trainer_signup_registers_trainee_and_admin_approves_ticket(): void
     {
@@ -38,7 +26,7 @@ class TicketControllerTest extends TestCase
             ->assertOk()->assertJsonPath('data.0.number', sprintf('TK-%06d', $ticketId));
         $this->actingWithToken($coachToken)->postJson('/api/v1/tickets/'.$ticketId.'/approve')->assertForbidden();
 
-        $adminToken = $this->login(self::adminEmail);
+        $adminToken = $this->login(static::adminEmail);
         $this->actingWithToken($adminToken)->getJson('/api/v1/tickets')
             ->assertOk()->assertJsonPath('data.0.id', $ticketId);
         $this->actingWithToken($adminToken)->postJson('/api/v1/tickets/'.$ticketId.'/approve')
@@ -51,7 +39,7 @@ class TicketControllerTest extends TestCase
 
     public function test_gym_code_signup_waits_for_owner_approval(): void
     {
-        $owner = User::where('email', self::adminEmail)->firstOrFail();
+        $owner = User::where('email', static::adminEmail)->firstOrFail();
         $trainer = $this->register('owner@example.com', 'trainee-role');
         $trainerId = $trainer->json('data.user.id');
         DB::table('gym_entities')->insert([
@@ -116,7 +104,7 @@ class TicketControllerTest extends TestCase
         $coach = $this->register('coach3@example.com', 'trainer-role');
         $ticketId = $coach->json('data.tickets.0.id');
         $coachToken = $coach->json('data.token');
-        $adminToken = $this->login(self::adminEmail);
+        $adminToken = $this->login(static::adminEmail);
 
         $this->actingWithToken($coachToken)->postJson('/api/v1/tickets/'.$ticketId.'/resubmit', ['note' => 'Tengo certificado'])
             ->assertStatus(400);
@@ -150,7 +138,7 @@ class TicketControllerTest extends TestCase
     {
         $coach = $this->register('coach4@example.com', 'trainer-role');
         $coachToken = $coach->json('data.token');
-        $this->actingWithToken($this->login(self::adminEmail))
+        $this->actingWithToken($this->login(static::adminEmail))
             ->postJson('/api/v1/tickets/'.$coach->json('data.tickets.0.id').'/approve')->assertOk();
 
         $me = $this->actingWithToken($coachToken)->getJson('/api/v1/auth/me')->assertOk();
@@ -160,8 +148,9 @@ class TicketControllerTest extends TestCase
         $baseGymId = DB::table('gym_entities')->where('slug', Gym::baseGymSlug)->value('id');
         $this->actingWithToken($coachToken)->getJson('/api/v1/me/gyms')
             ->assertOk()->assertJsonPath('data.0.id', $baseGymId)->assertJsonPath('data.0.isPublic', false)
+            ->assertJsonPath('data.0.isBase', true)
             ->assertJsonMissingPath('data.0.alumnsCount');
-        $this->actingWithToken($this->login(self::adminEmail))->getJson('/api/v1/me/gyms')
+        $this->actingWithToken($this->login(static::adminEmail))->getJson('/api/v1/me/gyms')
             ->assertOk()->assertJsonPath('data.0.id', $baseGymId)->assertJsonPath('data.0.alumnsCount', 2);
         $this->actingWithToken($coachToken)->putJson('/api/v1/me/gyms/'.$baseGymId.'/visibility', ['is_public' => true])
             ->assertOk()->assertJsonPath('data.isPublic', true);
@@ -176,36 +165,5 @@ class TicketControllerTest extends TestCase
         $baseGymId = DB::table('gym_entities')->where('slug', Gym::baseGymSlug)->value('id');
         $this->assertTrue(DB::table('gym_users')->where('gym_id', $baseGymId)
             ->where('user_id', $register->json('data.user.id'))->exists());
-    }
-
-    private function register(string $email, string $roleSlug, ?string $gymCode = null)
-    {
-        return $this->postJson('/api/v1/auth/register', [
-            'name' => 'Test',
-            'last_name' => 'User',
-            'email' => $email,
-            'password' => self::password,
-            'password_confirmation' => self::password,
-            'age' => 30,
-            'height' => 175,
-            'weight' => 80,
-            'role_id' => DB::table('roles')->where('slug', $roleSlug)->value('id'),
-            'gym_code' => $gymCode,
-        ]);
-    }
-
-    /**
-     * El guard de sanctum recuerda al usuario entre requests del mismo test: se olvida al cambiar de token.
-     */
-    private function actingWithToken(string $token): self
-    {
-        $this->app['auth']->forgetGuards();
-        return $this->withToken($token);
-    }
-
-    private function login(string $email): string
-    {
-        return $this->postJson('/api/v1/auth/login', ['email' => $email, 'password' => self::password])
-            ->json('data.token');
     }
 }

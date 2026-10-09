@@ -295,13 +295,6 @@
     margin-top: 1rem;
 }
 
-.routine-exercise-toggle {
-    background: none;
-    border: 0;
-    padding: 0;
-    text-align: left;
-}
-
 .routine-exercise.is-highlighted {
     background-color: rgba(193, 18, 31, .18);
     border-color: #c1121f;
@@ -409,4 +402,52 @@
 .routine-user-gyms i {
     color: #ff4d5a;
     margin-right: .2rem;
+}
+
+/* detalle del ejercicio al abrirlo desde la rutina */
+.routine-exercise-open {
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    text-decoration: underline dotted #5a1a1f;
+    text-underline-offset: .25rem;
+}
+
+.routine-exercise-open:hover,
+.routine-exercise-open:focus {
+    color: #ff4d5a;
+}
+
+.routine-exercise-toggle[aria-pressed="true"] {
+    background-color: #c1121f;
+    border-color: #c1121f;
+    color: #ffffff;
+}
+
+.routine-exercise-popup {
+    max-width: 640px;
+    width: calc(100% - 2rem);
+}
+
+.routine-exercise-detail {
+    display: grid;
+    gap: .75rem;
+    text-align: left;
+}
+
+.routine-exercise-detail img {
+    border-radius: 8px;
+    max-height: 360px;
+    object-fit: contain;
+    width: 100%;
+}
+
+.routine-exercise-detail p {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.routine-exercise-detail .routine-exercise-detail-meta {
+    font-weight: 700;
 }

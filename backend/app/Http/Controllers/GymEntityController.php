@@ -131,6 +131,8 @@ class GymEntityController extends Controller {
                 continue;
             }
             $gymModel = $this->buildGymModel($gym);
+            // el front decide si mostrarlo; el codigo no se expone
+            $gymModel['isBase'] = $gym->getSlug() === Gym::baseGymSlug;
             unset($gymModel['slug']);
             if(!$isAdmin){
                 unset($gymModel['alumnsCount']);

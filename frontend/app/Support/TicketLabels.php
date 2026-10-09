@@ -10,6 +10,8 @@ class TicketLabels
     private const typeLabelMap = [
         'trainer-request' => 'Alta como entrenador',
         'gym-join' => 'Ingreso a gimnasio',
+        'muscle-create' => 'Nuevo musculo',
+        'exercise-create' => 'Nuevo ejercicio',
     ];
 
     private const stateLabelMap = [
@@ -45,7 +47,20 @@ class TicketLabels
                 'rejected' => 'No fuiste aceptado en '.$gymName,
                 default => 'Pendiente de aceptar en '.$gymName,
             },
+            'muscle-create', 'exercise-create' => self::catalogSummary($ticket),
             default => self::stateLabel($ticket['state'] ?? null),
+        };
+    }
+
+    private static function catalogSummary(array $ticket): string
+    {
+        $kind = ($ticket['type'] ?? null) === 'muscle-create' ? 'musculo' : 'ejercicio';
+        $name = $ticket['refs']['entity']['name'] ?? null;
+        $subject = $name ? $kind.' '.$name : $kind;
+        return match ($ticket['state'] ?? null) {
+            'approved' => 'Se aprobo el '.$subject,
+            'rejected' => 'Se rechazo el '.$subject,
+            default => 'Pendiente de aprobacion del '.$subject,
         };
     }
 

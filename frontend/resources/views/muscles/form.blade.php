@@ -85,7 +85,11 @@
                     </small>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">{{ $isEdit ? 'Guardar cambios' : 'Crear musculo' }}</button>
+                @include('layouts._partials.visibility-field', ['entity' => $muscle, 'isAdmin' => $data['isAdmin']])
+
+                <button type="submit" class="btn btn-primary w-100">
+                    {{ $isEdit ? 'Guardar cambios' : ($data['isAdmin'] ? 'Crear musculo' : 'Enviar a revision') }}
+                </button>
             </form>
         </div>
     </section>

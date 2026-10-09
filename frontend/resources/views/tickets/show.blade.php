@@ -13,10 +13,17 @@
 
 @section('content')
     <section class="ticket-page">
-        <a href="{{ route('user.profile', session('auth_user.id')) }}" class="ticket-back-link">
-            <i class="fa-solid fa-arrow-left"></i>
-            <span>Mi perfil</span>
-        </a>
+        @if ($data['backToSent'])
+            <a href="{{ route('ticket.index', ['scope' => 'sent', 'state' => 'all']) }}" class="ticket-back-link">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Solicitudes enviadas</span>
+            </a>
+        @else
+            <a href="{{ route('user.profile', session('auth_user.id')) }}" class="ticket-back-link">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Mi perfil</span>
+            </a>
+        @endif
 
         @if (session('ticket_saved'))
             <div class="alert alert-success">{{ session('ticket_saved') }}</div>
@@ -31,6 +38,10 @@
 
             <h1>{{ TicketLabels::requesterSummary($ticket) }}</h1>
             <span class="ticket-detail-date">Enviada el {{ TicketLabels::formatDate($ticket['createdAt']) }}</span>
+
+            @if (!empty($ticket['refs']['entity']))
+                @include('tickets._entity', ['entity' => $ticket['refs']['entity']])
+            @endif
 
             @if ($ticket['state'] === 'rejected')
                 <div class="ticket-rejection">

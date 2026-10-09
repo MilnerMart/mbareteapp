@@ -62,6 +62,7 @@ class ExerciseController extends Controller
         $data['muscle'] = $muscle;
         $data['exercise'] = null;
         $data['muscles'] = [];
+        $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('exercises.form', compact('data'));
     }
 
@@ -75,6 +76,7 @@ class ExerciseController extends Controller
         $data['muscle'] = $muscle;
         $data['exercise'] = $exercise;
         $data['muscles'] = $this->apiClient->getMuscles() ?? [];
+        $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('exercises.form', compact('data'));
     }
 
@@ -111,6 +113,7 @@ class ExerciseController extends Controller
             'name' => ['required', 'string', 'min:3', 'max:100'],
             'description' => ['required', 'string', 'min:5', 'max:255'],
             'recommended_rest_time' => ['required', 'integer', 'min:1', 'max:600'],
+            'is_public' => ['required', 'boolean'],
             'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ];
     }
@@ -128,6 +131,6 @@ class ExerciseController extends Controller
                 ->withInput();
         }
 
-        return redirect()->route('exercise.group', $validated['muscle_id'])->with('catalog_saved', 'Ejercicio creado.');
+        return redirect()->route('exercise.group', $validated['muscle_id'])->with('catalog_saved', $this->createdMessage($response, 'Ejercicio creado.'));
     }
 }

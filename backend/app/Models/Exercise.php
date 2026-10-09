@@ -7,6 +7,7 @@ use App\Core\EntityStatus;
 use App\Db\DbAdapter;
 use App\Db\DbConnector;
 use App\Db\DbSchema;
+use App\HasCatalogReview;
 use App\Helpers\BaseHelper;
 use App\PublicException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Illuminate\Database\Query\Builder;
 use stdClass;
 
 class Exercise extends BaseEntity {
-    use HasFactory;
+    use HasFactory, HasCatalogReview;
 
     private const myTable = DbSchema::tableExercise;
 
@@ -100,7 +101,7 @@ class Exercise extends BaseEntity {
             'description' => $this->description,
             'recommended_rest_time' => $this->restTime,
             'status' => $this->getStatusId()
-        ];
+        ] + $this->buildReviewApiModel();
     }
 
     static function queryByDbId(DbConnector $dbConnect, int $dbId):?self{
@@ -123,6 +124,18 @@ class Exercise extends BaseEntity {
 
     static function queryListByMuscleId(DbConnector $dbConnect,  int $muscleId):array{
         $query = self::allocDbTable($dbConnect)->where('muscle_id', $muscleId)->where('status', EntityStatus::statusIdActive)->select();
+        return $dbConnect->fetchAll($query, [self::class, 'row2Exercise']);
+    }
+
+    /**
+     * Ejercicios que aparecen en las listas para el usuario (aprobados, publicos o propios).
+     */
+    static function queryVisibleList(DbConnector $dbConnect, ?int $viewerId, ?int $muscleId = null):array{
+        $query = self::allocDbTable($dbConnect)->where('status', EntityStatus::statusIdActive)->select();
+        if($muscleId){
+            $query->where('muscle_id', $muscleId);
+        }
+        self::applyVisibleScope($query, $viewerId);
         return $dbConnect->fetchAll($query, [self::class, 'row2Exercise']);
     }
 
@@ -153,6 +166,7 @@ class Exercise extends BaseEntity {
         $exercise->muscleId = $row->muscle_id;
         $exercise->description = $row->description;
         $exercise->restTime = $row->recommended_rest_time;
+        $exercise->loadReviewFromRow($row);
 
         return $exercise;
     }
@@ -164,6 +178,7 @@ class Exercise extends BaseEntity {
         $row->muscle_id = $this->muscleId;
         $row->recommended_rest_time = $this->restTime;
         $row->description = $this->description;
+        $this->writeReviewToRow($row);
         return $row;
     }
 }

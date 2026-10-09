@@ -5,6 +5,10 @@
     $state = $data['state'];
     $isAdmin = $data['isAdmin'];
     $stateFilters = ['pending' => 'Pendientes', 'approved' => 'Aprobadas', 'rejected' => 'Rechazadas', 'all' => 'Todas'];
+    // el admin alterna entre las suyas y todas; el entrenador entre las que recibe y las que envio
+    $scopeTabs = $isAdmin ? ['mine' => 'Mias', 'all' => 'Todas'] : ['mine' => 'Recibidas', 'sent' => 'Enviadas'];
+    $scopeEyebrows = ['mine' => 'Solicitudes para mi', 'all' => 'Todas las solicitudes', 'sent' => 'Solicitudes que envie'];
+    $isSent = $scope === 'sent';
 @endphp
 @extends('layouts.layout')
 
@@ -18,17 +22,15 @@
     <section class="ticket-page">
         <div class="ticket-header">
             <div>
-                <span class="ticket-eyebrow">{{ $scope === 'all' ? 'Todas las solicitudes' : 'Solicitudes para mi' }}</span>
+                <span class="ticket-eyebrow">{{ $scopeEyebrows[$scope] }}</span>
                 <h1>Solicitudes</h1>
             </div>
-            @if ($isAdmin)
-                <nav class="ticket-tabs" aria-label="Alcance">
-                    <a href="{{ route('ticket.index', ['scope' => 'mine', 'state' => $state]) }}"
-                        @class(['ticket-tab', 'active' => $scope === 'mine'])>Mias</a>
-                    <a href="{{ route('ticket.index', ['scope' => 'all', 'state' => $state]) }}"
-                        @class(['ticket-tab', 'active' => $scope === 'all'])>Todas</a>
-                </nav>
-            @endif
+            <nav class="ticket-tabs" aria-label="Alcance">
+                @foreach ($scopeTabs as $scopeSlug => $scopeName)
+                    <a href="{{ route('ticket.index', ['scope' => $scopeSlug, 'state' => $state]) }}"
+                        @class(['ticket-tab', 'active' => $scope === $scopeSlug])>{{ $scopeName }}</a>
+                @endforeach
+            </nav>
         </div>
 
         <nav class="ticket-filters" aria-label="Estado">
@@ -68,21 +70,35 @@
                         </div>
 
                         <div class="ticket-item-body">
-                            <img
-                                src="{{ $requester['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}"
-                                alt=""
-                                class="ticket-avatar">
+                            @unless ($isSent)
+                                <img
+                                    src="{{ $requester['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}"
+                                    alt=""
+                                    class="ticket-avatar">
+                            @endunless
                             <div class="ticket-info">
-                                <strong>{{ $requesterName ?: 'Usuario' }}</strong>
-                                @if (!empty($requester['email']))
-                                    <span>{{ $requester['email'] }}</span>
+                                @if ($isSent)
+                                    <strong>{{ TicketLabels::requesterSummary($ticket) }}</strong>
+                                @else
+                                    <strong>{{ $requesterName ?: 'Usuario' }}</strong>
+                                    @if (!empty($requester['email']))
+                                        <span>{{ $requester['email'] }}</span>
+                                    @endif
                                 @endif
                                 <span>
-                                    @if ($ticket['type'] === 'gym-join')
-                                        Quiere sumarse a <strong>{{ $gymName ?? 'un gimnasio eliminado' }}</strong>
-                                    @else
-                                        Quiere ser entrenador
-                                    @endif
+                                    @switch ($ticket['type'])
+                                        @case('gym-join')
+                                            Quiere sumarse a <strong>{{ $gymName ?? 'un gimnasio eliminado' }}</strong>
+                                            @break
+                                        @case('muscle-create')
+                                            Propone un musculo
+                                            @break
+                                        @case('exercise-create')
+                                            Propone un ejercicio
+                                            @break
+                                        @default
+                                            Quiere ser entrenador
+                                    @endswitch
                                     · {{ TicketLabels::formatDate($ticket['createdAt']) }}
                                 </span>
                                 @if (($ticket['resubmitCount'] ?? 0) > 0)
@@ -112,7 +128,18 @@
                             </div>
                         </div>
 
-                        @if ($ticket['state'] === 'pending')
+                        @if (!empty($ticket['refs']['entity']))
+                            @include('tickets._entity', ['entity' => $ticket['refs']['entity']])
+                        @endif
+
+                        @if ($isSent)
+                            <div class="ticket-actions">
+                                <a href="{{ route('ticket.show', $ticket['id']) }}" class="btn ticket-approve-btn">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>{{ ($ticket['canResubmit'] ?? false) ? 'Ver y reenviar' : 'Ver detalle' }}</span>
+                                </a>
+                            </div>
+                        @elseif ($ticket['state'] === 'pending')
                             <form method="POST" class="ticket-actions">
                                 @csrf
                                 <input

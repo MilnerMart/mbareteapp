@@ -7,6 +7,7 @@ use App\Core\EntityStatus;
 use App\Db\DbAdapter;
 use App\Db\DbConnector;
 use App\Db\DbSchema;
+use App\HasCatalogReview;
 use App\Helpers\BaseHelper;
 use App\PublicException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,7 @@ use stdClass;
 
 class Muscle extends BaseEntity {
 
-    use HasFactory;
+    use HasFactory, HasCatalogReview;
 
     private const myTable = DbSchema::tableMuscles;
 
@@ -79,7 +80,7 @@ class Muscle extends BaseEntity {
             'slug' =>  $this->getSlug(),
             'recommended_rest_days' => $this->getRestDays(),
             'description' => $this->getDescription(),
-        ];
+        ] + $this->buildReviewApiModel();
     }
     
     static function row2Muscle(DbAdapter $dbAdapter, stdClass $row):self{
@@ -89,6 +90,7 @@ class Muscle extends BaseEntity {
         $muscle->slug = $row->slug;
         $muscle->recommended_rest_days = $row->recommended_rest_days;
         $muscle->description = $row->description;
+        $muscle->loadReviewFromRow($row);
         return $muscle;
     }
 
@@ -98,6 +100,7 @@ class Muscle extends BaseEntity {
         $row->slug = $this->slug;
         $row->recommended_rest_days = $this->recommended_rest_days;
         $row->description = $this->description;
+        $this->writeReviewToRow($row);
         return $row;
     }
 
@@ -121,6 +124,15 @@ class Muscle extends BaseEntity {
 
     static function queryList(DbConnector $dbConnect):array{
         $query = self::allocDbTable($dbConnect)->where('status', EntityStatus::statusIdActive)->select();
+        return $dbConnect->fetchAll($query, [self::class, 'row2Muscle']);
+    }
+
+    /**
+     * Musculos que aparecen en la lista para el usuario (aprobados, publicos o propios).
+     */
+    static function queryVisibleList(DbConnector $dbConnect, ?int $viewerId):array{
+        $query = self::allocDbTable($dbConnect)->where('status', EntityStatus::statusIdActive)->select();
+        self::applyVisibleScope($query, $viewerId);
         return $dbConnect->fetchAll($query, [self::class, 'row2Muscle']);
     }
 

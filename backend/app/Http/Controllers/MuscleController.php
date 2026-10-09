@@ -8,6 +8,7 @@ use App\Http\Requests\MuscleRequest;
 use App\Models\Exercise;
 use App\Models\Muscle;
 use App\Models\Resource;
+use App\Models\Ticket;
 use App\PublicException;
 use App\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
@@ -15,9 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class MuscleController extends Controller {
-    public function index(): JsonResponse {
-        $dbconnector = $this->getDbConnector();   
-        $muscleList = Muscle::queryList($dbconnector);
+    public function index(Request $request): JsonResponse {
+        $dbconnector = $this->getDbConnector();
+        $muscleList = Muscle::queryVisibleList($dbconnector, $this->queryViewer($request)?->id);
         $model=[];
         foreach ($muscleList as $muscle) {
             /**  @var Muscle $muscle */
@@ -29,8 +30,12 @@ class MuscleController extends Controller {
         return $this->successApiResponse($model);
     }
 
+    /**
+     * El admin lo publica directo; el entrenador lo propone y queda pendiente hasta que el admin aprueba su ticket.
+     */
     public function store(MuscleRequest $request): JsonResponse {
-        $this->seeAllPermitOrFail($request->user());
+        $user = $this->createCatalogPermitOrFail($request->user());
+        $isAdmin = $this->isAdminViewer($user);
         $validated = $request->validated();
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::allocMuscle(
@@ -39,17 +44,31 @@ class MuscleController extends Controller {
             $validated['description'],
             $validated['recommended_rest_days'],
         );
-        $muscle->writeToDb($dbConnector);
-        $resource = $this->saveMuscleImage($request, $muscle);
+        $muscle->setOwnerId($user->id);
+        $muscle->setIsPublic((bool)($validated['is_public'] ?? true));
+        $muscle->setReviewState($isAdmin ? Ticket::stateIdApproved : Ticket::stateIdPending);
+
+        [$resource, $ticket] = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $request, $muscle, $user, $isAdmin){
+            $muscle->writeToDb($dbConnector);
+            $resource = $this->saveMuscleImage($request, $muscle);
+            $ticket = $isAdmin ? null
+                : Ticket::addNewCatalogTicket($dbConnector, Ticket::typeIdMuscleCreate, $user->id, $muscle->getEntityId());
+            return [$resource, $ticket];
+        });
 
         $model = $muscle->buildApiModel();
         $model['image_url'] = $resource?->getPublicUrl();
+        $model['ticket'] = $ticket ? Ticket::buildApiModelList($dbConnector, [$ticket])[0] : null;
         return $this->successApiResponse($model, 201);
     }
 
-    public function show(string $id): JsonResponse {
+    public function show(Request $request, string $id): JsonResponse {
         $dbConnector = $this->getDbConnector();
         $muscle = Muscle::queryByDbIdOrFail($dbConnector, $id);
+        $viewer = $this->queryViewer($request);
+        if(!$muscle->canBeSeenBy($viewer?->id, $this->isAdminViewer($viewer))){
+            throw PublicException::notFoundError('No se encuentra musculo con id: '.$id);
+        }
         $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::muscleModelId, $muscle->getEntityId());
 
         $model = $muscle->buildApiModel();
@@ -77,6 +96,10 @@ class MuscleController extends Controller {
         }
         if($muscle->getDescription() !== $validated['description']){
             $muscle->setDescription($validated['description']);
+            $dirty = true;
+        }
+        if(isset($validated['is_public']) && $muscle->isPublic() !== (bool)$validated['is_public']){
+            $muscle->setIsPublic((bool)$validated['is_public']);
             $dirty = true;
         }
         if($dirty){

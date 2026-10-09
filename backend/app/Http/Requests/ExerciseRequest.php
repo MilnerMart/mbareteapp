@@ -28,6 +28,7 @@ class ExerciseRequest extends FormRequest
             'muscle_id' => 'required|exists:muscles,id',
             'description' => 'required|min:5|max:255',
             'recommended_rest_time' => 'required|integer|min:1|max:600',
+            'is_public' => ['sometimes', 'boolean'],
             // la imagen es obligatoria al crear, al editar es opcional
             'image' => [$this->isMethod('post') ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ];

@@ -38,14 +38,18 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
 
-    Route::middleware('frontend.admin')->group(function () {
+    // los entrenadores proponen musculos y ejercicios, el admin los revisa
+    Route::middleware('frontend.catalog')->group(function () {
         Route::get('/muscle/create', [MuscleController::class, 'create'])->name('muscle.create');
         Route::post('/muscle', [MuscleController::class, 'store'])->name('muscle.store');
+        Route::get('/muscle/{id}/exercise/create', [ExerciseController::class, 'create'])->name('exercise.create');
+        Route::post('/exercise', [ExerciseController::class, 'store'])->name('exercise.store');
+    });
+
+    Route::middleware('frontend.admin')->group(function () {
         Route::get('/muscle/{id}/edit', [MuscleController::class, 'edit'])->whereNumber('id')->name('muscle.edit');
         Route::put('/muscle/{id}', [MuscleController::class, 'update'])->whereNumber('id')->name('muscle.update');
         Route::delete('/muscle/{id}', [MuscleController::class, 'destroy'])->whereNumber('id')->name('muscle.destroy');
-        Route::get('/muscle/{id}/exercise/create', [ExerciseController::class, 'create'])->name('exercise.create');
-        Route::post('/exercise', [ExerciseController::class, 'store'])->name('exercise.store');
         Route::get('/exercise/{id}/edit', [ExerciseController::class, 'edit'])->whereNumber('id')->name('exercise.edit');
         Route::put('/exercise/{id}', [ExerciseController::class, 'update'])->whereNumber('id')->name('exercise.update');
         Route::delete('/exercise/{id}', [ExerciseController::class, 'destroy'])->whereNumber('id')->name('exercise.destroy');

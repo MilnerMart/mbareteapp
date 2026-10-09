@@ -25,6 +25,7 @@ class MuscleController extends Controller
 
     public function create(): View{
         $data['muscle'] = null;
+        $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('muscles.form', compact('data'));
     }
 
@@ -35,6 +36,7 @@ class MuscleController extends Controller
         }
 
         $data['muscle'] = $muscle;
+        $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('muscles.form', compact('data'));
     }
 
@@ -67,7 +69,7 @@ class MuscleController extends Controller
                 ->withInput();
         }
 
-        return redirect()->route('muscle.index')->with('catalog_saved', 'Musculo creado.');
+        return redirect()->route('muscle.index')->with('catalog_saved', $this->createdMessage($response, 'Musculo creado.'));
     }
 
     public function destroy(int $id): RedirectResponse{
@@ -86,6 +88,7 @@ class MuscleController extends Controller
             'name' => ['required', 'string', 'min:3', 'max:50'],
             'description' => ['required', 'string', 'min:5', 'max:255'],
             'recommended_rest_days' => ['required', 'integer', 'min:1', 'max:14'],
+            'is_public' => ['required', 'boolean'],
             'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ];
     }

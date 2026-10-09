@@ -18,13 +18,19 @@ class TicketController extends Controller
         $this->apiClient = $apiClient;
     }
 
+    /**
+     * scope=mine: las que le toca resolver. El admin ademas ve todas (scope=all)
+     * y el entrenador las que envio el (scope=sent), que no se muestran en su perfil.
+     */
     public function index(Request $request): View{
         $isAdmin = AuthPermits::isAdmin();
-        // solo el admin puede ver todas las solicitudes, el resto ve las que le toca resolver
-        $scope = $isAdmin && $request->query('scope') === 'all' ? 'all' : 'mine';
+        $scopeList = $isAdmin ? ['mine', 'all'] : ['mine', 'sent'];
+        $scope = in_array($request->query('scope'), $scopeList, true) ? $request->query('scope') : 'mine';
         $state = in_array($request->query('state'), self::stateList, true) ? $request->query('state') : 'pending';
 
-        $data['tickets'] = $this->apiClient->getTickets($scope, $state) ?? [];
+        $data['tickets'] = $scope === 'sent'
+            ? $this->querySentTickets($state)
+            : ($this->apiClient->getTickets($scope, $state) ?? []);
         $data['scope'] = $scope;
         $data['state'] = $state;
         $data['isAdmin'] = $isAdmin;
@@ -37,10 +43,14 @@ class TicketController extends Controller
     public function show(int $id): RedirectResponse|View{
         $ticket = $this->apiClient->getTicket($id);
         if(!$ticket || (int) $ticket['requesterId'] !== (int) session('auth_user.id')){
-            return redirect()->route('user.profile', session('auth_user.id'));
+            return AuthPermits::canManageGyms()
+                ? redirect()->route('ticket.index', ['scope' => 'sent'])
+                : redirect()->route('user.profile', session('auth_user.id'));
         }
 
         $data['ticket'] = $ticket;
+        // el entrenador ve sus solicitudes en "Enviadas", el alumno en su perfil
+        $data['backToSent'] = AuthPermits::canManageGyms();
         return $this->renderView('tickets.show', compact('data'));
     }
 
@@ -66,6 +76,17 @@ class TicketController extends Controller
 
     public function reject(Request $request, int $id): RedirectResponse{
         return $this->resolve($request, $id, false);
+    }
+
+    /**
+     * Las solicitudes propias vienen todas juntas; el filtro de estado se aplica aca.
+     */
+    private function querySentTickets(string $state): array{
+        $ticketList = $this->apiClient->getMyTickets() ?? [];
+        if($state === 'all'){
+            return $ticketList;
+        }
+        return array_values(array_filter($ticketList, fn($ticket) => $ticket['state'] === $state));
     }
 
     private function resolve(Request $request, int $id, bool $approve): RedirectResponse{

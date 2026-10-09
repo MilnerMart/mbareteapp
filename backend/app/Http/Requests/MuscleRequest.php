@@ -27,6 +27,7 @@ class MuscleRequest extends FormRequest
             'slug' => 'nullable|min:3|max:50|alpha_dash',
             'description' => 'required|min:5|max:255',
             'recommended_rest_days' => 'required|integer|min:1|max:14',
+            'is_public' => ['sometimes', 'boolean'],
             // la imagen es obligatoria al crear, al editar es opcional
             'image' => [$this->isMethod('post') ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ];

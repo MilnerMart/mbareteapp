@@ -29,7 +29,7 @@
                     {{-- quien gestiona gimnasios ve los suyos como alumno desde el selector de "Gimnasios" --}}
                     @if(($canBelongToGym ?? false) && !($canManageGyms ?? false))
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('gym.member') }}">Mi gimnasio</a>
+                            <a class="nav-link" href="{{ route('gym.member') }}">Mis gimnasios</a>
                         </li>
                     @endif
 

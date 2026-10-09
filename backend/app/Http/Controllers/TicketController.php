@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TicketResolveRequest;
 use App\Http\Requests\TicketResubmitRequest;
+use App\Models\Exercise;
 use App\Models\Gym;
 use App\Models\GymUser;
+use App\Models\Muscle;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
@@ -77,6 +79,7 @@ class TicketController extends Controller {
                     UserRole::addNewUserRole($dbConnector, $ticket->getRequesterId(), $trainerRole->getEntityId());
                 }
             }
+            $this->updateCatalogEntityState($ticket, Ticket::stateIdApproved);
             $ticket->writeToDb($dbConnector);
         });
 
@@ -89,7 +92,10 @@ class TicketController extends Controller {
         $user = $request->user();
         $this->canResolveOrFail($user, $ticket);
         $ticket->resolve(Ticket::stateIdRejected, $user->id, $request->validated()['note'] ?? null);
-        $ticket->writeToDb($dbConnector);
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket){
+            $this->updateCatalogEntityState($ticket, Ticket::stateIdRejected);
+            $ticket->writeToDb($dbConnector);
+        });
 
         return $this->successApiResponse(Ticket::buildApiModelList($this->getDbConnector(), [$ticket])[0]);
     }
@@ -104,13 +110,34 @@ class TicketController extends Controller {
             throw PublicException::forbiddenError('Solo quien hizo la solicitud puede volver a enviarla');
         }
         $ticket->resubmit($request->validated()['note']);
-        $ticket->writeToDb($dbConnector);
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket){
+            $this->updateCatalogEntityState($ticket, Ticket::stateIdPending);
+            $ticket->writeToDb($dbConnector);
+        });
 
         return $this->successApiResponse(Ticket::buildApiModelList($dbConnector, [$ticket])[0]);
     }
 
     /**
-     * El alta de entrenador la resuelve solo el admin; el ingreso a un gimnasio, su dueño o el admin.
+     * El musculo o ejercicio propuesto acompaña el estado de su solicitud: solo aprobado aparece en las listas.
+     */
+    private function updateCatalogEntityState(Ticket $ticket, int $reviewState): void {
+        if(!$ticket->isCatalogRequest()){
+            return;
+        }
+        $dbConnector = $this->getDbConnector();
+        $entity = $ticket->getType() === Ticket::typeIdMuscleCreate
+            ? Muscle::queryByDbId($dbConnector, $ticket->getEntityRefId())
+            : Exercise::queryByDbId($dbConnector, $ticket->getEntityRefId());
+        if(!$entity){
+            throw PublicException::validationError('El musculo o ejercicio de la solicitud ya no existe');
+        }
+        $entity->setReviewState($reviewState);
+        $entity->writeToDb($dbConnector);
+    }
+
+    /**
+     * El alta de entrenador, de musculos y de ejercicios la resuelve solo el admin; el ingreso a un gimnasio, su dueño o el admin.
      */
     private function canResolveOrFail(User $user, Ticket $ticket): void {
         $dbConnector = $this->getDbConnector();

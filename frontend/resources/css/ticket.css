@@ -463,3 +463,49 @@ a.ticket-number {
         justify-content: center;
     }
 }
+
+/* musculo o ejercicio propuesto */
+.ticket-entity {
+    background-color: #0b0b0b;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: .85rem;
+}
+
+.ticket-entity-img {
+    border-radius: 6px;
+    flex: 0 0 140px;
+    height: 100px;
+    object-fit: cover;
+    width: 140px;
+}
+
+.ticket-entity-info {
+    display: flex;
+    flex: 1 1 220px;
+    flex-direction: column;
+    gap: .2rem;
+    min-width: 0;
+}
+
+.ticket-entity-info strong {
+    color: #ffffff;
+}
+
+.ticket-entity-info span {
+    color: #8f8f8f;
+    font-size: .88rem;
+}
+
+.ticket-entity-info p {
+    color: #d8d8d8;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.ticket-entity-info .ticket-entity-visibility {
+    color: #d8d8d8;
+}

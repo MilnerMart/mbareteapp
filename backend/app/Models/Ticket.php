@@ -25,7 +25,10 @@ class Ticket extends BaseEntity {
 
     private const myTable = DbSchema::tableTickets;
 
-    const typeIdTrainerRequest = 10, typeIdGymJoin = 20;
+    const typeIdTrainerRequest = 10, typeIdGymJoin = 20, typeIdMuscleCreate = 30, typeIdExerciseCreate = 40;
+
+    // solicitudes que resuelve solo el admin
+    const adminTypeIdList = [self::typeIdTrainerRequest, self::typeIdMuscleCreate, self::typeIdExerciseCreate];
 
     const stateIdPending = 10, stateIdApproved = 20, stateIdRejected = 30;
 
@@ -35,6 +38,8 @@ class Ticket extends BaseEntity {
     private const typeSlugMap = [
         self::typeIdTrainerRequest => 'trainer-request',
         self::typeIdGymJoin => 'gym-join',
+        self::typeIdMuscleCreate => 'muscle-create',
+        self::typeIdExerciseCreate => 'exercise-create',
     ];
 
     private const stateSlugMap = [
@@ -60,6 +65,16 @@ class Ticket extends BaseEntity {
 
     static function addNewTicket(DbConnector $dbConnect, int $type, int $requesterId, ?int $gymId = null): self{
         $self = self::allocNew($type, $requesterId, $gymId);
+        $self->writeToDb($dbConnect);
+        return $self;
+    }
+
+    /**
+     * Solicitud de alta de un musculo o ejercicio propuesto; el id queda en data.
+     */
+    static function addNewCatalogTicket(DbConnector $dbConnect, int $type, int $requesterId, int $entityId): self{
+        $self = self::allocNew($type, $requesterId);
+        $self->_setDataItem('entityId', $entityId);
         $self->writeToDb($dbConnect);
         return $self;
     }
@@ -98,6 +113,22 @@ class Ticket extends BaseEntity {
 
     function isGymJoin(): bool{
         return $this->type === self::typeIdGymJoin;
+    }
+
+    function isCatalogRequest(): bool{
+        return $this->type === self::typeIdMuscleCreate || $this->type === self::typeIdExerciseCreate;
+    }
+
+    function isAdminRequest(): bool{
+        return in_array($this->type, self::adminTypeIdList, true);
+    }
+
+    /**
+     * Musculo o ejercicio al que se refiere la solicitud.
+     */
+    function getEntityRefId(): ?int{
+        $entityId = $this->_getDataItem('entityId');
+        return $entityId !== null ? (int)$entityId : null;
     }
 
     /**
@@ -212,6 +243,7 @@ class Ticket extends BaseEntity {
             'state' => self::stateSlugMap[$this->state] ?? null,
             'requesterId' => $this->requesterId,
             'gymId' => $this->gymId,
+            'entityId' => $this->getEntityRefId(),
             'resolvedBy' => $this->resolvedBy,
             'resolvedAt' => BaseHelper::toDisplayDate($this->resolvedAt),
             'resolutionNote' => $this->getResolutionNote(),
@@ -238,6 +270,7 @@ class Ticket extends BaseEntity {
         $userMap = User::whereIn('id', array_filter(array_unique($userIdList)))->get()->keyBy('id');
         $gymNameMap = Gym::allocDbTable($dbConnect)
             ->whereIn('id', array_filter(array_unique($gymIdList)))->pluck('name', 'id')->all();
+        $entityRefMap = self::buildEntityRefMap($dbConnect, $ticketList);
 
         $model = [];
         foreach ($ticketList as $ticket) {
@@ -248,6 +281,7 @@ class Ticket extends BaseEntity {
                 'requester' => $requester ? $requester->buildPublicApiModel() + ['email' => $requester->email] : null,
                 'gym' => $ticket->gymId ? ['id' => $ticket->gymId, 'name' => $gymNameMap[$ticket->gymId] ?? null] : null,
                 'resolver' => $resolver?->buildPublicApiModel(),
+                'entity' => $entityRefMap[$ticket->type][$ticket->getEntityRefId()] ?? null,
             ];
             $ticketModel['history'] = array_map(fn(array $item) => ['at' => BaseHelper::toDisplayDate($item['at'])] + $item + [
                 'userName' => isset($userMap[$item['userId']])
@@ -256,6 +290,43 @@ class Ticket extends BaseEntity {
             $model[] = $ticketModel;
         }
         return $model;
+    }
+
+    /**
+     * Datos del musculo o ejercicio propuesto para que el admin lo verifique: [type => [entityId => ref]]
+     */
+    private static function buildEntityRefMap(DbConnector $dbConnect, array $ticketList): array{
+        $idMap = [];
+        foreach ($ticketList as $ticket) {
+            /**  @var Ticket $ticket */
+            if($ticket->isCatalogRequest() && $ticket->getEntityRefId()){
+                $idMap[$ticket->type][] = $ticket->getEntityRefId();
+            }
+        }
+
+        $refMap = [];
+        foreach ($idMap[self::typeIdMuscleCreate] ?? [] as $muscleId) {
+            $muscle = Muscle::queryByDbId($dbConnect, $muscleId);
+            if($muscle){
+                $resource = Resource::queryByOwnerAndModelId($dbConnect, CoreModel::muscleModelId, $muscleId);
+                $refMap[self::typeIdMuscleCreate][$muscleId] = $muscle->buildApiModel() + ['image_url' => $resource?->getPublicUrl()];
+            }
+        }
+        foreach ($idMap[self::typeIdExerciseCreate] ?? [] as $exerciseId) {
+            $exercise = Exercise::queryByDbId($dbConnect, $exerciseId);
+            if($exercise){
+                $resource = Resource::queryByOwnerAndModelId($dbConnect, CoreModel::exerciseModelId, $exerciseId);
+                $refMap[self::typeIdExerciseCreate][$exerciseId] = $exercise->buildApiModel() + [
+                    'image_url' => $resource?->getPublicUrl(),
+                    'muscleName' => Muscle::queryByDbId($dbConnect, $exercise->getMuscleId())?->getName(),
+                ];
+            }
+        }
+        return $refMap;
+    }
+
+    static function stateSlugFromId(int $stateId): ?string{
+        return self::stateSlugMap[$stateId] ?? null;
     }
 
     static function stateIdFromSlug(?string $slug): ?int{
@@ -293,7 +364,7 @@ class Ticket extends BaseEntity {
                 $gymJoin->where('t.type', self::typeIdGymJoin)->where('g.owner_id', $userId);
             });
             if($isAdmin){
-                $where->orWhere('t.type', self::typeIdTrainerRequest);
+                $where->orWhereIn('t.type', self::adminTypeIdList);
             }
         });
         return $dbConnect->fetchAll($query, [self::class, 'row2Ticket']);

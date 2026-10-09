@@ -99,7 +99,11 @@
                     </small>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">{{ $isEdit ? 'Guardar cambios' : 'Crear ejercicio' }}</button>
+                @include('layouts._partials.visibility-field', ['entity' => $exercise, 'isAdmin' => $data['isAdmin']])
+
+                <button type="submit" class="btn btn-primary w-100">
+                    {{ $isEdit ? 'Guardar cambios' : ($data['isAdmin'] ? 'Crear ejercicio' : 'Enviar a revision') }}
+                </button>
             </form>
         </div>
     </section>

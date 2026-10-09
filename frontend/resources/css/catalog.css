@@ -98,3 +98,75 @@
         padding: 1.4rem;
     }
 }
+
+/* publico / privado en musculos y ejercicios */
+.catalog-visibility {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.catalog-visibility-options {
+    display: grid;
+    gap: .5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.catalog-visibility-option {
+    align-items: center;
+    background-color: #0b0b0b;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    color: #d8d8d8;
+    cursor: pointer;
+    display: flex;
+    gap: .75rem;
+    padding: .7rem .9rem;
+}
+
+.catalog-visibility-option i {
+    color: #8f8f8f;
+    font-size: 1.1rem;
+}
+
+.catalog-visibility-option span {
+    display: flex;
+    flex-direction: column;
+}
+
+.catalog-visibility-option small {
+    color: #8f8f8f;
+}
+
+.btn-check:checked + .catalog-visibility-option {
+    border-color: #c1121f;
+    box-shadow: 0 0 0 .15rem rgba(193, 18, 31, .25);
+}
+
+.btn-check:checked + .catalog-visibility-option i {
+    color: #ff4d5a;
+}
+
+.btn-check:focus-visible + .catalog-visibility-option {
+    outline: 2px solid #ff4d5a;
+}
+
+.catalog-private-badge {
+    align-items: center;
+    background-color: rgba(193, 18, 31, .15);
+    border: 1px solid #5a1a1f;
+    border-radius: 999px;
+    color: #ff4d5a;
+    display: inline-flex;
+    font-size: .75rem;
+    font-weight: 700;
+    gap: .3rem;
+    padding: .1rem .6rem;
+}
+
+.catalog-private-badge-floating {
+    left: .75rem;
+    position: absolute;
+    top: .75rem;
+    z-index: 1;
+}

@@ -47,19 +47,14 @@ document.addEventListener('submit', async (event) => {
 });
 
 // Botones con data-confirm-reject: confirman el rechazo de una solicitud antes de enviar su formaction.
-document.addEventListener('click', async (event) => {
-    const button = event.target.closest('button[data-confirm-reject]');
-
-    if (!button) {
-        return;
-    }
-
+$(document).on('click', 'button[data-confirm-reject]', async function (event) {
     event.preventDefault();
+    const $button = $(this);
 
     const result = await Swal.fire({
         icon: 'warning',
         title: 'Rechazar solicitud',
-        text: `Rechazaras la solicitud ${button.dataset.ticketNumber} de ${button.dataset.requesterName}. ¿Estas seguro?`,
+        text: `Rechazaras la solicitud ${$button.data('ticketNumber')} de ${$button.data('requesterName')}. ¿Estas seguro?`,
         showCancelButton: true,
         confirmButtonText: 'Rechazar',
         cancelButtonText: 'Cancelar',
@@ -68,9 +63,9 @@ document.addEventListener('click', async (event) => {
     });
 
     if (result.isConfirmed) {
-        const form = button.form;
-        form.action = button.formAction;
-        form.submit();
+        const $form = $button.closest('form');
+        $form.attr('action', $button.attr('formaction'));
+        $form.get(0).submit();
     }
 });
 

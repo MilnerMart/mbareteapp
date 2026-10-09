@@ -6,9 +6,11 @@ use App\Http\Requests\RoutineAssignRequest;
 use App\Http\Requests\RoutineExerciseRequest;
 use App\Http\Requests\RoutineRequest;
 use App\Http\Resources\UserResource;
+use App\Core\CoreModel;
 use App\Models\Exercise;
 use App\Models\GymUser;
 use App\Models\Permit;
+use App\Models\Resource;
 use App\Models\Routine;
 use App\Models\RoutineExercise;
 use App\Models\User;
@@ -77,7 +79,8 @@ class RoutineController extends Controller
         $owner = User::find($routine->getOwnerId());
         $routineModel = $routine->buildApiModel();
         $routineModel['canEdit'] = $this->canEditRoutine($user, $routine);
-        $routineModel['exercises'] = RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId());
+        $routineModel['exercises'] = $this->addExerciseResources(
+            RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId()));
         $routineModel['refs']['owner'] = $owner ? UserResource::make($owner) : null;
         if($user->hasSeeAllPermit($dbConnector)){
             $routineModel['assignedUsers'] = $this->buildAssignedUserList($routine);
@@ -112,6 +115,10 @@ class RoutineController extends Controller
         $routine = $this->queryEditableRoutineOrFail($request, $id);
         $validated = $request->validated();
         $exercise = Exercise::queryByDbIdOrFail($dbConnector, $validated['exercise_id']);
+        // lo privado de otro usuario o lo pendiente de aprobacion no se puede sumar a una rutina
+        if(!$exercise->isApproved() || !$exercise->canBeSeenBy($request->user()->id, $request->user()->hasSeeAllPermit($dbConnector))){
+            throw PublicException::validationError('El ejercicio no esta disponible para tus rutinas');
+        }
         RoutineExercise::addOrUpdateRoutineExercise(
             $dbConnector,
             $routine->getEntityId(),
@@ -161,6 +168,21 @@ class RoutineController extends Controller
     /**
      * Usuarios con la rutina asignada y los gimnasios a los que pertenecen.
      */
+    /**
+     * Imagenes de cada ejercicio para mostrarlas al abrirlo desde la rutina. Viajan con la rutina para que
+     * el alumno vea tambien los ejercicios privados que su entrenador le asigno.
+     */
+    private function addExerciseResources(array $exerciseList): array {
+        $dbConnector = $this->getDbConnector();
+        foreach ($exerciseList as &$exercise) {
+            $exercise['resources'] = array_map(
+                fn(Resource $resource) => $resource->getPublicUrl(),
+                Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise['id'])
+            );
+        }
+        return $exerciseList;
+    }
+
     private function buildAssignedUserList(Routine $routine): array {
         $dbConnector = $this->getDbConnector();
         $userIdList = UserRoutine::queryUserIdListByRoutineId($dbConnector, $routine->getEntityId());
