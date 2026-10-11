@@ -72,3 +72,329 @@
     margin-top: .4rem;
     padding: .1rem .6rem;
 }
+
+.config-back-link {
+    align-items: center;
+    color: #a8a8a8;
+    display: inline-flex;
+    font-size: .9rem;
+    gap: .4rem;
+    margin-bottom: .75rem;
+    text-decoration: none;
+}
+
+.config-back-link:hover {
+    color: #ffffff;
+}
+
+.config-panel,
+.config-provider {
+    background: linear-gradient(145deg, #181818, #101010);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+}
+
+.config-panel h2,
+.config-subtitle {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.config-empty,
+.config-optional {
+    color: #8f8f8f;
+    font-size: .9rem;
+}
+
+.config-empty {
+    margin-bottom: 1rem;
+}
+
+.config-optional {
+    margin: 0;
+}
+
+.config-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.config-form .form-label {
+    color: #dddddd;
+}
+
+.config-form .form-control,
+.config-form .form-select {
+    background-color: #0b0b0b;
+    border-color: #303030;
+    color: #f5f5f5;
+}
+
+.config-form .form-control::placeholder {
+    color: #777;
+}
+
+.config-form .form-control:focus,
+.config-form .form-select:focus {
+    border-color: #c1121f;
+    box-shadow: 0 0 0 .2rem rgba(193, 18, 31, .2);
+}
+
+.config-provider-form {
+    align-items: end;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.config-provider-form-url {
+    grid-column: span 2;
+}
+
+.config-form .btn,
+.config-btn,
+.config-remove-btn {
+    align-items: center;
+    display: inline-flex;
+    font-weight: 700;
+    gap: .5rem;
+    justify-content: center;
+}
+
+.config-btn,
+.config-icon-btn {
+    background-color: #0b0b0b;
+    border: 1px solid #303030;
+    color: #d8d8d8;
+}
+
+.config-btn:hover,
+.config-btn:focus,
+.config-icon-btn:hover,
+.config-icon-btn:focus {
+    border-color: #c1121f;
+    color: #ffffff;
+}
+
+.config-icon-btn {
+    flex: 0 0 auto;
+    height: 38px;
+    padding: 0;
+    width: 38px;
+}
+
+.config-remove-btn {
+    background-color: transparent;
+    border: 1px solid #5a1a1f;
+    color: #ff4d5a;
+}
+
+.config-remove-btn:hover,
+.config-remove-btn:focus {
+    background-color: #c1121f;
+    border-color: #c1121f;
+    color: #ffffff;
+}
+
+.config-chip {
+    align-items: center;
+    background-color: #0b0b0b;
+    border: 1px solid #303030;
+    border-radius: 999px;
+    color: #d8d8d8;
+    display: inline-flex;
+    font-size: .75rem;
+    font-weight: 600;
+    gap: .3rem;
+    padding: .1rem .55rem;
+}
+
+.config-chip i {
+    color: #ff4d5a;
+}
+
+.config-provider-head {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.config-provider-head form,
+.config-credential form {
+    margin: 0;
+}
+
+.config-provider-title {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.config-provider-title strong {
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.config-provider-url {
+    color: #a8a8a8;
+    font-size: .85rem;
+    overflow-wrap: anywhere;
+    width: 100%;
+}
+
+.config-credential-list {
+    display: grid;
+    gap: .6rem;
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.config-credential {
+    align-items: center;
+    background-color: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: .75rem 1rem;
+}
+
+.config-credential-info {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-width: 0;
+}
+
+.config-credential-info strong {
+    color: #ffffff;
+}
+
+.config-credential-keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.config-credential-setting {
+    color: #a8a8a8;
+    font-size: .85rem;
+    overflow-wrap: anywhere;
+}
+
+.config-credential-new summary {
+    align-items: center;
+    color: #ff4d5a;
+    cursor: pointer;
+    display: inline-flex;
+    font-weight: 700;
+    gap: .4rem;
+    list-style: none;
+}
+
+.config-credential-new summary::-webkit-details-marker {
+    display: none;
+}
+
+.config-credential-new[open] summary {
+    margin-bottom: 1rem;
+}
+
+.config-kv {
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    display: grid;
+    gap: .6rem;
+    padding: .75rem 1rem 1rem;
+}
+
+.config-kv legend {
+    color: #dddddd;
+    float: none;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    padding: 0 .35rem;
+    width: auto;
+}
+
+.config-kv-rows {
+    display: grid;
+    gap: .5rem;
+}
+
+.config-kv-row {
+    display: flex;
+    gap: .5rem;
+}
+
+.config-kv-row .form-control {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.config-kv [data-kv-add] {
+    justify-self: start;
+}
+
+.config-action-list {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.config-action {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.config-action .form-label {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin: 0;
+}
+
+@media (max-width: 575.98px) {
+    .config-provider-form-url {
+        grid-column: auto;
+    }
+
+    .config-kv-row {
+        flex-wrap: wrap;
+    }
+
+    .config-kv-row .form-control {
+        flex-basis: calc(100% - 46px);
+    }
+}
+
+.config-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.config-header .config-chip-list {
+    margin-top: .5rem;
+}
+
+.config-header .config-optional {
+    margin-top: .5rem;
+}
+
+.config-danger-zone {
+    border-top: 1px solid #2a2a2a;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+}

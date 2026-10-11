@@ -259,4 +259,44 @@ class ApiClientService
     public function getRegisterRoles(){
         return $this->get('/auth/register/roles');
     }
+
+    public function getConfigProviderTypes(){
+        return $this->get('/config/provider-types');
+    }
+
+    public function getConfigProviders(){
+        return $this->get('/config/providers');
+    }
+
+    public function getConfigProvider(int $id){
+        return $this->get('/config/providers/'.$id);
+    }
+
+    public function updateConfigProvider(int $id, array $params){
+        return $this->put('/config/providers/'.$id, $params);
+    }
+
+    public function createConfigProvider(array $params){
+        return $this->post('/config/providers', $params);
+    }
+
+    public function deleteConfigProvider(int $id){
+        return $this->delete('/config/providers/'.$id);
+    }
+
+    public function createProviderConfig(int $providerId, array $params){
+        return $this->post('/config/providers/'.$providerId.'/configs', $params);
+    }
+
+    public function deleteProviderConfig(int $id){
+        return $this->delete('/config/provider-configs/'.$id);
+    }
+
+    public function getCoreConfig(){
+        return $this->get('/config/core');
+    }
+
+    public function updateCoreConfig(array $actions){
+        return $this->put('/config/core', ['actions' => $actions]);
+    }
 }

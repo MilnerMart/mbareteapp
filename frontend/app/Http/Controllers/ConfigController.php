@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ApiClientService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ConfigController extends Controller
@@ -12,30 +15,170 @@ class ConfigController extends Controller
      */
     private const sectionList = [
         [
-            'key' => 'resources',
-            'title' => 'Proveedores de recursos',
-            'description' => 'Donde se guardan las imagenes y videos de musculos, ejercicios, gimnasios y perfiles.',
-            'icon' => 'fa-solid fa-cloud-arrow-up',
-            'route' => null,
+            'key' => 'core',
+            'title' => 'Credenciales de la app',
+            'description' => 'Que credencial usa la app para cada accion: enviar correos, guardar y obtener recursos.',
+            'icon' => 'fa-solid fa-sliders',
+            'route' => 'config.core',
         ],
         [
-            'key' => 'mail',
-            'title' => 'Correo',
-            'description' => 'Servidor y remitente de los correos que envia la app.',
-            'icon' => 'fa-solid fa-envelope',
-            'route' => null,
-        ],
-        [
-            'key' => 'messaging',
-            'title' => 'Mensajeria',
-            'description' => 'Canales para avisar a los usuarios: WhatsApp, SMS y notificaciones.',
-            'icon' => 'fa-solid fa-comment-dots',
-            'route' => null,
+            'key' => 'providers',
+            'title' => 'Proveedores',
+            'description' => 'Servicios externos a los que se conecta la app y sus credenciales.',
+            'icon' => 'fa-solid fa-plug',
+            'route' => 'config.providers',
         ],
     ];
+
+    const capabilityMap = [
+        'resources' => 'Recursos',
+        'messaging' => 'Mensajeria',
+    ];
+
+    const channelMap = [
+        'email' => 'Email',
+        'sms' => 'SMS',
+        'push' => 'Push',
+        'whatsapp' => 'WhatsApp',
+    ];
+
+    private ApiClientService $apiClient;
+
+    public function __construct(ApiClientService $apiClient){
+        $this->apiClient = $apiClient;
+    }
 
     public function index(): View{
         $data['sections'] = self::sectionList;
         return $this->renderView('config.index', compact('data'));
+    }
+
+    public function providers(): View{
+        $data['types'] = $this->apiClient->getConfigProviderTypes() ?? [];
+        $data['providers'] = $this->apiClient->getConfigProviders() ?? [];
+        $data['capabilities'] = self::capabilityMap;
+        return $this->renderView('config.providers', compact('data'));
+    }
+
+    public function storeProvider(Request $request): RedirectResponse{
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100'],
+            'type' => ['required', 'string', 'max:50'],
+            'base_url' => ['nullable', 'url', 'max:255'],
+        ]);
+
+        $response = $this->apiClient->createConfigProvider($validated);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['provider' => $this->apiErrorMessage($response, 'No pudimos crear el proveedor.')])->withInput();
+        }
+
+        return redirect()->route('config.providers.show', $response['data']['id'])
+            ->with('config_saved', 'Proveedor creado. Ahora agregale una credencial.');
+    }
+
+    public function showProvider(int $id): RedirectResponse|View{
+        $provider = $this->apiClient->getConfigProvider($id);
+        if(!$provider){
+            return redirect()->route('config.providers');
+        }
+
+        $data['provider'] = $provider;
+        $data['capabilities'] = self::capabilityMap;
+        $data['channels'] = self::channelMap;
+        return $this->renderView('config.provider', compact('data'));
+    }
+
+    public function updateProvider(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100'],
+            'base_url' => ['nullable', 'url', 'max:255'],
+        ]);
+
+        $response = $this->apiClient->updateConfigProvider($id, $validated);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['provider' => $this->apiErrorMessage($response, 'No pudimos actualizar el proveedor.')])->withInput();
+        }
+
+        return back()->with('config_saved', 'Proveedor actualizado.');
+    }
+
+    public function destroyProvider(int $id): RedirectResponse{
+        $response = $this->apiClient->deleteConfigProvider($id);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['provider' => $this->apiErrorMessage($response, 'No pudimos eliminar el proveedor.')]);
+        }
+
+        return redirect()->route('config.providers')->with('config_saved', 'Proveedor eliminado.');
+    }
+
+    public function storeProviderConfig(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'config_name' => ['required', 'string', 'min:2', 'max:100'],
+            'credentials' => ['nullable', 'array', 'max:20'],
+            'credentials.*.key' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9_.-]+$/'],
+            'credentials.*.value' => ['nullable', 'string', 'max:4000'],
+            'settings' => ['nullable', 'array', 'max:20'],
+            'settings.*.key' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9_.-]+$/'],
+            'settings.*.value' => ['nullable', 'string', 'max:255'],
+        ], [
+            'credentials.*.key.regex' => 'El nombre de cada credencial solo puede tener letras, numeros, punto, guion o guion bajo.',
+            'settings.*.key.regex' => 'El nombre de cada ajuste solo puede tener letras, numeros, punto, guion o guion bajo.',
+        ]);
+
+        $response = $this->apiClient->createProviderConfig($id, [
+            'name' => $validated['config_name'],
+            'credentials' => $this->rowsToMap($validated['credentials'] ?? []),
+            'settings' => $this->rowsToMap($validated['settings'] ?? []),
+        ]);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['provider_config' => $this->apiErrorMessage($response, 'No pudimos guardar la credencial.')])
+                ->withInput($request->except('credentials'));
+        }
+
+        return back()->with('config_saved', 'Credencial guardada.');
+    }
+
+    public function destroyProviderConfig(int $id): RedirectResponse{
+        $response = $this->apiClient->deleteProviderConfig($id);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['provider_config' => $this->apiErrorMessage($response, 'No pudimos eliminar la credencial.')]);
+        }
+
+        return back()->with('config_saved', 'Credencial eliminada.');
+    }
+
+    public function core(): View{
+        $data['actions'] = $this->apiClient->getCoreConfig() ?? [];
+        $data['capabilities'] = self::capabilityMap;
+        $data['channels'] = self::channelMap;
+        return $this->renderView('config.core', compact('data'));
+    }
+
+    public function updateCore(Request $request): RedirectResponse{
+        $validated = $request->validate([
+            'actions' => ['required', 'array'],
+            'actions.*' => ['nullable', 'integer'],
+        ]);
+
+        $response = $this->apiClient->updateCoreConfig($validated['actions']);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['core' => $this->apiErrorMessage($response, 'No pudimos guardar la configuracion.')]);
+        }
+
+        return back()->with('config_saved', 'Configuracion guardada.');
+    }
+
+    /**
+     * Filas [key, value] del formulario a ['key' => 'value'], sin las que quedaron vacias.
+     */
+    private function rowsToMap(array $rowList): array{
+        $map = [];
+        foreach ($rowList as $row) {
+            $key = trim($row['key'] ?? '');
+            if($key !== '' && ($row['value'] ?? '') !== ''){
+                $map[$key] = $row['value'];
+            }
+        }
+        return $map;
     }
 }

@@ -98,5 +98,14 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::middleware('frontend.config')->prefix('/config')->group(function () {
         Route::get('/', [ConfigController::class, 'index'])->name('config.index');
+        Route::get('/core', [ConfigController::class, 'core'])->name('config.core');
+        Route::put('/core', [ConfigController::class, 'updateCore'])->name('config.core.update');
+        Route::get('/providers', [ConfigController::class, 'providers'])->name('config.providers');
+        Route::post('/providers', [ConfigController::class, 'storeProvider'])->name('config.providers.store');
+        Route::get('/providers/{id}', [ConfigController::class, 'showProvider'])->whereNumber('id')->name('config.providers.show');
+        Route::put('/providers/{id}', [ConfigController::class, 'updateProvider'])->whereNumber('id')->name('config.providers.update');
+        Route::delete('/providers/{id}', [ConfigController::class, 'destroyProvider'])->whereNumber('id')->name('config.providers.destroy');
+        Route::post('/providers/{id}/configs', [ConfigController::class, 'storeProviderConfig'])->whereNumber('id')->name('config.provider-configs.store');
+        Route::delete('/provider-configs/{id}', [ConfigController::class, 'destroyProviderConfig'])->whereNumber('id')->name('config.provider-configs.destroy');
     });
 });
