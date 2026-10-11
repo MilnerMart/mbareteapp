@@ -21,7 +21,8 @@ class Permit extends BaseEntity {
     private const myTable = DbSchema::tablePermits;
 
     const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity', assignRoutinesPermitSlug = 'Assing-routines',
-        belongsToGymPermitSlug = 'belongs-to-gym', createCatalogEntityPermitSlug = 'create-catalog-entity';
+        belongsToGymPermitSlug = 'belongs-to-gym', createCatalogEntityPermitSlug = 'create-catalog-entity',
+        allowConfigPermitSlug = 'allow-config';
 
     private string $name, $slug;
 
