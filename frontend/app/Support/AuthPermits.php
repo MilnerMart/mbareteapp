@@ -9,7 +9,8 @@ namespace App\Support;
 class AuthPermits
 {
     const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity', assignRoutinesPermitSlug = 'Assing-routines',
-        belongsToGymPermitSlug = 'belongs-to-gym', createCatalogEntityPermitSlug = 'create-catalog-entity';
+        belongsToGymPermitSlug = 'belongs-to-gym', createCatalogEntityPermitSlug = 'create-catalog-entity',
+        allowConfigPermitSlug = 'allow-config';
 
     static function hasPermit(string $permitSlug): bool
     {
@@ -43,5 +44,13 @@ class AuthPermits
     static function canAssignRoutines(): bool
     {
         return self::hasPermit(self::assignRoutinesPermitSlug);
+    }
+
+    /**
+     * Ver y cambiar la configuracion de la app (proveedores, correo, mensajeria...).
+     */
+    static function canConfigureApp(): bool
+    {
+        return self::hasPermit(self::allowConfigPermitSlug);
     }
 }

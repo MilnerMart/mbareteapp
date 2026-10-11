@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\GymController;
 use App\Http\Controllers\MediaController;
@@ -93,5 +94,9 @@ Route::middleware('frontend.auth')->group(function () {
         Route::get('/', [TicketController::class, 'index'])->name('ticket.index');
         Route::post('/{id}/approve', [TicketController::class, 'approve'])->whereNumber('id')->name('ticket.approve');
         Route::post('/{id}/reject', [TicketController::class, 'reject'])->whereNumber('id')->name('ticket.reject');
+    });
+
+    Route::middleware('frontend.config')->prefix('/config')->group(function () {
+        Route::get('/', [ConfigController::class, 'index'])->name('config.index');
     });
 });

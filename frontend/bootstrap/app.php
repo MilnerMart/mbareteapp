@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureBelongsToGym;
+use App\Http\Middleware\EnsureCanConfigureApp;
 use App\Http\Middleware\EnsureCanCreateCatalog;
 use App\Http\Middleware\EnsureCanManageGyms;
 use App\Http\Middleware\EnsureFrontendAuthenticated;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'frontend.admin' => EnsureIsAdmin::class,
             'frontend.member' => EnsureBelongsToGym::class,
             'frontend.catalog' => EnsureCanCreateCatalog::class,
+            'frontend.config' => EnsureCanConfigureApp::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

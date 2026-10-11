@@ -43,6 +43,12 @@
                         </li>
                     @endif
 
+                    @if($canConfigureApp ?? false)
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('config.index') }}">Configuración</a>
+                        </li>
+                    @endif
+
                     @if(session('auth_user'))
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('user.profile', session('auth_user.id')) }}">Perfil</a>

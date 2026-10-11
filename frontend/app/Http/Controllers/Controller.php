@@ -16,6 +16,7 @@ abstract class Controller
             'canManageGyms' => AuthPermits::canManageGyms(),
             'canBelongToGym' => AuthPermits::canBelongToGym(),
             'canCreateCatalog' => AuthPermits::canCreateCatalog(),
+            'canConfigureApp' => AuthPermits::canConfigureApp(),
         ]);
     }
 
