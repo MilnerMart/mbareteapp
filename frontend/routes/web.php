@@ -39,12 +39,16 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
 
+    Route::delete('/exercise/{id}/resource/{resourceId}', [ExerciseController::class, 'removeResource'])->whereNumber(['id', 'resourceId'])->name('exercise.resource.remove');
+
     // los entrenadores proponen musculos y ejercicios, el admin los revisa
     Route::middleware('frontend.catalog')->group(function () {
         Route::get('/muscle/create', [MuscleController::class, 'create'])->name('muscle.create');
         Route::post('/muscle', [MuscleController::class, 'store'])->name('muscle.store');
         Route::get('/muscle/{id}/exercise/create', [ExerciseController::class, 'create'])->name('exercise.create');
         Route::post('/exercise', [ExerciseController::class, 'store'])->name('exercise.store');
+        Route::get('/public-resources/search', [ExerciseController::class, 'searchPublicResources'])->name('public-resource.search');
+        Route::get('/public-resources/{itemKey}/media', [ExerciseController::class, 'publicResourceMedia'])->name('public-resource.media');
     });
 
     Route::middleware('frontend.admin')->group(function () {

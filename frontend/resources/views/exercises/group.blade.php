@@ -41,6 +41,11 @@
                             <span class="catalog-private-badge catalog-private-badge-floating"><i class="fa-solid fa-lock"></i> Privado</span>
                         @endif
                         <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}" class="card-img-top" style="border-radius: 10%;"></a>
+                        <div class="card-body pb-0">
+                            <h5 class="card-title text-center mb-0">
+                                <a href="{{ route('exercise.resource', $exercise['id']) }}" class="catalog-card-title-link">{{ $exercise['name'] }}</a>
+                            </h5>
+                        </div>
                         @if ($isAdmin)
                             <div class="card-body d-flex gap-2">
                                 <a href="{{ route('exercise.edit', $exercise['id']) }}" class="btn btn-outline-secondary btn-sm flex-fill">

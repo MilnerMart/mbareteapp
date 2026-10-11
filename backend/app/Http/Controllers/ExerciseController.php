@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\ExerciseRequest;
+use App\Http\Requests\PublicResourceAttachRequest;
 use App\Models\Exercise;
 use App\Models\Muscle;
+use App\Models\Permit;
 use App\Models\Resource;
 use App\Models\Ticket;
+use App\Models\User;
 use App\PublicException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -51,8 +54,7 @@ class ExerciseController extends Controller
 
         [$resource, $ticket] = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $request, $exercise, $user, $isAdmin){
             $exercise->writeToDb($dbConnector);
-            $resource = $this->getResourceService()->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
-                $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
+            $resource = $this->saveExerciseResources($request, $exercise);
             $ticket = $isAdmin ? null
                 : Ticket::addNewCatalogTicket($dbConnector, Ticket::typeIdExerciseCreate, $user->id, $exercise->getEntityId());
             return [$resource, $ticket];
@@ -71,6 +73,7 @@ class ExerciseController extends Controller
 
         $model = $exercise->buildApiModel();
         $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
+        $model['canManageResources'] = $this->canManageExerciseResources($request->user('sanctum'), $exercise);
         return $this->successApiResponse($model, 200);
     }
 
@@ -92,11 +95,7 @@ class ExerciseController extends Controller
         }
         $exercise->writeToDb($dbConnector);
 
-        $resource = null;
-        if($request->hasFile('image')){
-            $resource = $this->getResourceService()->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
-                $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
-        }
+        $resource = $this->saveExerciseResources($request, $exercise);
         $resource ??= Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
 
         $model = $exercise->buildApiModel();
@@ -139,9 +138,72 @@ class ExerciseController extends Controller
             /**  @var Resource $resource */
             $resourceModel = $resource->buildApiModel();
             $resourceModel['url'] = $this->getResourceService()->obtainPublicUrl($resource);
-            $model[] = $resourceModel;
+            if($resourceModel['url']){
+                $model[] = $resourceModel;
+            }
         }
         return $this->successApiResponse($model);
+    }
+
+    public function addResource(PublicResourceAttachRequest $request, string $id): JsonResponse {
+        $exercise = Exercise::queryByDbIdOrFail($this->getDbConnector(), (int)$id);
+        $this->manageExerciseResourcesOrFail($request->user(), $exercise);
+
+        $resource = $this->getResourceService()->attachPublicResource(CoreModel::exerciseModelId, $exercise->getEntityId(), $request->validated()['key']);
+        $model = $resource->buildApiModel();
+        $model['url'] = $this->getResourceService()->obtainPublicUrl($resource);
+        return $this->successApiResponse($model, 201);
+    }
+
+    public function removeResource(Request $request, string $id, string $resourceId): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $exercise = Exercise::queryByDbIdOrFail($dbConnector, (int)$id);
+        $this->manageExerciseResourcesOrFail($request->user(), $exercise);
+
+        $resource = Resource::queryByDbId($dbConnector, (int)$resourceId);
+        if(!$resource || $resource->getEntityModelId() !== CoreModel::exerciseModelId || $resource->getOwnerId() !== $exercise->getEntityId()){
+            throw PublicException::notFoundError('No se encuentra el recurso en este ejercicio');
+        }
+        $mainResource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
+        if(!$resource->isPublicResource() || $mainResource?->getEntityId() === $resource->getEntityId()){
+            throw PublicException::validationError('Solo se pueden quitar recursos publicos extra; la imagen principal se cambia editando el ejercicio');
+        }
+        $resource->setStatusId(EntityStatus::statusIdDeleted);
+        $resource->writeToDb($dbConnector);
+        return $this->successApiResponse();
+    }
+
+    private function saveExerciseResources(ExerciseRequest $request, Exercise $exercise): ?Resource {
+        $resourceService = $this->getResourceService();
+        $validated = $request->validated();
+        $resource = null;
+        if($request->hasFile('image')){
+            $resource = $resourceService->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
+                $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
+        } elseif(!empty($validated['public_resource_key'])){
+            $resource = $resourceService->saveEntityPublicImage(CoreModel::exerciseModelId, $exercise->getEntityId(),
+                $validated['public_resource_key'], $exercise->getName(), $exercise->getSlug());
+        }
+
+        $mediaKeyList = array_diff(array_unique($validated['public_resource_media_keys'] ?? []), [$validated['public_resource_key'] ?? null]);
+        foreach ($mediaKeyList as $mediaKey) {
+            $resourceService->attachPublicResource(CoreModel::exerciseModelId, $exercise->getEntityId(), $mediaKey);
+        }
+        return $resource;
+    }
+
+    private function canManageExerciseResources(?User $user, Exercise $exercise): bool {
+        if(!$user){
+            return false;
+        }
+        return $this->isAdminViewer($user)
+            || ($exercise->getOwnerId() === $user->id && $user->hasPermit($this->getDbConnector(), Permit::createCatalogEntityPermitSlug));
+    }
+
+    private function manageExerciseResourcesOrFail(?User $user, Exercise $exercise): void {
+        if(!$this->canManageExerciseResources($user, $exercise)){
+            throw PublicException::forbiddenError('No puedes cambiar los recursos de este ejercicio');
+        }
     }
 
     /**

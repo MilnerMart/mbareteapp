@@ -12,6 +12,7 @@ class ProviderClientRegistry {
     const capabilityMap = [
         MessagingApi::class => 'messaging',
         ResourceApi::class => 'resources',
+        PublicResourceApi::class => 'public-resources',
     ];
 
     static function clientClassMap(): array{

@@ -414,7 +414,8 @@
     text-align: left;
 }
 
-.routine-exercise-detail img {
+.routine-exercise-detail img,
+.routine-exercise-detail video {
     border-radius: 8px;
     max-height: 360px;
     object-fit: contain;

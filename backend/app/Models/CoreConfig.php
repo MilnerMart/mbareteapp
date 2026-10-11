@@ -13,6 +13,7 @@ use App\Models\BaseEntity;
 use App\PublicException;
 use App\ServiceApi\MessagingApi;
 use App\ServiceApi\ProviderClientRegistry;
+use App\ServiceApi\PublicResourceApi;
 use App\ServiceApi\ResourceApi;
 use Illuminate\Database\Query\Builder;
 use stdClass;
@@ -24,11 +25,12 @@ class CoreConfig extends BaseEntity {
     private const myTable = DbSchema::tableCoreConfigs;
 
     const actionSendEmail = 'send-email', actionSendSms = 'send-sms', actionSendPush = 'send-push', actionSendWhatsapp = 'send-whatsapp',
-        actionStoreResources = 'store-resources', actionFetchResources = 'fetch-resources';
+        actionStoreResources = 'store-resources', actionFetchResources = 'fetch-resources', actionFetchPublicResources = 'fetch-public-resources';
 
     const actionMap = [
         self::actionStoreResources => ['label' => 'Almacenamiento de recursos', 'interface' => ResourceApi::class, 'channel' => null],
         self::actionFetchResources => ['label' => 'Obtener recursos', 'interface' => ResourceApi::class, 'channel' => null],
+        self::actionFetchPublicResources => ['label' => 'Recursos publicos', 'interface' => PublicResourceApi::class, 'channel' => null],
         self::actionSendEmail => ['label' => 'Envio de correos', 'interface' => MessagingApi::class, 'channel' => MessagingApi::channelEmail],
         self::actionSendSms => ['label' => 'Envio de SMS', 'interface' => MessagingApi::class, 'channel' => MessagingApi::channelSms],
         self::actionSendPush => ['label' => 'Notificaciones push', 'interface' => MessagingApi::class, 'channel' => MessagingApi::channelPush],

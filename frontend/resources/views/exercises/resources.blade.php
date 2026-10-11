@@ -2,6 +2,7 @@
     $exerciseResources = $data['exerciseResources'];
     $editableRoutines = $data['editableRoutines'];
     $exercise = $data['exercise'];
+    $canManageResources = $exercise['canManageResources'] ?? false;
 @endphp
 @extends('layouts.layout')
 @section('css')
@@ -32,8 +33,27 @@
                 <div class="col-12 col-md-10 col-lg-8 d-flex justify-content-center mb-4">
                     <div class="card exercise-card">
                         <div class="exercise-image-wrapper">
-                            <img src="{{ asset($resource['url']) }}" class="exercise-image">
+                            @if (($resource['kind'] ?? null) === 'video')
+                                <video src="{{ $resource['url'] }}" class="exercise-image" controls muted loop playsinline preload="metadata"></video>
+                            @else
+                                <img src="{{ asset($resource['url']) }}" class="exercise-image" alt="{{ $resource['name'] ?? $exercise['name'] }}">
+                            @endif
                         </div>
+                        @if ($resource['isPublic'] ?? false)
+                            <div class="exercise-resource-footer">
+                                <span class="exercise-resource-badge"><i class="fa-solid fa-globe" aria-hidden="true"></i> Recurso público</span>
+                                @if ($canManageResources)
+                                    <form method="POST" action="{{ route('exercise.resource.remove', [$exercise['id'], $resource['id']]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn routine-remove-btn btn-sm">
+                                            <i class="fa-solid fa-xmark"></i>
+                                            <span>Quitar</span>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach

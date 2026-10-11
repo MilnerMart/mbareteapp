@@ -19,6 +19,8 @@ class Resource extends BaseEntity {
     
     public const kindImg = 1, kindVideo= 5, kindGif= 11;
 
+    public const publicKeyPrefix = 'public:';
+
     private string $name, $url, $slug;
 
     private int $kind, $ownerId, $modelId;
@@ -56,6 +58,31 @@ class Resource extends BaseEntity {
         $this->url = $url;
     }
 
+    function getEntityModelId(): int{
+        return (int)$this->modelId;
+    }
+
+    function getOwnerId(): int{
+        return (int)$this->ownerId;
+    }
+
+    function getKind(): int{
+        return (int)$this->kind;
+    }
+
+    function setKind(int $kind): void{
+        $this->kind = $kind;
+    }
+
+    function isPublicResource(): bool{
+        return str_starts_with($this->url, self::publicKeyPrefix);
+    }
+
+    static function kindIdFromSlug(string $slug): ?int{
+        $kindId = array_search($slug, self::kindSlugMap, true);
+        return $kindId === false ? null : $kindId;
+    }
+
     function getUrl():string{
         return $this->url;
     }
@@ -84,6 +111,12 @@ class Resource extends BaseEntity {
         return $this->belongsTo(Exercise::class);
     }
 
+    private const kindSlugMap = [
+        self::kindGif => 'gif',
+        self::kindImg => 'image',
+        self::kindVideo => 'video',
+    ];
+
     private const kindMap = [
         self::kindGif => 'Gif',
         self::kindImg => 'Image',
@@ -96,6 +129,8 @@ class Resource extends BaseEntity {
             'name' =>  $this->getName(),
             'slug' =>  $this->getSlug(),
             'url' => $this->url,
+            'kind' => self::kindSlugMap[$this->getKind()] ?? null,
+            'isPublic' => $this->isPublicResource(),
         ];
     }
 
@@ -133,7 +168,7 @@ class Resource extends BaseEntity {
 
     static function queryByOwnerAndModelId(DbConnector $dbConnect, int $modelId, int $muscleId):?self{
         $query = Self::allocDbTable($dbConnect)->where('model_id', $modelId)
-        ->where('owner_id', $muscleId);
+        ->where('owner_id', $muscleId)->where('status', '!=', EntityStatus::statusIdDeleted)->orderBy('id');
         return $dbConnect->fetchSingle($query, [self::class ,'row2Resource']);
     }
 

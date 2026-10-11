@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
 use App\Support\AuthPermits;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -53,6 +54,32 @@ class ExerciseController extends Controller
         return $this->renderView('exercises.resources', compact('data'));
     }
 
+    public function searchPublicResources(Request $request): JsonResponse{
+        $response = $this->apiClient->searchPublicResources(trim((string)$request->query('q', '')));
+        return $this->publicResourceJson($response, 'No pudimos buscar recursos publicos.');
+    }
+
+    public function publicResourceMedia(string $itemKey): JsonResponse{
+        $response = $this->apiClient->getPublicResourceMedia($itemKey);
+        return $this->publicResourceJson($response, 'No pudimos cargar los recursos.');
+    }
+
+    public function removeResource(int $id, int $resourceId): RedirectResponse{
+        $response = $this->apiClient->removeExerciseResource($id, $resourceId);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['resource' => $this->apiErrorMessage($response, 'No pudimos quitar el recurso.')]);
+        }
+
+        return back()->with('routine_saved', 'Recurso quitado del ejercicio.');
+    }
+
+    private function publicResourceJson(?array $response, string $fallback): JsonResponse{
+        if(!$this->isApiSuccess($response)){
+            return response()->json(['success' => false, 'message' => $this->apiErrorMessage($response, $fallback)], 422);
+        }
+        return response()->json(['success' => true, 'data' => $response['data']]);
+    }
+
     public function create(int $muscleId): RedirectResponse|View{
         $muscle = $this->apiClient->getMuscle($muscleId);
         if(!$muscle){
@@ -63,6 +90,7 @@ class ExerciseController extends Controller
         $data['exercise'] = null;
         $data['muscles'] = [];
         $data['isAdmin'] = AuthPermits::isAdmin();
+        $data['publicProvider'] = $this->apiClient->getPublicResourceProvider();
         return $this->renderView('exercises.form', compact('data'));
     }
 
@@ -77,15 +105,16 @@ class ExerciseController extends Controller
         $data['exercise'] = $exercise;
         $data['muscles'] = $this->apiClient->getMuscles() ?? [];
         $data['isAdmin'] = AuthPermits::isAdmin();
+        $data['publicProvider'] = $this->apiClient->getPublicResourceProvider();
         return $this->renderView('exercises.form', compact('data'));
     }
 
     public function update(Request $request, int $id): RedirectResponse{
-        $validated = $request->validate($this->exerciseRules(false));
+        $validated = $request->validate($this->exerciseRules(false), $this->exerciseMessages());
 
         $image = $validated['image'] ?? null;
         unset($validated['image']);
-        $response = $this->apiClient->updateExercise($id, $validated, $image);
+        $response = $this->apiClient->updateExercise($id, array_filter($validated, fn($value) => $value !== null), $image);
 
         if(!$this->isApiSuccess($response)){
             return back()
@@ -107,6 +136,13 @@ class ExerciseController extends Controller
     }
 
     // la imagen es obligatoria al crear, al editar es opcional
+    private function exerciseMessages(): array{
+        return [
+            'image.required_without' => 'Sube una imagen o elige una imagen del recurso publico.',
+            'public_resource_key.prohibits' => 'Elige una sola imagen: subida o del recurso publico.',
+        ];
+    }
+
     private function exerciseRules(bool $imageRequired): array{
         return [
             'muscle_id' => ['required', 'integer'],
@@ -114,16 +150,19 @@ class ExerciseController extends Controller
             'description' => ['required', 'string', 'min:5', 'max:255'],
             'recommended_rest_time' => ['required', 'integer', 'min:1', 'max:600'],
             'is_public' => ['required', 'boolean'],
-            'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'image' => [$imageRequired ? 'required_without:public_resource_key' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'public_resource_key' => ['nullable', 'string', 'max:200', 'prohibits:image'],
+            'public_resource_media_keys' => ['nullable', 'array', 'max:10'],
+            'public_resource_media_keys.*' => ['string', 'max:200'],
         ];
     }
 
     public function store(Request $request): RedirectResponse{
-        $validated = $request->validate($this->exerciseRules(true));
+        $validated = $request->validate($this->exerciseRules(true), $this->exerciseMessages());
 
-        $image = $validated['image'];
+        $image = $validated['image'] ?? null;
         unset($validated['image']);
-        $response = $this->apiClient->createExercise($validated, $image);
+        $response = $this->apiClient->createExercise(array_filter($validated, fn($value) => $value !== null), $image);
 
         if(!$this->isApiSuccess($response)){
             return back()

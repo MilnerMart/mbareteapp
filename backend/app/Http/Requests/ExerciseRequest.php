@@ -29,8 +29,11 @@ class ExerciseRequest extends FormRequest
             'description' => 'required|min:5|max:255',
             'recommended_rest_time' => 'required|integer|min:1|max:600',
             'is_public' => ['sometimes', 'boolean'],
-            // la imagen es obligatoria al crear, al editar es opcional
-            'image' => [$this->isMethod('post') ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            // al crear se sube una imagen o se elige una del proveedor de recursos publicos; al editar ambas son opcionales
+            'image' => [$this->isMethod('post') ? 'required_without:public_resource_key' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'public_resource_key' => ['nullable', 'string', 'max:200', 'prohibits:image'],
+            'public_resource_media_keys' => ['nullable', 'array', 'max:10'],
+            'public_resource_media_keys.*' => ['string', 'max:200'],
         ];
     }
 }

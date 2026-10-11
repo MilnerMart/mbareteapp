@@ -175,10 +175,13 @@ class RoutineController extends Controller
     private function addExerciseResources(array $exerciseList): array {
         $dbConnector = $this->getDbConnector();
         foreach ($exerciseList as &$exercise) {
-            $exercise['resources'] = array_map(
-                fn(Resource $resource) => $this->getResourceService()->obtainPublicUrl($resource),
-                Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise['id'])
-            );
+            $exercise['resources'] = [];
+            foreach (Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise['id']) as $resource) {
+                $url = $this->getResourceService()->obtainPublicUrl($resource);
+                if($url){
+                    $exercise['resources'][] = ['url' => $url, 'kind' => $resource->buildApiModel()['kind']];
+                }
+            }
         }
         return $exerciseList;
     }

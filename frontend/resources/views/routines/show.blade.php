@@ -186,8 +186,12 @@
         // .text() y .attr() escapan: la descripcion la escribe un usuario
         const buildExerciseDetail = (exercise) => {
             const $container = $('<div>', { class: 'routine-exercise-detail' });
-            $.each(exercise.resources, (index, url) => {
-                $('<img>', { src: url, alt: exercise.name }).appendTo($container);
+            $.each(exercise.resources, (index, resource) => {
+                if (resource.kind === 'video') {
+                    $('<video>', { src: resource.url, controls: true, muted: true, loop: true, playsinline: true, preload: 'metadata' }).appendTo($container);
+                } else {
+                    $('<img>', { src: resource.url, alt: exercise.name }).appendTo($container);
+                }
             });
             $('<p>', { class: 'routine-exercise-detail-meta' })
                 .text(`${exercise.sets ?? '-'} series × ${exercise.reps ?? '-'} reps`

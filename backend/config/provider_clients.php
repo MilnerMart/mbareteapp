@@ -1,5 +1,6 @@
 <?php
 
+use App\ServiceApi\FreeExerciseDbApiClient;
 use App\ServiceApi\LocalStorageApiClient;
 
 /*
@@ -9,4 +10,5 @@ use App\ServiceApi\LocalStorageApiClient;
 */
 return [
     'local-storage' => LocalStorageApiClient::class,
+    'free-exercise-db' => FreeExerciseDbApiClient::class,
 ];

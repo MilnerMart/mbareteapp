@@ -6,6 +6,7 @@ use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\GymEntityController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\PermitController;
+use App\Http\Controllers\PublicResourceController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RoutineController;
@@ -42,6 +43,11 @@ Route::prefix('/v1')->group(function(){
         Route::put('/exercise/{id}', [ExerciseController::class, 'update']);
         Route::delete('/exercise/{id}', [ExerciseController::class, 'destroy']);
         Route::post('/exercise/{id}/resource', [ExerciseController::class, 'addResource']);
+        Route::delete('/exercise/{id}/resource/{resourceId}', [ExerciseController::class, 'removeResource']);
+
+        Route::get('/public-resources/provider', [PublicResourceController::class, 'provider']);
+        Route::get('/public-resources', [PublicResourceController::class, 'search']);
+        Route::get('/public-resources/{itemKey}/media', [PublicResourceController::class, 'media']);
 
         Route::prefix('resources')->group(function(){
             Route::get('/', [ResourceController::class, 'index']);

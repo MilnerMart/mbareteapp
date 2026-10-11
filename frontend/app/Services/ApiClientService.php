@@ -107,12 +107,28 @@ class ApiClientService
         return $this->get('/exercise/'.$id);
     }
 
+    public function removeExerciseResource(int $id, int $resourceId){
+        return $this->delete('/exercise/'.$id.'/resource/'.$resourceId);
+    }
+
+    public function getPublicResourceProvider(){
+        return $this->get('/public-resources/provider')['provider'] ?? null;
+    }
+
+    public function searchPublicResources(string $query){
+        return $this->request()->get($this->baseUrl.'/public-resources', ['q' => $query])->json();
+    }
+
+    public function getPublicResourceMedia(string $itemKey){
+        return $this->request()->get($this->baseUrl.'/public-resources/'.rawurlencode($itemKey).'/media')->json();
+    }
+
     public function getExerciseResources(int $id){
         return $this->get('/exercise/'.$id.'/resource');
     }
 
-    public function createExercise(array $params, UploadedFile $image){
-        return $this->postWithImage('/exercise', $params, 'image', $image);
+    public function createExercise(array $params, ?UploadedFile $image){
+        return $image ? $this->postWithImage('/exercise', $params, 'image', $image) : $this->post('/exercise', $params);
     }
 
     public function updateExercise(int $id, array $params, ?UploadedFile $image = null){

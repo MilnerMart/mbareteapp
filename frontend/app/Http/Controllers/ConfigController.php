@@ -33,6 +33,7 @@ class ConfigController extends Controller
     const capabilityMap = [
         'resources' => 'Recursos',
         'messaging' => 'Mensajeria',
+        'public-resources' => 'Recursos publicos',
     ];
 
     const channelMap = [
