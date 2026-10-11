@@ -8,8 +8,6 @@ use App\Models\User;
 use App\PublicException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -47,21 +45,11 @@ class UserController extends Controller
             throw PublicException::unAuthorizedError('No puedes cambiar la foto de otro usuario');
         }
 
-        $directory = public_path('images/profiles');
-        File::ensureDirectoryExists($directory);
+        $resourceService = $this->getResourceService();
+        $resourceKey = $resourceService->uploadFile($request->file('profile_image'), 'images/profiles');
+        $resourceService->deleteFile($user->profile_image_url);
 
-        $file = $request->file('profile_image');
-        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $file->move($directory, $filename);
-
-        if($user->profile_image_url){
-            $previousPath = public_path($user->profile_image_url);
-            if(File::exists($previousPath)){
-                File::delete($previousPath);
-            }
-        }
-
-        $user->profile_image_url = 'images/profiles/'.$filename;
+        $user->profile_image_url = $resourceKey;
         $user->save();
 
         return $this->successApiResponse(UserResource::make($user));

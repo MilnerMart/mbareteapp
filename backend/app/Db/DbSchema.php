@@ -16,5 +16,8 @@ class DbSchema{
     tableRoutineExercises = 'routine_exercises',
     tableUserRoutines = 'user_routines',
     tableTickets = 'tickets',
+    tableProviders = 'providers',
+    tableProviderConfigs = 'provider_configs',
+    tableCoreConfigs = 'core_configs',
     tableUsers = 'users';
 }

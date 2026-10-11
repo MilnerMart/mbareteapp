@@ -7,6 +7,7 @@ use App\Db\DbConnector;
 use App\Models\Permit;
 use App\Models\User;
 use App\PublicException;
+use App\Services\ResourceService;
 use Illuminate\Http\Request;
 
 abstract class Controller
@@ -15,12 +16,18 @@ abstract class Controller
 
     private DbConnector $dbConnector;
 
+    private ?ResourceService $resourceService = null;
+
     public function __construct( DbConnector $dbConnector ) {
         $this->dbConnector = $dbConnector;
     }
 
     function getDbConnector():DbConnector {
         return $this->dbConnector;
+    }
+
+    protected function getResourceService(): ResourceService {
+        return $this->resourceService ??= new ResourceService($this->dbConnector);
     }
 
     /**
@@ -39,6 +46,12 @@ abstract class Controller
             throw PublicException::forbiddenError('No tienes permisos para proponer musculos o ejercicios');
         }
         return $user;
+    }
+
+    protected function allowConfigPermitOrFail(?User $user): void {
+        if(!$user?->hasPermit($this->dbConnector, Permit::allowConfigPermitSlug)){
+            throw PublicException::forbiddenError('No tienes permisos para configurar la app');
+        }
     }
 
     protected function seeAllPermitOrFail(?User $user): void {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\GymEntityController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\PermitController;
@@ -85,6 +86,19 @@ Route::prefix('/v1')->group(function(){
         Route::prefix('roles')->group(function(){
             Route::get('/', [RoleController::class, 'index']);
             Route::post('/', [RoleController::class, 'store']);
+        });
+
+        Route::prefix('config')->group(function(){
+            Route::get('/provider-types', [ConfigController::class, 'providerTypeIndex']);
+            Route::get('/providers', [ConfigController::class, 'providerIndex']);
+            Route::post('/providers', [ConfigController::class, 'providerStore']);
+            Route::get('/providers/{id}', [ConfigController::class, 'providerShow']);
+            Route::put('/providers/{id}', [ConfigController::class, 'providerUpdate']);
+            Route::delete('/providers/{id}', [ConfigController::class, 'providerDestroy']);
+            Route::post('/providers/{id}/configs', [ConfigController::class, 'providerConfigStore']);
+            Route::delete('/provider-configs/{id}', [ConfigController::class, 'providerConfigDestroy']);
+            Route::get('/core', [ConfigController::class, 'coreIndex']);
+            Route::put('/core', [ConfigController::class, 'coreUpdate']);
         });
 
         Route::prefix('permits')->group(function(){

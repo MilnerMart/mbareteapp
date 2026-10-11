@@ -176,7 +176,7 @@ class RoutineController extends Controller
         $dbConnector = $this->getDbConnector();
         foreach ($exerciseList as &$exercise) {
             $exercise['resources'] = array_map(
-                fn(Resource $resource) => $resource->getPublicUrl(),
+                fn(Resource $resource) => $this->getResourceService()->obtainPublicUrl($resource),
                 Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise['id'])
             );
         }

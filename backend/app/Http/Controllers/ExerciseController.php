@@ -10,7 +10,6 @@ use App\Models\Muscle;
 use App\Models\Resource;
 use App\Models\Ticket;
 use App\PublicException;
-use App\Services\ResourceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,7 +23,7 @@ class ExerciseController extends Controller
             /**  @var Exercise $exercise */
             $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
             $exerciseModel = $exercise->buildApiModel();
-            $exerciseModel['image'] = $resource?->getPublicUrl();
+            $exerciseModel['image'] = $this->getResourceService()->obtainPublicUrl($resource);
             $model[] = $exerciseModel;
         }
         return $this->successApiResponse($model);
@@ -52,8 +51,7 @@ class ExerciseController extends Controller
 
         [$resource, $ticket] = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $request, $exercise, $user, $isAdmin){
             $exercise->writeToDb($dbConnector);
-            $service = new ResourceService($dbConnector);
-            $resource = $service->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
+            $resource = $this->getResourceService()->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
                 $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
             $ticket = $isAdmin ? null
                 : Ticket::addNewCatalogTicket($dbConnector, Ticket::typeIdExerciseCreate, $user->id, $exercise->getEntityId());
@@ -61,7 +59,7 @@ class ExerciseController extends Controller
         });
 
         $model = $exercise->buildApiModel();
-        $model['image_url'] = $resource->getPublicUrl();
+        $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         $model['ticket'] = $ticket ? Ticket::buildApiModelList($dbConnector, [$ticket])[0] : null;
         return $this->successApiResponse($model, 201);
     }
@@ -72,7 +70,7 @@ class ExerciseController extends Controller
         $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
 
         $model = $exercise->buildApiModel();
-        $model['image_url'] = $resource?->getPublicUrl();
+        $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         return $this->successApiResponse($model, 200);
     }
 
@@ -96,14 +94,13 @@ class ExerciseController extends Controller
 
         $resource = null;
         if($request->hasFile('image')){
-            $service = new ResourceService($dbConnector);
-            $resource = $service->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
+            $resource = $this->getResourceService()->saveEntityImage($request->file('image'), 'images/exercises', CoreModel::exerciseModelId,
                 $exercise->getEntityId(), $exercise->getName(), $exercise->getSlug());
         }
         $resource ??= Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
 
         $model = $exercise->buildApiModel();
-        $model['image_url'] = $resource?->getPublicUrl();
+        $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         return $this->successApiResponse($model);
     }
 
@@ -126,7 +123,7 @@ class ExerciseController extends Controller
             /**  @var Exercise $exercise */
             $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
             $exerciseModel = $exercise->buildApiModel();
-            $exerciseModel['image'] = $resource?->getPublicUrl();
+            $exerciseModel['image'] = $this->getResourceService()->obtainPublicUrl($resource);
             $model[]= $exerciseModel;
         }
         return $this->successApiResponse($model);
@@ -141,7 +138,7 @@ class ExerciseController extends Controller
         foreach (Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId()) as $resource) {
             /**  @var Resource $resource */
             $resourceModel = $resource->buildApiModel();
-            $resourceModel['url'] = $resource->getPublicUrl();
+            $resourceModel['url'] = $this->getResourceService()->obtainPublicUrl($resource);
             $model[] = $resourceModel;
         }
         return $this->successApiResponse($model);

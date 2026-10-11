@@ -10,7 +10,6 @@ use App\Models\Muscle;
 use App\Models\Resource;
 use App\Models\Ticket;
 use App\PublicException;
-use App\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,7 +23,7 @@ class MuscleController extends Controller {
             /**  @var Muscle $muscle */
             $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::muscleModelId, $muscle->getEntityId());
             $muscleModel = $muscle->buildApiModel();
-            $muscleModel['image_url'] = $resource?->getPublicUrl();
+            $muscleModel['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
             $model[]= $muscleModel;
         }
         return $this->successApiResponse($model);
@@ -57,7 +56,7 @@ class MuscleController extends Controller {
         });
 
         $model = $muscle->buildApiModel();
-        $model['image_url'] = $resource?->getPublicUrl();
+        $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         $model['ticket'] = $ticket ? Ticket::buildApiModelList($dbConnector, [$ticket])[0] : null;
         return $this->successApiResponse($model, 201);
     }
@@ -72,7 +71,7 @@ class MuscleController extends Controller {
         $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::muscleModelId, $muscle->getEntityId());
 
         $model = $muscle->buildApiModel();
-        $model['image_url'] = $resource?->getPublicUrl();
+        $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         return $this->successApiResponse($model, 200);
     }
 
@@ -130,8 +129,7 @@ class MuscleController extends Controller {
         if(!$request->hasFile('image')){
             return null;
         }
-        $service = new ResourceService($this->getDbConnector());
-        return $service->saveEntityImage($request->file('image'), 'images/muscles', CoreModel::muscleModelId,
+        return $this->getResourceService()->saveEntityImage($request->file('image'), 'images/muscles', CoreModel::muscleModelId,
             $muscle->getEntityId(), $muscle->getName(), $muscle->getSlug());
     }
 }

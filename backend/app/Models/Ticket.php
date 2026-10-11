@@ -11,6 +11,7 @@ use App\HasDbData;
 use App\Helpers\BaseHelper;
 use App\Models\BaseEntity;
 use App\PublicException;
+use App\Services\ResourceService;
 use DateTimeImmutable;
 use Illuminate\Database\Query\Builder;
 use stdClass;
@@ -305,11 +306,12 @@ class Ticket extends BaseEntity {
         }
 
         $refMap = [];
+        $resourceService = new ResourceService($dbConnect);
         foreach ($idMap[self::typeIdMuscleCreate] ?? [] as $muscleId) {
             $muscle = Muscle::queryByDbId($dbConnect, $muscleId);
             if($muscle){
                 $resource = Resource::queryByOwnerAndModelId($dbConnect, CoreModel::muscleModelId, $muscleId);
-                $refMap[self::typeIdMuscleCreate][$muscleId] = $muscle->buildApiModel() + ['image_url' => $resource?->getPublicUrl()];
+                $refMap[self::typeIdMuscleCreate][$muscleId] = $muscle->buildApiModel() + ['image_url' => $resourceService->obtainPublicUrl($resource)];
             }
         }
         foreach ($idMap[self::typeIdExerciseCreate] ?? [] as $exerciseId) {
@@ -317,7 +319,7 @@ class Ticket extends BaseEntity {
             if($exercise){
                 $resource = Resource::queryByOwnerAndModelId($dbConnect, CoreModel::exerciseModelId, $exerciseId);
                 $refMap[self::typeIdExerciseCreate][$exerciseId] = $exercise->buildApiModel() + [
-                    'image_url' => $resource?->getPublicUrl(),
+                    'image_url' => $resourceService->obtainPublicUrl($resource),
                     'muscleName' => Muscle::queryByDbId($dbConnect, $exercise->getMuscleId())?->getName(),
                 ];
             }

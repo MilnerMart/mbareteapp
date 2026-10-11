@@ -65,7 +65,11 @@ class Resource extends BaseEntity {
      * apuntan a imagenes del front y se devuelven tal cual para que el front los resuelva.
      */
     function getPublicUrl():string{
-        return File::exists(public_path($this->url)) ? asset($this->url) : $this->url;
+        return self::buildLegacyPublicUrl($this->url);
+    }
+
+    static function buildLegacyPublicUrl(string $url):string{
+        return File::exists(public_path($url)) ? asset($url) : $url;
     }
     function getModelId():int{
         return CoreModel::resourceModelId;

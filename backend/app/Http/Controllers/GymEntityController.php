@@ -15,7 +15,6 @@ use App\Models\Resource;
 use App\Models\User;
 use App\Models\UserRoutine;
 use App\PublicException;
-use App\Services\ResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -85,8 +84,7 @@ class GymEntityController extends Controller {
         $dbConnector = $this->getDbConnector();
         $gym = $this->queryAccessibleGymOrFail($request, $id);
 
-        $service = new ResourceService($dbConnector);
-        $service->saveEntityImage($request->file('gym_image'), 'images/gyms', CoreModel::gymEntityModelId,
+        $this->getResourceService()->saveEntityImage($request->file('gym_image'), 'images/gyms', CoreModel::gymEntityModelId,
             $gym->getEntityId(), $gym->getName(), $gym->getSlug());
 
         return $this->successApiResponse($this->buildGymModel($gym), 200);
@@ -162,7 +160,7 @@ class GymEntityController extends Controller {
         $userOwner = User::find($gym->getOwnerId());
         $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::gymEntityModelId, $gym->getEntityId());
         $gymModel = $gym->buildApiModel();
-        $gymModel['image_url'] = $resource?->getPublicUrl();
+        $gymModel['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         $gymModel['refs']['owner'] = $userOwner ? UserResource::make($userOwner) : null;
         return $gymModel;
     }
