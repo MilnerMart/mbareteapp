@@ -304,43 +304,21 @@
     color: #ff4d5a;
 }
 
-.routine-exercise-edit {
-    flex: 1 1 260px;
-}
-
-.routine-exercise-edit summary {
-    align-items: center;
-    cursor: pointer;
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem 1rem;
-    list-style: none;
-}
-
-.routine-exercise-edit summary::-webkit-details-marker {
-    display: none;
-}
-
-.routine-exercise-edit summary .routine-exercise-name {
-    flex: 1 1 160px;
-}
-
-.routine-exercise-edit summary .fa-pen {
-    color: #8f8f8f;
-    font-size: .75rem;
-    margin-left: .35rem;
-}
-
-.routine-exercise-edit summary:hover .routine-exercise-name {
+.routine-exercise-edit-toggle[aria-expanded="true"] {
+    border-color: #c1121f;
     color: #ff4d5a;
 }
 
 .routine-exercise-form {
     align-items: flex-end;
     display: flex;
+    flex: 1 1 100%;
     flex-wrap: wrap;
     gap: .75rem;
-    margin-top: .75rem;
+}
+
+.routine-exercise-form[hidden] {
+    display: none;
 }
 
 .routine-exercise-form > div {
