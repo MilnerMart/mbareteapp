@@ -16,6 +16,12 @@ for envFile in deploy/env/backend.env deploy/env/frontend.env; do
     [[ -f "$envFile" ]] || fail "Falta $envFile (copia ${envFile}.example y completalo)"
 done
 
+docker compose version >/dev/null 2>&1 \
+    || fail "Docker Compose no esta instalado. Corre: sudo bash deploy/bootstrap-ec2.sh (y vuelve a entrar por SSH)"
+BUILDX_VERSION="$(docker buildx version 2>/dev/null | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1 | tr -d v)"
+[[ -n "$BUILDX_VERSION" ]] && printf '%s\n%s\n' "0.17.0" "$BUILDX_VERSION" | sort -V -C \
+    || fail "Docker Buildx ${BUILDX_VERSION:-no instalado} es muy viejo (minimo 0.17). Corre: sudo bash deploy/bootstrap-ec2.sh"
+
 step "Actualizando codigo de la rama $BRANCH"
 git fetch --prune origin
 git checkout "$BRANCH"
