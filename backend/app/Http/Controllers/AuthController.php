@@ -6,11 +6,13 @@ use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\VerifyEmailRequest;
 use App\Models\Gym;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
 use App\PublicException;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -39,8 +41,10 @@ class AuthController extends Controller
         $token = $user->createToken($this->tokenName($request))->plainTextToken;
 
         $ticketModel = Ticket::buildApiModelList($dbConnector, Ticket::queryListByRequesterId($dbConnector, $user->id));
+        $verificationEmailSent = (new EmailVerificationService($dbConnector))->sendVerificationEmail($user);
 
-        return $this->successApiResponse(new AuthResource($this->buildAuthUserModel($user), $token, $ticketModel), 201);
+        return $this->successApiResponse(new AuthResource($this->buildAuthUserModel($user), $token, $ticketModel,
+            ['verificationEmailSent' => $verificationEmailSent]), 201);
     }
 
     public function registerRoles(): JsonResponse
@@ -73,6 +77,29 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return $this->successApiResponse($this->buildAuthUserModel($request->user()));
+    }
+
+    public function verifyEmail(VerifyEmailRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $user = (new EmailVerificationService($this->getDbConnector()))
+            ->verify((int)$validated['user'], (int)$validated['expires'], $validated['signature']);
+
+        return $this->successApiResponse(['userId' => $user->id, 'email' => $user->email, 'email_verified' => true]);
+    }
+
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        if($user->email_verified_at){
+            throw PublicException::validationError('Tu correo ya esta confirmado', 'email_verification.already_verified');
+        }
+        if(!(new EmailVerificationService($this->getDbConnector()))->sendVerificationEmail($user)){
+            throw PublicException::internalError('No pudimos enviar el correo. Intenta de nuevo mas tarde.', 'email_verification.not_sent');
+        }
+
+        return $this->successApiResponse(['email' => $user->email]);
     }
 
     public function logout(Request $request): JsonResponse

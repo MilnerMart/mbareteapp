@@ -113,3 +113,23 @@ body {
     border-bottom: 2px solid #c1121f;
     box-shadow: 0 0 10px rgba(193, 18, 31, 0.3);
 }
+
+.account-verify-notice {
+    align-items: center;
+    background-color: #1c1214;
+    border: 1px solid #5a1a1f;
+    color: #e5e5e5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    justify-content: space-between;
+}
+
+.account-verify-notice i {
+    color: #ff4d5a;
+    margin-right: .35rem;
+}
+
+.account-verify-notice form {
+    margin: 0;
+}

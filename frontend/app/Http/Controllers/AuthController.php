@@ -70,6 +70,10 @@ class AuthController extends Controller
         $request->session()->put('auth_user', $response['data']['user']);
         $request->session()->put('auth_token', $response['data']['token']);
 
+        if($response['data']['verificationEmailSent'] ?? false){
+            session()->flash('auth_notice', 'Te enviamos un correo a '.$response['data']['user']['email'].' para confirmar tu cuenta.');
+        }
+
         // si quedo alguna solicitud pendiente (entrenador o gimnasio) lo llevamos al perfil para que vea su ticket
         $ticketNumbers = array_column($response['data']['tickets'] ?? [], 'number');
         if($ticketNumbers){
@@ -88,6 +92,42 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('user.login');
+    }
+
+    /**
+     * Enlace del correo de confirmacion. Funciona con o sin sesion iniciada.
+     */
+    public function verifyEmail(Request $request){
+        $isLoggedIn = $request->session()->has('auth_user');
+        $redirect = redirect()->route($isLoggedIn ? 'muscle.index' : 'user.login');
+        $params = $request->only(['user', 'expires', 'signature']);
+        if(count(array_filter($params)) !== 3){
+            return $redirect->with('auth_error', 'El enlace para confirmar tu correo esta incompleto.');
+        }
+
+        $response = $this->apiClient->verifyEmail($params);
+        if(!$this->isSuccess($response)){
+            return $redirect->with('auth_error', $this->errorMessage($response, 'No pudimos confirmar tu correo.'));
+        }
+
+        if((int) $request->session()->get('auth_user.id') === (int) $response['data']['userId']){
+            $request->session()->put('auth_user.email_verified', true);
+        }
+        return $redirect->with('auth_notice', 'Listo, tu correo '.$response['data']['email'].' quedo confirmado.');
+    }
+
+    public function resendVerificationEmail(Request $request){
+        $response = $this->apiClient->resendVerificationEmail();
+
+        if(($response['error']['code'] ?? null) === 'email_verification.already_verified'){
+            $request->session()->put('auth_user.email_verified', true);
+            return back()->with('auth_notice', 'Tu correo ya estaba confirmado.');
+        }
+        if(!$this->isSuccess($response)){
+            return back()->with('auth_error', $this->errorMessage($response, 'No pudimos reenviar el correo.'));
+        }
+
+        return back()->with('auth_notice', 'Te reenviamos el correo a '.$response['data']['email'].'. Revisa tambien la carpeta de spam.');
     }
 
     private function errorMessage(?array $response, string $fallback): string

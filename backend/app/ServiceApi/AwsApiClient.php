@@ -3,13 +3,13 @@
 namespace App\ServiceApi;
 
 use App\PublicException;
-use Aws\Exception\AwsException;
 use Aws\S3\S3Client;
 use Closure;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 
 class AwsApiClient extends ProviderApiClient implements ResourceApi {
+
+    use UsesAwsClient;
 
     private const defaultUrlExpirationMinutes = 60, maxUrlExpirationMinutes = 10080;
 
@@ -105,38 +105,15 @@ class AwsApiClient extends ProviderApiClient implements ResourceApi {
         if($this->s3Client){
             return $this->s3Client;
         }
-        $providerConfig = $this->getProviderConfig();
-        $region = $providerConfig->getSetting('region');
-        if(!$region){
-            throw PublicException::validationError('Falta el ajuste region de '.$this->getProvider()->getName(), 'provider.missing_setting');
-        }
-        $s3Options = ['version' => 'latest', 'region' => $region];
-        $accessKeyId = $providerConfig->getCredential('access_key_id');
-        $secretAccessKey = $providerConfig->getCredential('secret_access_key');
-        if($accessKeyId && $secretAccessKey){
-            $s3Options['credentials'] = ['key' => $accessKeyId, 'secret' => $secretAccessKey];
-        }
-        $endpoint = $providerConfig->getSetting('endpoint') ?: $this->getProvider()->getBaseUrl();
-        if($endpoint){
-            $s3Options['endpoint'] = $endpoint;
+        $s3Options = $this->buildAwsClientOptions();
+        if(isset($s3Options['endpoint'])){
             $s3Options['use_path_style_endpoint'] = true;
         }
         return $this->s3Client = new S3Client($s3Options);
     }
 
     private function runS3OrFail(string $actionLabel, string $resourceKey, Closure $operation): mixed{
-        try {
-            return $operation();
-        } catch (AwsException $exception) {
-            Log::warning('provider.s3_error', [
-                'provider' => $this->getProvider()->getSlug(),
-                'providerConfigId' => $this->getProviderConfig()->getEntityId(),
-                'action' => $actionLabel,
-                'key' => $resourceKey,
-                'awsCode' => $exception->getAwsErrorCode(),
-                'httpStatus' => $exception->getStatusCode(),
-            ]);
-            throw PublicException::internalError('No se pudo '.$actionLabel.' el recurso en '.$this->getProvider()->getName(), 'provider.s3_error');
-        }
+        return $this->runAwsOrFail($actionLabel, $resourceKey, $operation,
+            'No se pudo '.$actionLabel.' el recurso en '.$this->getProvider()->getName(), 'provider.s3_error');
     }
 }
