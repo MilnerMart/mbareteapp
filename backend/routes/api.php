@@ -19,6 +19,8 @@ Route::prefix('/v1')->group(function(){
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::get('/auth/register/roles', [AuthController::class, 'registerRoles']);
     Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail'])->middleware('throttle:email-verification-verify');
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:password-reset-send');
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:password-reset');
 
     Route::get('/muscle', [MuscleController::class, 'index']);
     Route::get('/muscle/{id}', [MuscleController::class, 'show']);

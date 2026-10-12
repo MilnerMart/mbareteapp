@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Models\Gym;
 use App\Models\Role;
@@ -13,6 +15,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\PublicException;
 use App\Services\EmailVerificationService;
+use App\Services\PasswordResetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -98,6 +101,22 @@ class AuthController extends Controller
         if(!(new EmailVerificationService($this->getDbConnector()))->sendVerificationEmail($user)){
             throw PublicException::internalError('No pudimos enviar el correo. Intenta de nuevo mas tarde.', 'email_verification.not_sent');
         }
+
+        return $this->successApiResponse(['email' => $user->email]);
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        (new PasswordResetService($this->getDbConnector()))->sendResetLink($request->validated()['email']);
+
+        return $this->successApiResponse(['message' => 'Si el correo esta registrado, te enviamos un enlace para cambiar la contraseña.']);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $user = (new PasswordResetService($this->getDbConnector()))
+            ->resetPassword($validated['email'], $validated['token'], $validated['password']);
 
         return $this->successApiResponse(['email' => $user->email]);
     }

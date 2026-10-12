@@ -29,5 +29,7 @@ class AppServiceProvider extends ServiceProvider
         ], 429);
         RateLimiter::for('email-verification-send', fn(Request $request) => Limit::perMinute(3)->by((string)$request->user()?->id)->response($tooManyAttempts));
         RateLimiter::for('email-verification-verify', fn(Request $request) => Limit::perMinute(10)->by((string)$request->input('user'))->response($tooManyAttempts));
+        RateLimiter::for('password-reset-send', fn(Request $request) => Limit::perMinutes(10, 3)->by(mb_strtolower((string)$request->input('email')))->response($tooManyAttempts));
+        RateLimiter::for('password-reset', fn(Request $request) => Limit::perMinute(10)->by(mb_strtolower((string)$request->input('email')))->response($tooManyAttempts));
     }
 }

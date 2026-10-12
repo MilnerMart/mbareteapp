@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\MediaController;
 use Illuminate\Http\UploadedFile;
+use Psr\Http\Message\ResponseInterface;
 
 class ApiClientService
 {
@@ -17,10 +18,23 @@ class ApiClientService
 
     private function request()
     {
-        $request = Http::acceptJson();
+        $request = Http::acceptJson()->withResponseMiddleware(fn(ResponseInterface $response) => $this->forgetRevokedSession($response));
         $token = session('auth_token');
 
         return $token ? $request->withToken($token) : $request;
+    }
+
+    /**
+     * Si el backend ya no reconoce el token (ej. se cambio la contraseña o se cerro la sesion en otro lado)
+     * se cierra tambien la sesion del front, asi la proxima pagina lleva al login.
+     */
+    private function forgetRevokedSession(ResponseInterface $response): ResponseInterface
+    {
+        if($response->getStatusCode() === 401 && session()->has('auth_token')){
+            session()->forget(['auth_user', 'auth_token']);
+            session()->flash('auth_error', 'Tu sesion se cerro. Vuelve a ingresar.');
+        }
+        return $response;
     }
 
     private function get($endpoint, $params = [])
@@ -274,6 +288,14 @@ class ApiClientService
 
     public function verifyEmail(array $params){
         return $this->post('/auth/verify-email', $params);
+    }
+
+    public function forgotPassword(string $email){
+        return $this->post('/auth/forgot-password', ['email' => $email]);
+    }
+
+    public function resetPassword(array $params){
+        return $this->post('/auth/reset-password', $params);
     }
 
     public function resendVerificationEmail(){

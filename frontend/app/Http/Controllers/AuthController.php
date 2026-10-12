@@ -130,6 +130,51 @@ class AuthController extends Controller
         return back()->with('auth_notice', 'Te reenviamos el correo a '.$response['data']['email'].'. Revisa tambien la carpeta de spam.');
     }
 
+    public function forgotPassword(){
+        return $this->renderView('login.forgot-password');
+    }
+
+    public function sendResetLink(Request $request){
+        $validated = $request->validate(['email' => ['required', 'email', 'max:255']]);
+
+        $response = $this->apiClient->forgotPassword($validated['email']);
+        if(!$this->isSuccess($response)){
+            return back()->withErrors(['email' => $this->errorMessage($response, 'No pudimos enviar el correo.')])->withInput();
+        }
+
+        return back()->with('auth_notice', $response['data']['message']);
+    }
+
+    public function resetPasswordForm(Request $request){
+        $token = (string) $request->query('token', '');
+        $email = (string) $request->query('email', '');
+        if(strlen($token) !== 64 || !filter_var($email, FILTER_VALIDATE_EMAIL)){
+            return redirect()->route('user.password.request')->with('auth_error', 'El enlace para cambiar la contraseña esta incompleto. Pide uno nuevo.');
+        }
+
+        return $this->renderView('login.reset-password', compact('token', 'email'));
+    }
+
+    public function resetPassword(Request $request){
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'token' => ['required', 'string', 'size:64'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+            'password_confirmation' => ['required', 'string'],
+        ]);
+
+        $response = $this->apiClient->resetPassword($validated);
+        if(!$this->isSuccess($response)){
+            return back()->withErrors(['password' => $this->errorMessage($response, 'No pudimos cambiar la contraseña.')]);
+        }
+
+        // las sesiones abiertas de esa cuenta quedan cerradas en el backend
+        if(strcasecmp((string) $request->session()->get('auth_user.email'), $response['data']['email']) === 0){
+            $request->session()->forget(['auth_user', 'auth_token']);
+        }
+        return redirect()->route('user.login')->with('auth_notice', 'Tu contraseña se cambio. Ya puedes ingresar con la nueva.');
+    }
+
     private function errorMessage(?array $response, string $fallback): string
     {
         if(isset($response['error']['message'])){

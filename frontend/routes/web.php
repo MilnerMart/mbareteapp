@@ -26,6 +26,11 @@ Route::post('/register', [AuthController::class, 'store'])->name('user.register.
 
 Route::get('/verify-email', [AuthController::class, 'verifyEmail'])->name('user.verify-email');
 
+Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('user.password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('user.password.email');
+Route::get('/reset-password', [AuthController::class, 'resetPasswordForm'])->name('user.password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('user.password.update');
+
 Route::get('/muscle', [MuscleController::class, 'index'])->name('muscle.index');
 
 Route::get('/exercise', [ExerciseController::class, 'index'])->name('exercise.index');

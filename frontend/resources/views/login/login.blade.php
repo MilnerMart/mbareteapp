@@ -114,7 +114,7 @@
                                 </label>
                             </div>
 
-                            <a href="#">Olvide mi contrasena</a>
+                            <a href="{{ route('user.password.request') }}">Olvide mi contraseña</a>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">

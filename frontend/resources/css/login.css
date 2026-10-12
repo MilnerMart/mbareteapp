@@ -198,3 +198,9 @@
         flex-direction: column;
     }
 }
+
+.login-help {
+    color: #b8b8b8;
+    font-size: .95rem;
+    margin-bottom: 1.25rem;
+}
