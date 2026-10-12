@@ -9,7 +9,7 @@ APP_USER="${SUDO_USER:-ec2-user}"
 . /etc/os-release
 
 echo "==> Swap de 2 GB"
-if ! swapon --show | grep -q /swapfile; then
+if ! grep -q "^/swapfile " /proc/swaps; then
     fallocate -l 2G /swapfile
     chmod 600 /swapfile
     mkswap /swapfile
@@ -29,7 +29,10 @@ elif [[ "$ID" == "amzn" ]]; then
     PLUGIN_DIR=/usr/local/lib/docker/cli-plugins
     mkdir -p "$PLUGIN_DIR"
     curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${ARCH}" -o "$PLUGIN_DIR/docker-compose"
-    BUILDX_VERSION="$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4)"
+    # la ultima version sale de la redireccion de releases/latest (sin pipes que corten a curl)
+    BUILDX_VERSION="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/docker/buildx/releases/latest)"
+    BUILDX_VERSION="${BUILDX_VERSION##*/}"
+    [[ "$BUILDX_VERSION" == v* ]] || { echo "No se pudo obtener la version de buildx"; exit 1; }
     curl -fsSL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${BUILDX_ARCH}" -o "$PLUGIN_DIR/docker-buildx"
     chmod +x "$PLUGIN_DIR/docker-compose" "$PLUGIN_DIR/docker-buildx"
 else
