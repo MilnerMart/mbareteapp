@@ -24,6 +24,9 @@ class LocalStorageApiClient extends ProviderApiClient implements ResourceApi {
             throw PublicException::validationError('No se encuentra el archivo a subir');
         }
         $relativePath = $this->buildRelativePath($resourceKey);
+        if(realpath($localPath) === realpath(public_path($relativePath))){
+            return $this->buildResourceModel($resourceKey, $relativePath);
+        }
         File::ensureDirectoryExists(dirname(public_path($relativePath)));
         File::copy($localPath, public_path($relativePath));
         return $this->buildResourceModel($resourceKey, $relativePath);

@@ -1,5 +1,6 @@
 <?php
 
+use App\ServiceApi\AwsApiClient;
 use App\ServiceApi\FreeExerciseDbApiClient;
 use App\ServiceApi\LocalStorageApiClient;
 
@@ -11,4 +12,5 @@ use App\ServiceApi\LocalStorageApiClient;
 return [
     'local-storage' => LocalStorageApiClient::class,
     'free-exercise-db' => FreeExerciseDbApiClient::class,
+    'aws-s3' => AwsApiClient::class,
 ];
