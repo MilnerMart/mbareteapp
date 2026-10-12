@@ -1,0 +1,4 @@
+.DS_Store
+# variables de produccion con claves: solo viven en el servidor
+.env
+deploy/env/*.env

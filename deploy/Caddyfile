@@ -1,0 +1,6 @@
+# Entrada publica: solo el frontend queda expuesto. El backend vive en la red interna de Docker.
+# APP_DOMAIN=":80" sirve por http con la IP de la EC2; con un dominio (ej. app.midominio.com) Caddy saca HTTPS solo.
+{$APP_DOMAIN::80} {
+	encode zstd gzip
+	reverse_proxy frontend:8080
+}

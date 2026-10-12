@@ -1,0 +1,58 @@
+# Produccion en una EC2: Caddy (80/443) -> frontend -> backend. La base de datos es RDS y las imagenes van a S3.
+# Las variables de cada app estan en deploy/env/*.env (no se suben al repositorio).
+x-php-app: &php-app
+  restart: unless-stopped
+  environment:
+    PHP_OPCACHE_ENABLE: "1"
+    PHP_FPM_PM_CONTROL: ondemand
+    PHP_FPM_PM_MAX_CHILDREN: "6"
+    # al arrancar cachea config, rutas y vistas; las migraciones las corre deploy.sh
+    AUTORUN_ENABLED: "true"
+    AUTORUN_LARAVEL_MIGRATION: "false"
+    AUTORUN_LARAVEL_STORAGE_LINK: "false"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-:80}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+
+  frontend:
+    <<: *php-app
+    build: ./frontend
+    image: mbarete-frontend:latest
+    env_file: ./deploy/env/frontend.env
+    volumes:
+      - frontend-logs:/var/www/html/storage/logs
+    depends_on:
+      - backend
+
+  backend:
+    <<: *php-app
+    build: ./backend
+    image: mbarete-backend:latest
+    env_file: ./deploy/env/backend.env
+    volumes:
+      # imagenes del almacenamiento local (hasta pasar a S3) y archivos/logs de Laravel
+      - backend-images:/var/www/html/public/images
+      - backend-storage:/var/www/html/storage/app
+      - backend-logs:/var/www/html/storage/logs
+
+volumes:
+  caddy-data:
+  caddy-config:
+  frontend-logs:
+  backend-images:
+  backend-storage:
+  backend-logs:

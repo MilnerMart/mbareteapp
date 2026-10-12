@@ -4,9 +4,12 @@ namespace App\Console\Commands;
 
 use App\Core\EntityStatus;
 use App\Db\DbConnector;
+use App\Models\Provider;
+use App\Models\ProviderConfig;
 use App\Models\Resource;
 use App\PublicException;
 use App\ServiceApi\ProviderApiClient;
+use App\ServiceApi\ProviderClientRegistry;
 use App\ServiceApi\ResourceApi;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -14,12 +17,16 @@ use Illuminate\Support\Facades\File;
 
 class CopyLocalResources extends Command
 {
-    protected $signature = 'resources:copy-local {providerConfigId : Credencial del proveedor de destino} {--dry-run : Solo lista lo que se copiaria}';
+    protected $signature = 'resources:copy-local {providerConfigId? : Credencial del proveedor de destino (sin id lista las disponibles)} {--dry-run : Solo lista lo que se copiaria}';
 
     protected $description = 'Copia a otro proveedor de almacenamiento (ej. S3) las imagenes guardadas en public/, manteniendo sus claves';
 
     public function handle(DbConnector $dbConnector): int
     {
+        if($this->argument('providerConfigId') === null){
+            $this->listStorageConfigs($dbConnector);
+            return self::SUCCESS;
+        }
         try {
             $client = ProviderApiClient::allocForConfigId($dbConnector, (int)$this->argument('providerConfigId'));
         } catch (PublicException $exception) {
@@ -57,6 +64,21 @@ class CopyLocalResources extends Command
         $this->newLine();
         $this->info(($this->option('dry-run') ? 'A copiar: ' : 'Copiados: ').$copied.' · Sin archivo local: '.$missing.' · Con error: '.$failed);
         return $failed ? self::FAILURE : self::SUCCESS;
+    }
+
+    private function listStorageConfigs(DbConnector $dbConnector): void
+    {
+        $rowList = [];
+        foreach (Provider::queryList($dbConnector) as $provider) {
+            if(!ProviderClientRegistry::isClientCompatible($provider->getType(), ResourceApi::class)){
+                continue;
+            }
+            foreach (ProviderConfig::queryListByProviderId($dbConnector, $provider->getEntityId()) as $providerConfig) {
+                $rowList[] = [$providerConfig->getEntityId(), $provider->getName(), $provider->getType(), $providerConfig->getName()];
+            }
+        }
+        $this->table(['id', 'Proveedor', 'Tipo', 'Credencial'], $rowList);
+        $this->line('Uso: php artisan resources:copy-local {id} [--dry-run]');
     }
 
     private function queryLocalKeyList(DbConnector $dbConnector): array
