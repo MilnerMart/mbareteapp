@@ -18,6 +18,7 @@ Route::prefix('/v1')->group(function(){
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::get('/auth/register/roles', [AuthController::class, 'registerRoles']);
+    Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail'])->middleware('throttle:email-verification-verify');
 
     Route::get('/muscle', [MuscleController::class, 'index']);
     Route::get('/muscle/{id}', [MuscleController::class, 'show']);
@@ -29,6 +30,7 @@ Route::prefix('/v1')->group(function(){
     Route::middleware('auth:sanctum')->prefix('/auth')->group(function(){
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])->middleware('throttle:email-verification-send');
     });
 
     Route::middleware('auth:sanctum')->group(function(){

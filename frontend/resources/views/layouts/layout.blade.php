@@ -11,6 +11,7 @@
 <body class="d-flex flex-column min-vh-100">
     @include('layouts._partials.menu')
     <main class="flex-fill container py-4">
+        @include('layouts._partials.notices')
         @yield('content')
     </main>
     

@@ -272,6 +272,14 @@ class ApiClientService
         return $this->post('/tickets/'.$id.'/reject', ['note' => $note]);
     }
 
+    public function verifyEmail(array $params){
+        return $this->post('/auth/verify-email', $params);
+    }
+
+    public function resendVerificationEmail(){
+        return $this->post('/auth/email/verification-notification');
+    }
+
     public function getRegisterRoles(){
         return $this->get('/auth/register/roles');
     }

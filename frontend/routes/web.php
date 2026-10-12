@@ -24,6 +24,8 @@ Route::get('/register', [AuthController::class, 'register'])->name('user.registe
 
 Route::post('/register', [AuthController::class, 'store'])->name('user.register.submit');
 
+Route::get('/verify-email', [AuthController::class, 'verifyEmail'])->name('user.verify-email');
+
 Route::get('/muscle', [MuscleController::class, 'index'])->name('muscle.index');
 
 Route::get('/exercise', [ExerciseController::class, 'index'])->name('exercise.index');
@@ -38,6 +40,8 @@ Route::middleware('frontend.auth')->group(function () {
     Route::post('/profile/{id}/image', [UserController::class, 'updateProfileImage'])->name('user.profile.image');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
+
+    Route::post('/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])->name('user.verification.resend');
 
     Route::delete('/exercise/{id}/resource/{resourceId}', [ExerciseController::class, 'removeResource'])->whereNumber(['id', 'resourceId'])->name('exercise.resource.remove');
 

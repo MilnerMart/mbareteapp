@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // url publica del frontend: los enlaces que van en los correos apuntan ahi (el backend no es publico)
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
