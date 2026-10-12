@@ -1,7 +1,13 @@
-# Produccion en una EC2: Caddy (80/443) -> frontend -> backend. La base de datos es RDS y las imagenes van a S3.
+# Produccion: frontend -> backend. Las imagenes van a S3.
+# Entrada publica: Caddy (80/443, HTTPS solo) con COMPOSE_PROFILES=caddy en el .env de la raiz, o el nginx que ya tenga
+# el servidor apuntando al frontend publicado en FRONTEND_PUBLISH (por defecto 127.0.0.1:8280, solo local).
+# La base de datos es externa: RDS, u otro contenedor del mismo servidor (DB_HOST=host.docker.internal).
 # Las variables de cada app estan en deploy/env/*.env (no se suben al repositorio).
 x-php-app: &php-app
   restart: unless-stopped
+  # permite llegar a servicios del propio servidor, ej. un MySQL en otro contenedor con el puerto publicado
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   environment:
     PHP_OPCACHE_ENABLE: "1"
     PHP_FPM_PM_CONTROL: ondemand
@@ -14,6 +20,7 @@ x-php-app: &php-app
 services:
   caddy:
     image: caddy:2-alpine
+    profiles: ["caddy"]
     restart: unless-stopped
     ports:
       - "80:80"
@@ -33,6 +40,8 @@ services:
     build: ./frontend
     image: mbarete-frontend:latest
     env_file: ./deploy/env/frontend.env
+    ports:
+      - "${FRONTEND_PUBLISH:-127.0.0.1:8280}:8080"
     volumes:
       - frontend-logs:/var/www/html/storage/logs
     depends_on:

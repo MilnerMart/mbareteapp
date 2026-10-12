@@ -2,3 +2,6 @@
 # variables de produccion con claves: solo viven en el servidor
 .env
 deploy/env/*.env
+# dumps de la base de datos (tienen datos de usuarios)
+deploy/dumps/
+*.sql
