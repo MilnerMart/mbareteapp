@@ -1,0 +1,15 @@
+# Para servidores con Docker anterior a 20.10.10 que no se pueden actualizar (ej. droplet compartido).
+# Ese Docker bloquea la llamada clone3 con "sin permiso" y la glibc de las imagenes nuevas (Debian 13) no puede
+# lanzar procesos desde PHP (proc_open / posix_spawn "Operation not permitted").
+# seccomp-docker-20.10-clone3.json es el perfil oficial de Docker 20.10.24 (el mismo filtro de siempre), con clone3
+# marcado como SCMP_ACT_TRACE: sin un depurador conectado el kernel responde "no implementado" y glibc usa clone.
+# No desactiva seccomp. El build no lo necesita: Composer corre en una etapa Alpine (ver los Dockerfile).
+# Activar en el servidor:
+#   cp deploy/compat/docker-20.10.override.yml docker-compose.override.yml
+services:
+  backend:
+    security_opt:
+      - seccomp=./deploy/compat/seccomp-docker-20.10-clone3.json
+  frontend:
+    security_opt:
+      - seccomp=./deploy/compat/seccomp-docker-20.10-clone3.json
