@@ -5,3 +5,5 @@ deploy/env/*.env
 # dumps de la base de datos (tienen datos de usuarios)
 deploy/dumps/
 *.sql
+# ajustes de compose propios de cada servidor (ej. deploy/compat/docker-20.10.override.yml)
+docker-compose.override.yml
