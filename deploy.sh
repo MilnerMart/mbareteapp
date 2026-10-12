@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Despliega la rama indicada (o la actual) en la EC2:
+# Despliega la rama indicada (o la actual) en el servidor:
 #   ./deploy.sh            -> actualiza la rama en la que esta el servidor
 #   ./deploy.sh develop    -> cambia a develop y la despliega
-# Trae el codigo, construye las imagenes, corre migraciones y reemplaza los contenedores.
+# Hace git pull, construye las imagenes, corre migraciones y reemplaza los contenedores.
+# Desde tu Mac: ./deploy-remote.sh deploy
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -17,10 +18,10 @@ for envFile in deploy/env/backend.env deploy/env/frontend.env; do
 done
 
 docker compose version >/dev/null 2>&1 \
-    || fail "Docker Compose no esta instalado. Corre: sudo bash deploy/bootstrap-ec2.sh (y vuelve a entrar por SSH)"
+    || fail "Docker Compose no esta instalado. Corre: bash deploy/install-compose.sh (o sudo bash deploy/bootstrap-server.sh en un servidor nuevo)"
 BUILDX_VERSION="$(docker buildx version 2>/dev/null | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1 | tr -d v)"
 [[ -n "$BUILDX_VERSION" ]] && printf '%s\n%s\n' "0.17.0" "$BUILDX_VERSION" | sort -V -C \
-    || fail "Docker Buildx ${BUILDX_VERSION:-no instalado} es muy viejo (minimo 0.17). Corre: sudo bash deploy/bootstrap-ec2.sh"
+    || fail "Docker Buildx ${BUILDX_VERSION:-no instalado} es muy viejo (minimo 0.17). Corre: bash deploy/install-compose.sh"
 
 step "Actualizando codigo de la rama $BRANCH"
 git fetch --prune origin
