@@ -50,7 +50,10 @@
                                     value="{{ old('name') }}"
                                     placeholder="Tu nombre"
                                     autocomplete="given-name"
-                                    maxlength="255"
+                                    minlength="2"
+                                    maxlength="60"
+                                    pattern="[\p{L}\p{M}]+(?:(?:\. *| +|['’\-])[\p{L}\p{M}]+)*\.?"
+                                    title="Solo letras, espacios, apóstrofes o guiones. Sin números, correos ni símbolos."
                                     required>
                             </div>
                             @error('name')
@@ -72,7 +75,10 @@
                                     value="{{ old('last_name') }}"
                                     placeholder="Tu apellido"
                                     autocomplete="family-name"
-                                    maxlength="255"
+                                    minlength="2"
+                                    maxlength="60"
+                                    pattern="[\p{L}\p{M}]+(?:(?:\. *| +|['’\-])[\p{L}\p{M}]+)*\.?"
+                                    title="Solo letras, espacios, apóstrofes o guiones. Sin números, correos ni símbolos."
                                     required>
                             </div>
                             @error('last_name')

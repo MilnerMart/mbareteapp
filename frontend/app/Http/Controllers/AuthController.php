@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\PersonName;
 use App\Services\ApiClientService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
@@ -45,9 +46,13 @@ class AuthController extends Controller
     }
 
     public function store(Request $request){
+        $request->merge([
+            'name' => PersonName::normalize($request->input('name')),
+            'last_name' => PersonName::normalize($request->input('last_name')),
+        ]);
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'min:2', 'max:60', new PersonName('nombre')],
+            'last_name' => ['required', 'string', 'min:2', 'max:60', new PersonName('apellido')],
             'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'password_confirmation' => ['required', 'string'],
