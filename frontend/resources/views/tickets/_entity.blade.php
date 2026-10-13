@@ -6,7 +6,7 @@
     <div class="ticket-entity-info">
         <strong>{{ $entity['name'] }}</strong>
         @if (!empty($entity['muscleName']))
-            <span>Musculo: {{ $entity['muscleName'] }}</span>
+            <span>Grupo: {{ $entity['muscleName'] }}</span>
         @endif
         @if (!empty($entity['description']))
             <p>{{ $entity['description'] }}</p>

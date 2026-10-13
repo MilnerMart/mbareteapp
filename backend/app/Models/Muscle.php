@@ -20,16 +20,34 @@ class Muscle extends BaseEntity {
 
     private const myTable = DbSchema::tableMuscles;
 
+    public const kindMuscle = 1, kindActivity = 2;
+
+    private const kindSlugMap = [
+        self::kindMuscle => 'muscle',
+        self::kindActivity => 'activity',
+    ];
+
     private string $name, $slug, $description;
     private int $recommended_rest_days;
+    private int $kind = self::kindMuscle;
 
-    public static function allocMuscle(string $name, string $slug, string $description,int $restDays): self{
+    public static function allocMuscle(string $name, string $slug, string $description,int $restDays, int $kind = self::kindMuscle): self{
         $self = new Muscle();
         $self->name = $name;
         $self->slug = $slug;
         $self->description = $description;
         $self->recommended_rest_days = $restDays;
+        $self->setKind($kind);
         return $self;
+    }
+
+    static function kindSlugList(): array{
+        return array_values(self::kindSlugMap);
+    }
+
+    static function kindIdFromSlug(?string $slug): ?int{
+        $kindId = array_search($slug, self::kindSlugMap, true);
+        return $kindId === false ? null : $kindId;
     }
 
     function getModelId(): int{
@@ -68,6 +86,17 @@ class Muscle extends BaseEntity {
         return $this->description;
     }
 
+    function getKind(): int{
+        return $this->kind;
+    }
+
+    function setKind(int $kind): void{
+        if(!isset(self::kindSlugMap[$kind])){
+            throw PublicException::validationError('Tipo de grupo invalido: '.$kind);
+        }
+        $this->kind = $kind;
+    }
+
     public function exercises()
     {
         return $this->hasMany(Exercise::class);
@@ -78,6 +107,7 @@ class Muscle extends BaseEntity {
             'id' => $this->getEntityId(),
             'name' =>  $this->getName(),
             'slug' =>  $this->getSlug(),
+            'kind' => self::kindSlugMap[$this->kind],
             'recommended_rest_days' => $this->getRestDays(),
             'description' => $this->getDescription(),
         ] + $this->buildReviewApiModel();
@@ -88,6 +118,7 @@ class Muscle extends BaseEntity {
         $muscle->initFromDbRow($dbAdapter, $row);
         $muscle->name = $row->name;
         $muscle->slug = $row->slug;
+        $muscle->kind = (int)($row->kind ?? self::kindMuscle);
         $muscle->recommended_rest_days = $row->recommended_rest_days;
         $muscle->description = $row->description;
         $muscle->loadReviewFromRow($row);
@@ -98,6 +129,7 @@ class Muscle extends BaseEntity {
         $row = $this->allocDbRow($dbAdapter);
         $row->name = $this->name;
         $row->slug = $this->slug;
+        $row->kind = $this->kind;
         $row->recommended_rest_days = $this->recommended_rest_days;
         $row->description = $this->description;
         $this->writeReviewToRow($row);

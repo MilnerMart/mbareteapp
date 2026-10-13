@@ -42,6 +42,7 @@ class MuscleController extends Controller {
             $validated['slug'] ?? Str::slug($validated['name']),
             $validated['description'],
             $validated['recommended_rest_days'],
+            Muscle::kindIdFromSlug($validated['kind'] ?? null) ?? Muscle::kindMuscle,
         );
         $muscle->setOwnerId($user->id);
         $muscle->setIsPublic((bool)($validated['is_public'] ?? true));
@@ -95,6 +96,11 @@ class MuscleController extends Controller {
         }
         if($muscle->getDescription() !== $validated['description']){
             $muscle->setDescription($validated['description']);
+            $dirty = true;
+        }
+        $kind = Muscle::kindIdFromSlug($validated['kind'] ?? null);
+        if($kind && $muscle->getKind() !== $kind){
+            $muscle->setKind($kind);
             $dirty = true;
         }
         if(isset($validated['is_public']) && $muscle->isPublic() !== (bool)$validated['is_public']){

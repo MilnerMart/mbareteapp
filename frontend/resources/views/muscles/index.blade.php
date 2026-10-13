@@ -1,6 +1,11 @@
 @php
-    $muscles = $data['muscles'];
     $isAdmin = $data['isAdmin'];
+    $canCreate = $canCreateCatalog ?? false;
+    // grupos musculares y actividades (cardio, boxeo...) se muestran en secciones separadas
+    $sectionList = [
+        ['title' => 'Musculos', 'kind' => 'muscle', 'addLabel' => 'Agregar musculo', 'groups' => $data['muscles']],
+        ['title' => 'Actividades', 'kind' => 'activity', 'addLabel' => 'Agregar actividad', 'groups' => $data['activities']],
+    ];
 @endphp
 @extends('layouts.layout')
 @section('css')
@@ -13,52 +18,28 @@
     @if ($errors->has('muscle'))
         <div class="alert alert-danger">{{ $errors->first('muscle') }}</div>
     @endif
-    @if ($canCreateCatalog ?? false)
-        <div class="catalog-header">
-            <h1>Musculos</h1>
-            <a href="{{ route('muscle.create') }}" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i>
-                <span>Agregar musculo</span>
-            </a>
-        </div>
-    @endif
-    @if (!empty($muscles))
-        <div class="row justify-content-center">
-            @foreach ($muscles as $muscle)
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex justify-content-center mb-4">
-                    <div class="card" style="width: 18rem;">
-                        <a href="{{ route('exercise.group', $muscle['id']) }}"><img src="{{ asset($muscle['image_url']??null) }}" class="card-img-top"></a>
-                        <div class="card-body">
-                            <h5 class="card-title text-center">{{ $muscle['name'] }}</h5>
-                            @if (!($muscle['isPublic'] ?? true))
-                                <div class="text-center mb-2">
-                                    <span class="catalog-private-badge"><i class="fa-solid fa-lock"></i> Privado</span>
-                                </div>
-                            @endif
-                            <p class="card-text justify-content-center">{{ $muscle['description'] }}</p>
-                            @if ($isAdmin)
-                                <div class="d-flex gap-2">
-                                    <a href="{{ route('muscle.edit', $muscle['id']) }}" class="btn btn-outline-secondary btn-sm flex-fill">
-                                        <i class="fa-solid fa-pen"></i>
-                                        <span>Editar</span>
-                                    </a>
-                                    <form method="POST" action="{{ route('muscle.destroy', $muscle['id']) }}" class="flex-fill"
-                                        data-confirm-delete
-                                        data-confirm-title="Eliminar musculo"
-                                        data-confirm-text="El musculo dejara de mostrarse. Solo se puede eliminar si no tiene ejercicios.">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                                            <i class="fa-solid fa-trash"></i>
-                                            <span>Eliminar</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
+    @foreach ($sectionList as $section)
+        @if ($canCreate || !empty($section['groups']))
+            <section class="mb-4">
+                <div class="catalog-header">
+                    <h1>{{ $section['title'] }}</h1>
+                    @if ($canCreate)
+                        <a href="{{ route('muscle.create', ['kind' => $section['kind']]) }}" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>{{ $section['addLabel'] }}</span>
+                        </a>
+                    @endif
                 </div>
-            @endforeach
-        </div>
-    @endif
+                @if (!empty($section['groups']))
+                    <div class="row justify-content-center">
+                        @foreach ($section['groups'] as $muscle)
+                            @include('muscles._card', ['muscle' => $muscle, 'isAdmin' => $isAdmin])
+                        @endforeach
+                    </div>
+                @else
+                    <p class="catalog-hint">Todavia no hay {{ mb_strtolower($section['title']) }}.</p>
+                @endif
+            </section>
+        @endif
+    @endforeach
 @endsection

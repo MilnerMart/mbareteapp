@@ -33,12 +33,16 @@
                 @if ($isEdit)
                     @method('PUT')
                     <div class="mb-3">
-                        <label for="muscle_id" class="form-label">Musculo</label>
+                        <label for="muscle_id" class="form-label">Musculo o actividad</label>
                         <select class="form-select @error('muscle_id') is-invalid @enderror" id="muscle_id" name="muscle_id" required>
-                            @foreach ($muscles as $muscleOption)
-                                <option value="{{ $muscleOption['id'] }}" @selected(old('muscle_id', $exercise['muscle_id']) == $muscleOption['id'])>
-                                    {{ $muscleOption['name'] }}
-                                </option>
+                            @foreach (collect($muscles)->groupBy(fn($muscleOption) => ($muscleOption['kind'] ?? 'muscle') === 'activity' ? 'Actividades' : 'Musculos')->sortKeysDesc() as $groupLabel => $optionList)
+                                <optgroup label="{{ $groupLabel }}">
+                                    @foreach ($optionList as $muscleOption)
+                                        <option value="{{ $muscleOption['id'] }}" @selected(old('muscle_id', $exercise['muscle_id']) == $muscleOption['id'])>
+                                            {{ $muscleOption['name'] }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>

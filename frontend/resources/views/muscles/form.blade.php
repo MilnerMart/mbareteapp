@@ -1,10 +1,13 @@
 @php
     $muscle = $data['muscle'] ?? null;
     $isEdit = (bool) $muscle;
+    $kind = old('kind', $data['kind']);
+    $isActivity = $kind === 'activity';
+    $kindLabel = $isActivity ? 'actividad' : 'musculo';
 @endphp
 @extends('layouts.layout')
 
-@section('title', ($isEdit ? 'Editar musculo' : 'Nuevo musculo').' | Mbarete App')
+@section('title', ($isEdit ? 'Editar '.$kindLabel : ($isActivity ? 'Nueva actividad' : 'Nuevo musculo')).' | Mbarete App')
 
 @section('css')
     @vite('resources/css/catalog.css')
@@ -17,7 +20,7 @@
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Inicio</span>
             </a>
-            <h1>{{ $isEdit ? 'Editar '.$muscle['name'] : 'Nuevo musculo' }}</h1>
+            <h1>{{ $isEdit ? 'Editar '.$muscle['name'] : ($isActivity ? 'Nueva actividad' : 'Nuevo musculo') }}</h1>
 
             @if ($errors->any())
                 <div class="alert alert-danger">{{ $errors->first() }}</div>
@@ -30,6 +33,14 @@
                 @endif
 
                 <div class="mb-3">
+                    <label for="kind" class="form-label">Tipo</label>
+                    <select class="form-select @error('kind') is-invalid @enderror" id="kind" name="kind" required>
+                        <option value="muscle" @selected(!$isActivity)>Grupo muscular (pecho, espalda, piernas...)</option>
+                        <option value="activity" @selected($isActivity)>Actividad (cardio, boxeo, atletismo...)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
                     <label for="name" class="form-label">Nombre</label>
                     <input
                         type="text"
@@ -37,7 +48,7 @@
                         id="name"
                         name="name"
                         value="{{ old('name', $muscle['name'] ?? '') }}"
-                        placeholder="Pecho"
+                        placeholder="{{ $isActivity ? 'Boxeo' : 'Pecho' }}"
                         minlength="3"
                         maxlength="50"
                         required>
@@ -81,14 +92,14 @@
                         accept="image/jpeg,image/png,image/webp,image/gif"
                         @required(!$isEdit)>
                     <small class="catalog-hint">
-                        {{ $isEdit ? 'Deja vacio para mantener la imagen actual.' : 'Se muestra en la tarjeta del musculo en Inicio.' }} Maximo 4 MB.
+                        {{ $isEdit ? 'Deja vacio para mantener la imagen actual.' : 'Se muestra en la tarjeta en Inicio.' }} Maximo 4 MB.
                     </small>
                 </div>
 
                 @include('layouts._partials.visibility-field', ['entity' => $muscle, 'isAdmin' => $data['isAdmin']])
 
                 <button type="submit" class="btn btn-primary w-100">
-                    {{ $isEdit ? 'Guardar cambios' : ($data['isAdmin'] ? 'Crear musculo' : 'Enviar a revision') }}
+                    {{ $isEdit ? 'Guardar cambios' : ($data['isAdmin'] ? 'Crear '.$kindLabel : 'Enviar a revision') }}
                 </button>
             </form>
         </div>

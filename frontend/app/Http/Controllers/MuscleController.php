@@ -10,6 +10,18 @@ use Illuminate\View\View;
 
 class MuscleController extends Controller
 {
+    private const kindMuscle = 'muscle', kindActivity = 'activity';
+
+    private const kindLabelMap = [
+        self::kindMuscle => 'Musculo',
+        self::kindActivity => 'Actividad',
+    ];
+
+    private const savedMessageMap = [
+        self::kindMuscle => ['created' => 'Musculo creado.', 'updated' => 'Musculo actualizado.'],
+        self::kindActivity => ['created' => 'Actividad creada.', 'updated' => 'Actividad actualizada.'],
+    ];
+
     private ApiClientService $apiClient;
 
     public function __construct(ApiClientService $apiClient){
@@ -17,14 +29,17 @@ class MuscleController extends Controller
     }
 
     public function index(): View{
-        $muscleList = $this->apiClient->getMuscles();
-        $data['muscles'] = $muscleList;
+        $groupList = collect($this->apiClient->getMuscles() ?? []);
+        $data['muscles'] = $groupList->where('kind', '!=', self::kindActivity)->values()->all();
+        $data['activities'] = $groupList->where('kind', self::kindActivity)->values()->all();
         $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('muscles.index', compact('data'));
     }
 
-    public function create(): View{
+    public function create(Request $request): View{
         $data['muscle'] = null;
+        $data['kind'] = $request->query('kind') === self::kindActivity ? self::kindActivity : self::kindMuscle;
+        $data['kindLabels'] = self::kindLabelMap;
         $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('muscles.form', compact('data'));
     }
@@ -36,6 +51,8 @@ class MuscleController extends Controller
         }
 
         $data['muscle'] = $muscle;
+        $data['kind'] = $muscle['kind'] ?? self::kindMuscle;
+        $data['kindLabels'] = self::kindLabelMap;
         $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('muscles.form', compact('data'));
     }
@@ -49,11 +66,11 @@ class MuscleController extends Controller
 
         if(!$this->isApiSuccess($response)){
             return back()
-                ->withErrors(['name' => $this->apiErrorMessage($response, 'No pudimos actualizar el musculo.')])
+                ->withErrors(['name' => $this->apiErrorMessage($response, 'No pudimos guardar los cambios.')])
                 ->withInput();
         }
 
-        return redirect()->route('muscle.index')->with('catalog_saved', 'Musculo actualizado.');
+        return redirect()->route('muscle.index')->with('catalog_saved', self::savedMessageMap[$validated['kind']]['updated']);
     }
 
     public function store(Request $request): RedirectResponse{
@@ -65,21 +82,21 @@ class MuscleController extends Controller
 
         if(!$this->isApiSuccess($response)){
             return back()
-                ->withErrors(['name' => $this->apiErrorMessage($response, 'No pudimos crear el musculo.')])
+                ->withErrors(['name' => $this->apiErrorMessage($response, 'No pudimos crearlo.')])
                 ->withInput();
         }
 
-        return redirect()->route('muscle.index')->with('catalog_saved', $this->createdMessage($response, 'Musculo creado.'));
+        return redirect()->route('muscle.index')->with('catalog_saved', $this->createdMessage($response, self::savedMessageMap[$validated['kind']]['created']));
     }
 
     public function destroy(int $id): RedirectResponse{
         $response = $this->apiClient->deleteMuscle($id);
 
         if(!$this->isApiSuccess($response)){
-            return back()->withErrors(['muscle' => $this->apiErrorMessage($response, 'No pudimos eliminar el musculo.')]);
+            return back()->withErrors(['muscle' => $this->apiErrorMessage($response, 'No pudimos eliminarlo.')]);
         }
 
-        return redirect()->route('muscle.index')->with('catalog_saved', 'Musculo eliminado.');
+        return redirect()->route('muscle.index')->with('catalog_saved', 'Eliminado.');
     }
 
     // la imagen es obligatoria al crear, al editar es opcional
@@ -88,6 +105,7 @@ class MuscleController extends Controller
             'name' => ['required', 'string', 'min:3', 'max:50'],
             'description' => ['required', 'string', 'min:5', 'max:255'],
             'recommended_rest_days' => ['required', 'integer', 'min:1', 'max:14'],
+            'kind' => ['required', 'in:'.self::kindMuscle.','.self::kindActivity],
             'is_public' => ['required', 'boolean'],
             'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ];
