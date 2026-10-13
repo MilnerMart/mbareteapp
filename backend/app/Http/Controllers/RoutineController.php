@@ -99,7 +99,9 @@ class RoutineController extends Controller
         $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $routine, $validated){
             $routine->writeToDb($dbConnector);
             if(array_key_exists('exercises', $validated)){
-                RoutineExercise::syncRoutineExercises($dbConnector, $routine->getEntityId(), $validated['exercises']);
+                $exerciseList = $validated['exercises'];
+                ksort($exerciseList);
+                RoutineExercise::syncRoutineExercises($dbConnector, $routine->getEntityId(), $exerciseList);
             }
         });
 

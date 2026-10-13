@@ -195,8 +195,10 @@ class RoutineController extends Controller
             'exercises.*.notes' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // validated() arma el array siguiendo el orden de las reglas, no el del formulario: el orden sale del input
         $exerciseList = [];
-        foreach ($validated['exercises'] ?? [] as $exerciseId => $values) {
+        foreach (array_keys((array)$request->input('exercises', [])) as $exerciseId) {
+            $values = $validated['exercises'][$exerciseId] ?? [];
             $exerciseList[] = [
                 'exercise_id' => (int)$exerciseId,
                 'sets' => $values['sets'] ?? null,
