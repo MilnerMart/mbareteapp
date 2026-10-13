@@ -32,12 +32,13 @@
             @foreach ($exerciseResources as $resource)
                 <div class="col-12 col-md-10 col-lg-8 d-flex justify-content-center mb-4">
                     <div class="card exercise-card">
-                        <div class="exercise-image-wrapper">
+                        <div class="exercise-image-wrapper media-attribution-host">
                             @if (($resource['kind'] ?? null) === 'video')
                                 <video src="{{ $resource['url'] }}" class="exercise-image" controls muted loop playsinline preload="metadata"></video>
                             @else
                                 <img src="{{ asset($resource['url']) }}" class="exercise-image" alt="{{ $resource['name'] ?? $exercise['name'] }}">
                             @endif
+                            @include('layouts._partials.media-attribution', ['attribution' => $resource['attribution'] ?? null])
                         </div>
                         @if ($resource['isPublic'] ?? false)
                             <div class="exercise-resource-footer">

@@ -5,6 +5,7 @@ use App\ServiceApi\AwsSesApiClient;
 use App\ServiceApi\BrevoApiClient;
 use App\ServiceApi\FreeExerciseDbApiClient;
 use App\ServiceApi\LocalStorageApiClient;
+use App\ServiceApi\WgerApiClient;
 
 /*
 | Tipos de proveedor que se pueden crear: tipo => clase que extiende ProviderApiClient.
@@ -14,6 +15,7 @@ use App\ServiceApi\LocalStorageApiClient;
 return [
     'local-storage' => LocalStorageApiClient::class,
     'free-exercise-db' => FreeExerciseDbApiClient::class,
+    'wger' => WgerApiClient::class,
     'aws-s3' => AwsApiClient::class,
     'aws-ses' => AwsSesApiClient::class,
     'brevo' => BrevoApiClient::class,

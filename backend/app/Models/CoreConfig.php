@@ -25,12 +25,17 @@ class CoreConfig extends BaseEntity {
     private const myTable = DbSchema::tableCoreConfigs;
 
     const actionSendEmail = 'send-email', actionSendSms = 'send-sms', actionSendPush = 'send-push', actionSendWhatsapp = 'send-whatsapp',
-        actionStoreResources = 'store-resources', actionFetchResources = 'fetch-resources', actionFetchPublicResources = 'fetch-public-resources';
+        actionStoreResources = 'store-resources', actionFetchResources = 'fetch-resources', actionFetchPublicResources = 'fetch-public-resources',
+        actionFetchPublicResources2 = 'fetch-public-resources-2', actionFetchPublicResources3 = 'fetch-public-resources-3';
+
+    const publicResourceActionList = [self::actionFetchPublicResources, self::actionFetchPublicResources2, self::actionFetchPublicResources3];
 
     const actionMap = [
         self::actionStoreResources => ['label' => 'Almacenamiento de recursos', 'interface' => ResourceApi::class, 'channel' => null],
         self::actionFetchResources => ['label' => 'Obtener recursos', 'interface' => ResourceApi::class, 'channel' => null],
         self::actionFetchPublicResources => ['label' => 'Recursos publicos', 'interface' => PublicResourceApi::class, 'channel' => null],
+        self::actionFetchPublicResources2 => ['label' => 'Recursos publicos (2)', 'interface' => PublicResourceApi::class, 'channel' => null],
+        self::actionFetchPublicResources3 => ['label' => 'Recursos publicos (3)', 'interface' => PublicResourceApi::class, 'channel' => null],
         self::actionSendEmail => ['label' => 'Envio de correos', 'interface' => MessagingApi::class, 'channel' => MessagingApi::channelEmail],
         self::actionSendSms => ['label' => 'Envio de SMS', 'interface' => MessagingApi::class, 'channel' => MessagingApi::channelSms],
         self::actionSendPush => ['label' => 'Notificaciones push', 'interface' => MessagingApi::class, 'channel' => MessagingApi::channelPush],

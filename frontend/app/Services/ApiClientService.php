@@ -125,8 +125,8 @@ class ApiClientService
         return $this->delete('/exercise/'.$id.'/resource/'.$resourceId);
     }
 
-    public function getPublicResourceProvider(){
-        return $this->get('/public-resources/provider')['provider'] ?? null;
+    public function getPublicResourceProviders(){
+        return $this->get('/public-resources/provider')['providers'] ?? [];
     }
 
     public function searchPublicResources(string $query){

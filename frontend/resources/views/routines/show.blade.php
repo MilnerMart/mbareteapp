@@ -183,14 +183,32 @@
     <script type="module">
         const routineExerciseData = JSON.parse($('#routineExerciseData').text());
 
+        const link = (text, href, rel = 'noopener') => $('<a>', { href, target: '_blank', rel }).text(text);
+
+        // mismo bloque que layouts._partials.media-attribution
+        const buildAttribution = (attribution) => $('<details>', { class: 'media-attribution' }).append(
+            $('<summary>', { title: 'Créditos y licencia', 'aria-label': 'Créditos y licencia' })
+                .append($('<i>', { class: 'fa-brands fa-creative-commons', 'aria-hidden': 'true' })),
+            $('<p>').append(
+                link(attribution.title, attribution.sourceUrl), ' por ',
+                attribution.authorUrl ? link(attribution.author, attribution.authorUrl) : document.createTextNode(attribution.author), ', ',
+                link(attribution.license, attribution.licenseUrl, 'noopener license'),
+                document.createTextNode(` · vía ${attribution.provider}`),
+            ),
+        );
+
         // .text() y .attr() escapan: la descripcion la escribe un usuario
         const buildExerciseDetail = (exercise) => {
             const $container = $('<div>', { class: 'routine-exercise-detail' });
             $.each(exercise.resources, (index, resource) => {
+                const $media = $('<div>', { class: 'media-attribution-host' }).appendTo($container);
                 if (resource.kind === 'video') {
-                    $('<video>', { src: resource.url, controls: true, muted: true, loop: true, playsinline: true, preload: 'metadata' }).appendTo($container);
+                    $('<video>', { src: resource.url, controls: true, muted: true, loop: true, playsinline: true, preload: 'metadata' }).appendTo($media);
                 } else {
-                    $('<img>', { src: resource.url, alt: exercise.name }).appendTo($container);
+                    $('<img>', { src: resource.url, alt: exercise.name }).appendTo($media);
+                }
+                if (resource.attribution) {
+                    buildAttribution(resource.attribution).appendTo($media);
                 }
             });
             $('<p>', { class: 'routine-exercise-detail-meta' })

@@ -40,7 +40,10 @@
                         @if (!($exercise['isPublic'] ?? true))
                             <span class="catalog-private-badge catalog-private-badge-floating"><i class="fa-solid fa-lock"></i> Privado</span>
                         @endif
-                        <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}" class="card-img-top" style="border-radius: 10%;"></a>
+                        <div class="media-attribution-host">
+                            <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}" class="card-img-top" style="border-radius: 10%;"></a>
+                            @include('layouts._partials.media-attribution', ['attribution' => $exercise['imageAttribution'] ?? null])
+                        </div>
                         <div class="card-body pb-0">
                             <h5 class="card-title text-center mb-0">
                                 <a href="{{ route('exercise.resource', $exercise['id']) }}" class="catalog-card-title-link">{{ $exercise['name'] }}</a>

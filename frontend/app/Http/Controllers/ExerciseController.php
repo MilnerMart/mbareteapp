@@ -90,7 +90,7 @@ class ExerciseController extends Controller
         $data['exercise'] = null;
         $data['muscles'] = [];
         $data['isAdmin'] = AuthPermits::isAdmin();
-        $data['publicProvider'] = $this->apiClient->getPublicResourceProvider();
+        $data['publicProviders'] = $this->apiClient->getPublicResourceProviders();
         return $this->renderView('exercises.form', compact('data'));
     }
 
@@ -105,7 +105,7 @@ class ExerciseController extends Controller
         $data['exercise'] = $exercise;
         $data['muscles'] = $this->apiClient->getMuscles() ?? [];
         $data['isAdmin'] = AuthPermits::isAdmin();
-        $data['publicProvider'] = $this->apiClient->getPublicResourceProvider();
+        $data['publicProviders'] = $this->apiClient->getPublicResourceProviders();
         return $this->renderView('exercises.form', compact('data'));
     }
 

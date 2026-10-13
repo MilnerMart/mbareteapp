@@ -5,9 +5,10 @@ namespace App\ServiceApi;
 use App\PublicException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 class FreeExerciseDbApiClient extends ProviderApiClient implements PublicResourceApi {
+
+    use SearchesTextIndex;
 
     protected int $timeoutSeconds = 30;
 
@@ -24,9 +25,6 @@ class FreeExerciseDbApiClient extends ProviderApiClient implements PublicResourc
     private const imageLabelMap = ['Posicion inicial', 'Posicion final'];
 
     private const translationPath = 'data/free-exercise-db/es.json';
-
-    private const stopWordList = ['de', 'del', 'con', 'en', 'la', 'el', 'los', 'las', 'y', 'a', 'al', 'para', 'por', 'un', 'una',
-        'the', 'with', 'on', 'of', 'and', 'to', 'for'];
 
     private ?array $exerciseIndex = null;
 
@@ -48,33 +46,16 @@ class FreeExerciseDbApiClient extends ProviderApiClient implements PublicResourc
     }
 
     function searchPublicResources(string $query, int $limit = 10): array{
-        $wordList = array_values(array_diff(explode(' ', self::normalizeText($query)), self::stopWordList, ['']));
-        if(mb_strlen(implode('', $wordList)) < 2){
-            throw PublicException::validationError('La busqueda debe tener al menos 2 caracteres');
-        }
-
-        $queryPhrase = implode(' ', $wordList);
+        $wordList = self::buildSearchWordListOrFail($query);
         $matchList = [];
         foreach ($this->queryExerciseIndex() as $itemKey => $exercise) {
             if(!$exercise['images']){
                 continue;
             }
-            $score = 0;
-            foreach ($wordList as $word) {
-                if(!self::containsWord($exercise['searchText'], $word)){
-                    continue 2;
-                }
-                $score += self::containsWord($exercise['nameText'], $word) ? 10 : 0;
+            $score = self::scoreSearchMatch($wordList, $exercise['searchText'], $exercise['nameText'], [$exercise['name'], (string)$exercise['nameEs']]);
+            if($score !== null){
+                $matchList[] = ['key' => (string)$itemKey, 'exercise' => $exercise, 'score' => $score];
             }
-            foreach ([$exercise['name'], $exercise['nameEs']] as $name) {
-                $namePhrase = implode(' ', array_diff(explode(' ', self::normalizeText($name)), self::stopWordList));
-                $score += match(true) {
-                    $namePhrase === $queryPhrase => 100,
-                    $namePhrase !== '' && str_starts_with($namePhrase, $queryPhrase) => 20,
-                    default => 0,
-                };
-            }
-            $matchList[] = ['key' => (string)$itemKey, 'exercise' => $exercise, 'score' => $score];
         }
 
         usort($matchList, fn(array $a, array $b) => [$b['score'], mb_strlen(self::displayName($a['exercise'])), self::displayName($a['exercise'])]
@@ -164,18 +145,6 @@ class FreeExerciseDbApiClient extends ProviderApiClient implements PublicResourc
 
     private static function displayName(array $exercise): string{
         return $exercise['nameEs'] ?? $exercise['name'];
-    }
-
-    private static function normalizeText(?string $text): string{
-        return trim(preg_replace('/[^a-z0-9]+/', ' ', Str::lower(Str::ascii((string)$text))));
-    }
-
-    private static function containsWord(string $text, string $word): bool{
-        if(str_contains(' '.$text, ' '.$word)){
-            return true;
-        }
-        $singular = preg_replace('/(es|s)$/', '', $word);
-        return strlen($singular) >= 3 && $singular !== $word && str_contains(' '.$text, ' '.$singular);
     }
 
     private function buildCacheKey(string $suffix): string{

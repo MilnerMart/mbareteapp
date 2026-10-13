@@ -179,7 +179,11 @@ class RoutineController extends Controller
             foreach (Resource::queryListByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise['id']) as $resource) {
                 $url = $this->getResourceService()->obtainPublicUrl($resource);
                 if($url){
-                    $exercise['resources'][] = ['url' => $url, 'kind' => $resource->buildApiModel()['kind']];
+                    $exercise['resources'][] = [
+                        'url' => $url,
+                        'kind' => $resource->buildApiModel()['kind'],
+                        'attribution' => $this->getResourceService()->obtainAttribution($resource),
+                    ];
                 }
             }
         }

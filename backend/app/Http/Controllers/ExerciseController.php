@@ -27,6 +27,7 @@ class ExerciseController extends Controller
             $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
             $exerciseModel = $exercise->buildApiModel();
             $exerciseModel['image'] = $this->getResourceService()->obtainPublicUrl($resource);
+            $exerciseModel['imageAttribution'] = $this->getResourceService()->obtainAttribution($resource);
             $model[] = $exerciseModel;
         }
         return $this->successApiResponse($model);
@@ -73,6 +74,7 @@ class ExerciseController extends Controller
 
         $model = $exercise->buildApiModel();
         $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
+        $model['imageAttribution'] = $this->getResourceService()->obtainAttribution($resource);
         $model['canManageResources'] = $this->canManageExerciseResources($request->user('sanctum'), $exercise);
         return $this->successApiResponse($model, 200);
     }
@@ -123,6 +125,7 @@ class ExerciseController extends Controller
             $resource = Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
             $exerciseModel = $exercise->buildApiModel();
             $exerciseModel['image'] = $this->getResourceService()->obtainPublicUrl($resource);
+            $exerciseModel['imageAttribution'] = $this->getResourceService()->obtainAttribution($resource);
             $model[]= $exerciseModel;
         }
         return $this->successApiResponse($model);
@@ -138,6 +141,7 @@ class ExerciseController extends Controller
             /**  @var Resource $resource */
             $resourceModel = $resource->buildApiModel();
             $resourceModel['url'] = $this->getResourceService()->obtainPublicUrl($resource);
+            $resourceModel['attribution'] = $this->getResourceService()->obtainAttribution($resource);
             if($resourceModel['url']){
                 $model[] = $resourceModel;
             }

@@ -138,19 +138,31 @@ class ConfigController extends Controller
         $this->allowConfigPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $coreConfigMap = CoreConfig::queryActionMap($dbConnector);
+        $actionMap = [];
+        $publicProviderTypeMap = [];
 
         foreach ($request->validated()['actions'] as $action => $providerConfigId) {
             $action = (string)$action;
             $actionInfo = CoreConfig::actionInfoOrFail($action);
             $providerConfigId = $providerConfigId ? (int)$providerConfigId : null;
-            if($providerConfigId){
-                $providerConfig = ProviderConfig::queryByDbIdOrFail($dbConnector, $providerConfigId);
-                $provider = Provider::queryByDbIdOrFail($dbConnector, $providerConfig->getProviderId());
-                if(!$providerConfig->isActive() || !CoreConfig::isProviderCompatible($action, $provider)){
-                    throw PublicException::validationError('La credencial "'.$providerConfig->getName().'" no sirve para: '.$actionInfo['label']);
-                }
+            $actionMap[$action] = $providerConfigId;
+            if(!$providerConfigId){
+                continue;
             }
+            $providerConfig = ProviderConfig::queryByDbIdOrFail($dbConnector, $providerConfigId);
+            $provider = Provider::queryByDbIdOrFail($dbConnector, $providerConfig->getProviderId());
+            if(!$providerConfig->isActive() || !CoreConfig::isProviderCompatible($action, $provider)){
+                throw PublicException::validationError('La credencial "'.$providerConfig->getName().'" no sirve para: '.$actionInfo['label']);
+            }
+            if(in_array($action, CoreConfig::publicResourceActionList, true)){
+                if(isset($publicProviderTypeMap[$provider->getType()])){
+                    throw PublicException::validationError('El proveedor '.$provider->getName().' ya esta elegido en otro espacio de recursos publicos');
+                }
+                $publicProviderTypeMap[$provider->getType()] = true;
+            }
+        }
 
+        foreach ($actionMap as $action => $providerConfigId) {
             $coreConfig = $coreConfigMap[$action] ?? CoreConfig::allocNew($action);
             $coreConfig->setProviderConfigId($providerConfigId);
             $coreConfig->writeToDb($dbConnector);

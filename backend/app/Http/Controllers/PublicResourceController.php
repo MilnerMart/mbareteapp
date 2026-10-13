@@ -14,7 +14,8 @@ class PublicResourceController extends Controller
 
     public function provider(Request $request): JsonResponse {
         $this->usePublicResourcesOrFail($request->user());
-        return $this->successApiResponse(['provider' => $this->getResourceService()->publicProviderModel()]);
+        $providerList = $this->getResourceService()->publicProviderModelList();
+        return $this->successApiResponse(['provider' => $providerList[0] ?? null, 'providers' => $providerList]);
     }
 
     public function search(Request $request): JsonResponse {

@@ -133,3 +133,72 @@ body {
 .account-verify-notice form {
     margin: 0;
 }
+
+/* creditos de recursos publicos con licencia Creative Commons: icono discreto en la esquina de la imagen */
+.media-attribution-host {
+    position: relative;
+}
+
+.media-attribution {
+    bottom: .4rem;
+    color: #e5e5e5;
+    font-size: .72rem;
+    line-height: 1.35;
+    position: absolute;
+    right: .4rem;
+    text-align: left;
+    z-index: 2;
+}
+
+.media-attribution summary {
+    align-items: center;
+    background: rgba(0, 0, 0, .55);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    font-size: .95rem;
+    height: 1.6rem;
+    justify-content: center;
+    list-style: none;
+    opacity: .55;
+    transition: opacity .2s;
+    width: 1.6rem;
+}
+
+.media-attribution summary::-webkit-details-marker {
+    display: none;
+}
+
+.media-attribution summary:hover,
+.media-attribution summary:focus-visible,
+.media-attribution[open] summary {
+    opacity: 1;
+}
+
+.media-attribution p {
+    background: rgba(0, 0, 0, .85);
+    border-radius: 6px;
+    bottom: calc(100% + .3rem);
+    margin: 0;
+    max-width: min(18rem, 80vw);
+    padding: .4rem .6rem;
+    position: absolute;
+    right: 0;
+    width: max-content;
+}
+
+.media-attribution a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+/* en los videos va arriba para no tapar los controles */
+.media-attribution-host:has(video) .media-attribution {
+    bottom: auto;
+    top: .4rem;
+}
+
+.media-attribution-host:has(video) .media-attribution p {
+    bottom: auto;
+    top: calc(100% + .3rem);
+}

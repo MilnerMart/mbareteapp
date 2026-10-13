@@ -3,7 +3,8 @@
     $exercise = $data['exercise'] ?? null;
     $muscles = $data['muscles'] ?? [];
     $isEdit = (bool) $exercise;
-    $publicProvider = $data['publicProvider'] ?? null;
+    $publicProviders = $data['publicProviders'] ?? [];
+    $publicProviderNames = collect($publicProviders)->pluck('name')->join(', ', ' y ');
     $imageSource = old('image_source', 'upload');
 @endphp
 @extends('layouts.layout')
@@ -90,7 +91,7 @@
                         <img src="{{ asset($exercise['image_url']) }}" alt="{{ $exercise['name'] }}" class="d-block mb-2 rounded" style="max-height: 120px;">
                     @endif
 
-                    @if ($publicProvider)
+                    @if ($publicProviders)
                         <div class="catalog-source-toggle" role="radiogroup" aria-label="Origen de la imagen">
                             <label>
                                 <input type="radio" name="image_source" value="upload" @checked($imageSource === 'upload')>
@@ -98,7 +99,7 @@
                             </label>
                             <label>
                                 <input type="radio" name="image_source" value="public" @checked($imageSource === 'public')>
-                                <span><i class="fa-solid fa-globe"></i> Recurso público ({{ $publicProvider['name'] }})</span>
+                                <span><i class="fa-solid fa-globe"></i> Recurso público ({{ $publicProviderNames }})</span>
                             </label>
                         </div>
                     @endif
@@ -117,12 +118,12 @@
                         </small>
                     </div>
 
-                    @if ($publicProvider)
+                    @if ($publicProviders)
                         <div data-image-source="public" class="catalog-public-picker" hidden
                              data-search-url="{{ route('public-resource.search') }}"
                              data-media-url="{{ route('public-resource.media', '__ITEM__') }}">
                             <div class="catalog-public-search">
-                                <input type="search" class="form-control" data-public-query placeholder="Busca el ejercicio, ej. curl de bíceps" aria-label="Buscar en {{ $publicProvider['name'] }}">
+                                <input type="search" class="form-control" data-public-query placeholder="Busca el ejercicio, ej. curl de bíceps" aria-label="Buscar en {{ $publicProviderNames }}">
                                 <button type="button" class="btn btn-outline-light" data-public-search>
                                     <i class="fa-solid fa-magnifying-glass"></i>
                                     <span>Buscar</span>
@@ -147,7 +148,7 @@
     </section>
 @endsection
 
-@if ($publicProvider)
+@if ($publicProviders)
     @section('js')
         {{-- module: corre despues de app.js, que es quien expone jQuery --}}
         <script type="module">
@@ -156,6 +157,7 @@
             const isEdit = @json($isEdit);
             const $status = $picker.find('[data-public-status]');
             const defaultStatus = $status.text();
+            const publicProviderCount = @json(count($publicProviders));
 
             // solo viaja el origen elegido: el otro queda deshabilitado
             const applySource = () => {
@@ -198,6 +200,12 @@
                         ? $('<img>', { src: media.url, alt: media.name, loading: 'lazy' })
                         : $('<video>', { src: media.url, muted: true, loop: true, playsinline: true, preload: 'metadata' });
                     $item.append($preview, $('<span>').text(media.name));
+                    // la licencia se muestra junto a la imagen en la app; aca solo como referencia
+                    if (media.attribution) {
+                        $('<small>', { class: 'catalog-public-credit' })
+                            .text(`${media.attribution.license} · ${media.attribution.author}`)
+                            .appendTo($item);
+                    }
                     // una imagen puede ser la principal; todo lo marcado se suma como recurso del ejercicio
                     if (isImage) {
                         $('<label>', { class: 'catalog-public-option' })
@@ -243,6 +251,7 @@
                     $.each(resultList, (index, result) => {
                         $('<button>', { type: 'button', class: 'catalog-public-result' })
                             .text(result.name)
+                            .append(publicProviderCount > 1 ? $('<small>').text(` · ${result.provider}`) : null)
                             .on('click', function () {
                                 $results.find('.is-active').removeClass('is-active');
                                 $(this).addClass('is-active');
