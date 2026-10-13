@@ -165,6 +165,10 @@ class ApiClientService
         return $this->get('/user/'.$id);
     }
 
+    public function updateProfile(int $id, array $params){
+        return $this->put('/user/'.$id.'/profile', $params);
+    }
+
     public function updateProfileImage(int $id, UploadedFile $image){
         return $this->postWithImage('/user/'.$id.'/profile-image', [], 'profile_image', $image);
     }
@@ -239,6 +243,10 @@ class ApiClientService
 
     public function deleteRoutine(int $id){
         return $this->delete('/routines/'.$id);
+    }
+
+    public function syncRoutineDoneToday(int $id, array $exerciseList){
+        return $this->put('/routines/'.$id.'/done', ['exercises' => $exerciseList]);
     }
 
     public function addRoutineExercise(int $id, array $params){

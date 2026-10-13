@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 use stdClass;
 
-#[Fillable(['name', 'last_name', 'email', 'password', 'age', 'height', 'weight', 'profile_image_url', 'status'])]
+#[Fillable(['name', 'last_name', 'email', 'password', 'age', 'height', 'weight', 'profile_image_url', 'status', 'goal', 'gender'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,6 +27,10 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     private const myTable = DbSchema::tableUsers;
+
+    const goalSlugList = ['hypertrophy', 'fat-loss', 'strength', 'endurance', 'toning', 'health'];
+
+    const genderSlugList = ['male', 'female', 'unspecified'];
 
     /**
      * Get the attributes that should be cast.

@@ -37,6 +37,7 @@ Route::prefix('/v1')->group(function(){
 
     Route::middleware('auth:sanctum')->group(function(){
         Route::post('/user/{id}/profile-image', [UserController::class, 'updateProfileImage']);
+        Route::put('/user/{id}/profile', [UserController::class, 'updateProfile']);
         Route::get('/user/{id}', [UserController::class, 'show']);
 
         Route::post('/muscle', [MuscleController::class, 'store']);
@@ -88,6 +89,7 @@ Route::prefix('/v1')->group(function(){
             Route::put('/{id}', [RoutineController::class, 'update']);
             Route::delete('/{id}', [RoutineController::class, 'destroy']);
             Route::post('/{id}/exercises', [RoutineController::class, 'addExercise']);
+            Route::put('/{id}/done', [RoutineController::class, 'syncDoneToday']);
             Route::delete('/{id}/exercises/{exerciseId}', [RoutineController::class, 'removeExercise']);
             Route::post('/{id}/assign', [RoutineController::class, 'assign']);
             Route::delete('/{id}/assign/{userId}', [RoutineController::class, 'unassign']);

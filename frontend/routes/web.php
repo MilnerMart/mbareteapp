@@ -43,6 +43,7 @@ Route::middleware('frontend.auth')->group(function () {
     Route::get('/profile/{id}', [UserController::class, 'getProfile'])->name('user.profile');
 
     Route::post('/profile/{id}/image', [UserController::class, 'updateProfileImage'])->name('user.profile.image');
+    Route::put('/profile/{id}', [UserController::class, 'updateProfile'])->name('user.profile.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
 
@@ -88,6 +89,7 @@ Route::middleware('frontend.auth')->group(function () {
         Route::delete('/{id}', [RoutineController::class, 'destroy'])->name('routine.destroy');
         Route::post('/assign', [RoutineController::class, 'assign'])->name('routine.assign');
         Route::delete('/{id}/assign/{userId}', [RoutineController::class, 'unassign'])->name('routine.unassign');
+        Route::put('/{id}/done', [RoutineController::class, 'saveDoneToday'])->name('routine.done');
     });
 
     Route::middleware('frontend.gym')->prefix('/gym')->group(function () {

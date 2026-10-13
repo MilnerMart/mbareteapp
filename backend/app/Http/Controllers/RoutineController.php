@@ -13,6 +13,7 @@ use App\Models\Permit;
 use App\Models\Resource;
 use App\Models\Routine;
 use App\Models\RoutineExercise;
+use App\Models\RoutineExerciseLog;
 use App\Models\User;
 use App\Models\UserRoutine;
 use App\Core\EntityStatus;
@@ -71,16 +72,16 @@ class RoutineController extends Controller
         $dbConnector = $this->getDbConnector();
         /**  @var User $user */
         $user = $request->user();
-        $routine = Routine::queryByDbIdOrFail($dbConnector, $id);
-        if(!$this->canEditRoutine($user, $routine) && !UserRoutine::isAssigned($dbConnector, $user->id, $routine->getEntityId())){
-            throw PublicException::forbiddenError('No tienes acceso a esta rutina');
-        }
+        $routine = $this->queryAccessibleRoutineOrFail($user, $id);
 
         $owner = User::find($routine->getOwnerId());
         $routineModel = $routine->buildApiModel();
         $routineModel['canEdit'] = $this->canEditRoutine($user, $routine);
-        $routineModel['exercises'] = $this->addExerciseResources(
-            RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId()));
+        $doneWeightMap = RoutineExerciseLog::queryDoneTodayWeightMap($dbConnector, $user->id, $routine->getEntityId());
+        $routineModel['exercises'] = array_map(fn(array $exercise) => $exercise + [
+            'doneToday' => array_key_exists((int)$exercise['id'], $doneWeightMap),
+            'doneWeightKg' => $doneWeightMap[(int)$exercise['id']] ?? null,
+        ], $this->addExerciseResources(RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId())));
         $routineModel['refs']['owner'] = $owner ? UserResource::make($owner) : null;
         if($user->hasSeeAllPermit($dbConnector)){
             $routineModel['assignedUsers'] = $this->buildAssignedUserList($routine);
@@ -139,6 +140,30 @@ class RoutineController extends Controller
         );
 
         return $this->successApiResponse(RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId()), 201);
+    }
+
+    // lo hecho en el dia se guarda de una vez (lista completa) y alimenta los favoritos del perfil
+    public function syncDoneToday(Request $request, string $id): JsonResponse {
+        $validated = $request->validate([
+            'exercises' => ['present', 'array', 'max:100'],
+            'exercises.*.exercise_id' => ['required', 'integer', 'distinct'],
+            'exercises.*.weight_kg' => ['nullable', 'numeric', 'min:0', 'max:1000'],
+        ]);
+        $dbConnector = $this->getDbConnector();
+        $routine = $this->queryAccessibleRoutineOrFail($request->user(), $id);
+        $weightKgMap = [];
+        foreach ($validated['exercises'] as $exercise) {
+            $weightKgMap[(int)$exercise['exercise_id']] = isset($exercise['weight_kg']) ? round((float)$exercise['weight_kg'], 2) : null;
+        }
+        $exerciseIdList = array_keys($weightKgMap);
+        $routineExerciseIdList = RoutineExercise::allocDbTable($dbConnector)->where('routine_id', $routine->getEntityId())
+            ->pluck('exercise_id')->map(fn($exerciseId) => (int)$exerciseId)->all();
+        if(array_diff($exerciseIdList, $routineExerciseIdList)){
+            throw PublicException::validationError('Solo puedes marcar ejercicios que estan en esta rutina');
+        }
+
+        RoutineExerciseLog::syncDoneToday($dbConnector, $request->user()->id, $routine->getEntityId(), $weightKgMap);
+        return $this->successApiResponse(['doneExerciseIds' => $exerciseIdList]);
     }
 
     public function removeExercise(Request $request, string $id, string $exerciseId): JsonResponse {
@@ -212,6 +237,14 @@ class RoutineController extends Controller
             $model[] = $userModel;
         }
         return $model;
+    }
+
+    private function queryAccessibleRoutineOrFail(User $user, string $id): Routine {
+        $routine = Routine::queryByDbIdOrFail($this->getDbConnector(), $id);
+        if(!$this->canEditRoutine($user, $routine) && !UserRoutine::isAssigned($this->getDbConnector(), $user->id, $routine->getEntityId())){
+            throw PublicException::forbiddenError('No tienes acceso a esta rutina');
+        }
+        return $routine;
     }
 
     private function canEditRoutine(User $user, Routine $routine): bool {

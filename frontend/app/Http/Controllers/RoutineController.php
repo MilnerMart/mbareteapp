@@ -78,6 +78,8 @@ class RoutineController extends Controller
             return $exercise + [
                 'volume' => RoutineVolume::format($exercise),
                 'detailVolume' => RoutineVolume::formatDetail($exercise, $isActivity),
+                // los kg suman puntos de nivel; en actividades (cardio...) no aplican
+                'tracksWeight' => !$isActivity,
             ];
         }, $routine['exercises'] ?? []);
         $data['routine'] = $routine;
@@ -157,6 +159,28 @@ class RoutineController extends Controller
         }
 
         return back()->with('routine_saved', 'Ejercicio agregado a la rutina.');
+    }
+
+    // se guarda de una vez todo lo marcado como hecho hoy en la rutina
+    public function saveDoneToday(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'exercise_ids' => ['nullable', 'array', 'max:100'],
+            'exercise_ids.*' => ['nullable', 'integer'],
+            'weights' => ['nullable', 'array'],
+            'weights.*' => ['nullable', 'numeric', 'min:0', 'max:1000'],
+        ]);
+
+        $exerciseList = [];
+        foreach (array_filter($validated['exercise_ids'] ?? [], fn($exerciseId) => $exerciseId !== null) as $exerciseId) {
+            $weightKg = $validated['weights'][$exerciseId] ?? null;
+            $exerciseList[] = ['exercise_id' => (int)$exerciseId, 'weight_kg' => $weightKg !== null ? (float)$weightKg : null];
+        }
+        $response = $this->apiClient->syncRoutineDoneToday($id, $exerciseList);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['routine' => $this->apiErrorMessage($response, 'No pudimos guardar el entrenamiento.')]);
+        }
+
+        return back()->with('routine_saved', 'Entrenamiento de hoy guardado.');
     }
 
     public function assign(Request $request): RedirectResponse{

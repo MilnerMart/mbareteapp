@@ -96,17 +96,38 @@
                             @if (!empty($exercise['notes']))
                                 <p class="routine-exercise-notes">{{ $exercise['notes'] }}</p>
                             @endif
+                            @if ($exercise['tracksWeight'])
+                                <label class="routine-weight">
+                                    <input type="number" name="weights[{{ $exercise['id'] }}]" form="routine-done-form" class="form-control"
+                                        value="{{ $exercise['doneWeightKg'] ?? '' }}" min="0" max="1000" step="0.5" inputmode="decimal"
+                                        placeholder="Peso" aria-label="Kg usados en {{ $exercise['name'] }}" data-done-weight>
+                                    <span>kg</span>
+                                </label>
+                            @endif
                         </div>
                         <div class="routine-exercise-actions">
-                            <button type="button" class="btn routine-icon-btn routine-exercise-toggle" aria-pressed="false"
-                                title="Marcar como hecho" aria-label="Marcar {{ $exercise['name'] }} como hecho">
+                            <label class="btn routine-icon-btn routine-exercise-toggle" title="Marcar como hecho">
+                                <input type="checkbox" name="exercise_ids[]" value="{{ $exercise['id'] }}" form="routine-done-form"
+                                    class="visually-hidden" aria-label="Marcar {{ $exercise['name'] }} como hecho" data-done-check
+                                    @checked($exercise['doneToday'] ?? false)>
                                 <i class="fa-solid fa-check"></i>
-                            </button>
+                            </label>
                         </div>
                     </li>
                 @endforeach
             </ol>
-            <p class="routine-hint">Toca un ejercicio para ver como se hace y marcalo con <i class="fa-solid fa-check"></i> mientras entrenas.</p>
+            {{-- lo marcado se guarda todo junto en una sola llamada --}}
+            <form method="POST" action="{{ route('routine.done', $routine['id']) }}" id="routine-done-form" class="routine-done-form">
+                @csrf
+                @method('PUT')
+                {{-- siempre viaja la lista, aunque no quede nada marcado (asi se borra lo de hoy) --}}
+                <input type="hidden" name="exercise_ids[]" value="">
+                <button type="submit" class="btn btn-primary routine-btn-save" data-done-save>
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Guardar entrenamiento de hoy</span>
+                </button>
+            </form>
+            <p class="routine-hint">Toca un ejercicio para ver como se hace y marcalo con <i class="fa-solid fa-check"></i> mientras entrenas. Si usas peso, carga los kg. Al terminar guarda el entrenamiento: suma puntos a tu nivel y arma tus favoritos del perfil.</p>
             @if ($canEdit)
                 <p class="routine-hint">
                     Para cambiar tiempos, series, ordenar o quitar ejercicios usa <a href="{{ route('routine.edit', $routine['id']) }}">Editar</a>.
@@ -212,12 +233,26 @@
             });
         });
 
-        // marcar como hecho solo resalta el ejercicio, no guarda nada
-        $('.routine-exercise-toggle').on('click', function () {
-            const $button = $(this);
-            const isOn = $button.attr('aria-pressed') !== 'true';
-            $button.attr('aria-pressed', String(isOn));
-            $button.closest('.routine-exercise').toggleClass('is-highlighted', isOn);
+        // las casillas solo cambian en pantalla; el boton de guardar se habilita cuando hay cambios
+        const $doneCheckList = $('[data-done-check]');
+        const $doneWeightList = $('[data-done-weight]');
+        const readDoneState = () => [
+            ...$doneCheckList.map((index, check) => check.checked).get(),
+            ...$doneWeightList.map((index, input) => input.value).get(),
+        ].join();
+        const savedDoneState = readDoneState();
+        const refreshDoneSave = () => {
+            const currentState = readDoneState();
+            $('[data-done-save]').prop('disabled', currentState === savedDoneState);
+        };
+        $doneCheckList.on('change', refreshDoneSave);
+        // cargar kg marca el ejercicio como hecho
+        $doneWeightList.on('input', function () {
+            if (this.value !== '') {
+                $(this).closest('.routine-exercise').find('[data-done-check]').prop('checked', true);
+            }
+            refreshDoneSave();
         });
+        refreshDoneSave();
     </script>
 @endsection

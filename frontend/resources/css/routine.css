@@ -294,12 +294,14 @@
     margin-top: 1rem;
 }
 
-.routine-exercise.is-highlighted {
+.routine-exercise.is-highlighted,
+.routine-exercise:has([data-done-check]:checked) {
     background-color: rgba(193, 18, 31, .18);
     border-color: #c1121f;
 }
 
-.routine-exercise.is-highlighted .routine-exercise-name {
+.routine-exercise.is-highlighted .routine-exercise-name,
+.routine-exercise:has([data-done-check]:checked) .routine-exercise-name {
     color: #ff4d5a;
 }
 
@@ -396,7 +398,8 @@
     color: #ff4d5a;
 }
 
-.routine-exercise-toggle[aria-pressed="true"] {
+.routine-exercise-toggle[aria-pressed="true"],
+.routine-exercise-toggle:has(input:checked) {
     background-color: #c1121f;
     border-color: #c1121f;
     color: #ffffff;
@@ -599,4 +602,55 @@
 .routine-inline-label > .routine-inline-number {
     padding: .2rem .45rem;
     width: 4.5rem;
+}
+
+/* el check es una casilla del formulario del dia, con aspecto de boton */
+.routine-exercise-toggle {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    margin: 0;
+}
+
+.routine-exercise-toggle:has(input:focus-visible) {
+    outline: 2px solid #ff4d5a;
+    outline-offset: 2px;
+}
+
+.routine-done-form {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 1rem;
+}
+
+.routine-done-form .routine-btn-save:disabled {
+    background-color: #c1121f;
+    border-color: #c1121f;
+    color: #ffffff;
+    opacity: .45;
+}
+
+/* kg usados hoy: opcionales, suman puntos de nivel */
+.routine-weight {
+    align-items: center;
+    color: #a8a8a8;
+    display: inline-flex;
+    font-size: .85rem;
+    gap: .35rem;
+    margin: .2rem 0 0;
+}
+
+.routine-weight .form-control {
+    background-color: #0b0b0b;
+    border-color: #303030;
+    color: #f5f5f5;
+    font-size: .85rem;
+    padding: .15rem .45rem;
+    width: 5.5rem;
+}
+
+.routine-weight .form-control:focus {
+    border-color: #c1121f;
+    box-shadow: 0 0 0 .15rem rgba(193, 18, 31, .25);
 }
