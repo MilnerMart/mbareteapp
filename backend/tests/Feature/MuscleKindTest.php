@@ -106,6 +106,50 @@ class MuscleKindTest extends TestCase
         ])->assertUnprocessable();
     }
 
+    public function test_routine_update_saves_exercise_order_values_and_removals_together(): void
+    {
+        $token = $this->login(static::adminEmail);
+        $cardioId = collect($this->getJson('/api/v1/muscle')->json('data'))->firstWhere('slug', 'cardio')['id'];
+        $exerciseIdList = array_column($this->getJson('/api/v1/exercise/group/'.$cardioId)->json('data'), 'id');
+        [$first, $second, $third] = array_slice($exerciseIdList, 0, 3);
+        $routineId = $this->actingWithToken($token)->postJson('/api/v1/routines', [
+            'name' => 'Rutina ordenada', 'frequency' => 3, 'rest_minutes' => 1,
+        ])->assertCreated()->json('data.id');
+        foreach ([$first, $second, $third] as $exerciseId) {
+            $this->actingWithToken($token)->postJson('/api/v1/routines/'.$routineId.'/exercises', ['exercise_id' => $exerciseId, 'duration_minutes' => 5])
+                ->assertCreated();
+        }
+        $routineData = ['name' => 'Rutina renombrada', 'frequency' => 4, 'rest_minutes' => 2];
+
+        $this->actingWithToken($token)->putJson('/api/v1/routines/'.$routineId, $routineData + ['exercises' => [
+            ['exercise_id' => $third, 'sets' => 2, 'reps' => 10, 'notes' => 'Pasadas de 10 metros'],
+            ['exercise_id' => $first, 'duration_minutes' => 12],
+        ]])->assertOk()
+            ->assertJsonPath('data.name', 'Rutina renombrada')
+            ->assertJsonCount(2, 'data.exercises')
+            ->assertJsonPath('data.exercises.0.id', $third)
+            ->assertJsonPath('data.exercises.0.sets', 2)
+            ->assertJsonPath('data.exercises.0.duration_minutes', null)
+            ->assertJsonPath('data.exercises.0.notes', 'Pasadas de 10 metros')
+            ->assertJsonPath('data.exercises.1.id', $first)
+            ->assertJsonPath('data.exercises.1.duration_minutes', 12);
+
+        $this->actingWithToken($token)->putJson('/api/v1/routines/'.$routineId, $routineData)
+            ->assertOk()->assertJsonCount(2, 'data.exercises');
+
+        $this->actingWithToken($token)->putJson('/api/v1/routines/'.$routineId, $routineData + ['exercises' => [
+            ['exercise_id' => $exerciseIdList[4]],
+        ]])->assertStatus(400);
+        $this->actingWithToken($token)->putJson('/api/v1/routines/'.$routineId, $routineData + ['exercises' => [
+            ['exercise_id' => $first], ['exercise_id' => $first],
+        ]])->assertUnprocessable();
+        $this->actingWithToken($token)->getJson('/api/v1/routines/'.$routineId)->assertOk()
+            ->assertJsonPath('data.exercises.0.id', $third);
+
+        $this->actingWithToken($token)->putJson('/api/v1/routines/'.$routineId, $routineData + ['exercises' => []])
+            ->assertOk()->assertJsonCount(0, 'data.exercises');
+    }
+
     private function createGroup(string $token, string $name, ?string $kind = null)
     {
         $response = $this->actingWithToken($token)->post('/api/v1/muscle', array_filter([

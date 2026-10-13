@@ -96,9 +96,16 @@ class RoutineController extends Controller
         $routine->setFrequency($validated['frequency']);
         $routine->setRestTime(Routine::minutesToSeconds($validated['rest_minutes']));
         $routine->setDescription($validated['description'] ?? null);
-        $routine->writeToDb($dbConnector);
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $routine, $validated){
+            $routine->writeToDb($dbConnector);
+            if(array_key_exists('exercises', $validated)){
+                RoutineExercise::syncRoutineExercises($dbConnector, $routine->getEntityId(), $validated['exercises']);
+            }
+        });
 
-        return $this->successApiResponse($routine->buildApiModel());
+        $model = $routine->buildApiModel();
+        $model['exercises'] = RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId());
+        return $this->successApiResponse($model);
     }
 
     public function destroy(Request $request, string $id): JsonResponse {
