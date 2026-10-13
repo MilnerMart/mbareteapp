@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 
 class ResourceService extends BaseService {
 
-    private const slugMaxLength = 40;
+    private const slugMaxLength = 80;
 
     private ?ResourceApi $storeClient = null;
 
@@ -52,7 +52,7 @@ class ResourceService extends BaseService {
             $resource->setUrl($resourceKey);
             $resource->setKind(Resource::kindImg);
         } else {
-            $resource = Resource::allocNew($name, $slug.'-image', Resource::kindImg, $modelId, $ownerId, $resourceKey, EntityStatus::statusIdActive);
+            $resource = Resource::allocNew($name, self::buildSlug($slug, 'image'), Resource::kindImg, $modelId, $ownerId, $resourceKey, EntityStatus::statusIdActive);
         }
         $resource->writeToDb($dbConnector);
 
@@ -135,7 +135,7 @@ class ResourceService extends BaseService {
         $media = $this->obtainPublicMediaOrFail($mediaKey);
         $resource = Resource::allocNew(
             Str::limit($media['name'], 250, ''),
-            rtrim(Str::limit(Str::slug($media['name']), self::slugMaxLength - 7, ''), '-').'-'.Str::lower(Str::random(6)),
+            self::buildSlug(Str::slug($media['name']), Str::lower(Str::random(6))),
             Resource::kindIdFromSlug($media['kind']) ?? Resource::kindImg,
             $modelId,
             $ownerId,
@@ -163,7 +163,7 @@ class ResourceService extends BaseService {
             $resource->setUrl($publicKey);
             $resource->setKind(Resource::kindImg);
         } else {
-            $resource = Resource::allocNew($name, $slug.'-image', Resource::kindImg, $modelId, $ownerId, $publicKey, EntityStatus::statusIdActive);
+            $resource = Resource::allocNew($name, self::buildSlug($slug, 'image'), Resource::kindImg, $modelId, $ownerId, $publicKey, EntityStatus::statusIdActive);
         }
         $resource->writeToDb($dbConnector);
 
@@ -268,6 +268,10 @@ class ResourceService extends BaseService {
             throw PublicException::validationError('Clave de recurso publico invalida: '.$publicKey);
         }
         return [$type, $providerKey];
+    }
+
+    private static function buildSlug(string $slug, string $suffix): string{
+        return rtrim(Str::limit($slug, self::slugMaxLength - strlen($suffix) - 1, ''), '-').'-'.$suffix;
     }
 
     private static function isPublicKey(string $resourceKey): bool{

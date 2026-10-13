@@ -13,6 +13,9 @@ return new class extends Migration
 {
     private const publicKeyPrefix = Resource::publicKeyPrefix.'free-exercise-db:';
 
+    // resources.slug es de 80 caracteres (2026_10_22_200000_change_resources_slug_length)
+    private const resourceSlugMaxLength = 80;
+
     // grupo => slugs posibles del musculo (en algunos entornos se crearon con otro slug)
     private const muscleSlugMap = [
         'triceps' => ['muscle-triceps', 'triceps'],
@@ -109,6 +112,8 @@ return new class extends Migration
                     continue;
                 }
 
+                // cada ejercicio entra completo con sus imagenes o no entra
+                DB::transaction(function() use ($now, $muscleId, $name, $slug, $itemKey, $restSeconds, $description, $mainUrl){
                 $exerciseId = DB::table('exercises')->insertGetId([
                     'owner_id' => null,
                     'is_public' => true,
@@ -122,8 +127,9 @@ return new class extends Migration
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
-                $this->insertResource($name, $slug.'-image', $exerciseId, $mainUrl);
-                $this->insertResource($name.' · Posición final', $slug.'-'.Str::lower(Str::random(6)), $exerciseId, self::publicKeyPrefix.$itemKey.'/1.jpg');
+                $this->insertResource($name, $this->buildResourceSlug($slug, 'image'), $exerciseId, $mainUrl);
+                $this->insertResource($name.' · Posición final', $this->buildResourceSlug($slug, Str::lower(Str::random(6))), $exerciseId, self::publicKeyPrefix.$itemKey.'/1.jpg');
+                });
             }
         }
     }
@@ -149,11 +155,16 @@ return new class extends Migration
         DB::table('exercises')->whereIn('id', $exerciseIdList)->delete();
     }
 
-    // el slug de los recursos es unico: si ya existe uno igual se le suma un sufijo
+    private function buildResourceSlug(string $slug, string $suffix): string
+    {
+        return rtrim(Str::limit($slug, self::resourceSlugMaxLength - strlen($suffix) - 1, ''), '-').'-'.$suffix;
+    }
+
+    // el slug de los recursos es unico: si ya existe uno igual se cambia el sufijo por uno al azar
     private function insertResource(string $name, string $slug, int $exerciseId, string $url): void
     {
         if (DB::table('resources')->where('slug', $slug)->exists()) {
-            $slug .= '-'.Str::lower(Str::random(6));
+            $slug = $this->buildResourceSlug(Str::beforeLast($slug, '-'), Str::lower(Str::random(6)));
         }
         DB::table('resources')->insert([
             'name' => $name,
