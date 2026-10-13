@@ -88,52 +88,30 @@
             <ol class="routine-exercise-list">
                 @foreach ($exercises as $exercise)
                     <li class="routine-exercise">
-                        <button type="button" class="routine-exercise-name routine-exercise-open" data-exercise-detail="{{ $exercise['id'] }}">
-                            {{ $exercise['name'] }}
-                        </button>
-                        <span class="routine-exercise-volume">
-                            {{ $exercise['volume'] }}
-                        </span>
-                        <div class="routine-exercise-actions">
-                            @if ($canEdit)
-                                <button type="button" class="btn routine-icon-btn routine-exercise-edit-toggle" aria-expanded="false"
-                                    aria-controls="volume_form_{{ $exercise['id'] }}"
-                                    title="Editar indicaciones" aria-label="Editar indicaciones de {{ $exercise['name'] }}">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
+                        <div class="routine-exercise-info">
+                            <button type="button" class="routine-exercise-name routine-exercise-open" data-exercise-detail="{{ $exercise['id'] }}">
+                                {{ $exercise['name'] }}
+                            </button>
+                            <span class="routine-exercise-volume">{{ $exercise['volume'] }}</span>
+                            @if (!empty($exercise['notes']))
+                                <p class="routine-exercise-notes">{{ $exercise['notes'] }}</p>
                             @endif
+                        </div>
+                        <div class="routine-exercise-actions">
                             <button type="button" class="btn routine-icon-btn routine-exercise-toggle" aria-pressed="false"
                                 title="Marcar como hecho" aria-label="Marcar {{ $exercise['name'] }} como hecho">
                                 <i class="fa-solid fa-check"></i>
                             </button>
-                            @if ($canEdit)
-                                <form method="POST" action="{{ route('routine.exercises.remove', [$routine['id'], $exercise['id']]) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn routine-icon-btn" title="Quitar de la rutina" aria-label="Quitar {{ $exercise['name'] }} de la rutina">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </form>
-                            @endif
                         </div>
-                        @if (!empty($exercise['notes']))
-                            <p class="routine-exercise-notes">{{ $exercise['notes'] }}</p>
-                        @endif
-                        @if ($canEdit)
-                            <form method="POST" action="{{ route('routine.exercises.update', [$routine['id'], $exercise['id']]) }}"
-                                  id="volume_form_{{ $exercise['id'] }}" class="routine-form routine-exercise-form" hidden>
-                                @csrf
-                                @method('PUT')
-                                @include('routines._volume-fields', ['fieldId' => $exercise['id'], 'fields' => $exercise['volumeFields']])
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </form>
-                        @endif
                     </li>
                 @endforeach
             </ol>
             <p class="routine-hint">Toca un ejercicio para ver como se hace y marcalo con <i class="fa-solid fa-check"></i> mientras entrenas.</p>
             @if ($canEdit)
-                <p class="routine-hint">Para agregar mas ejercicios entra a un musculo desde <a href="{{ route('muscle.index') }}">acá</a>.</p>
+                <p class="routine-hint">
+                    Para cambiar tiempos, series, ordenar o quitar ejercicios usa <a href="{{ route('routine.edit', $routine['id']) }}">Editar</a>.
+                    Para agregar mas entra a un musculo o actividad desde <a href="{{ route('muscle.index') }}">acá</a>.
+                </p>
             @endif
         @endif
 
@@ -240,14 +218,6 @@
             const isOn = $button.attr('aria-pressed') !== 'true';
             $button.attr('aria-pressed', String(isOn));
             $button.closest('.routine-exercise').toggleClass('is-highlighted', isOn);
-        });
-
-        // admin o creador: abre el formulario de series y repeticiones
-        $('.routine-exercise-edit-toggle').on('click', function () {
-            const $button = $(this);
-            const isOpen = $button.attr('aria-expanded') !== 'true';
-            $button.attr('aria-expanded', String(isOpen));
-            $('#' + $button.attr('aria-controls')).prop('hidden', !isOpen);
         });
     </script>
 @endsection

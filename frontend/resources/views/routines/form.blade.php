@@ -1,16 +1,10 @@
 @php
-    $routine = $data['routine'];
-    $isEdit = $routine !== null;
     $exerciseId = $data['exerciseId'] ?? null;
-    $backUrl = match (true) {
-        $isEdit => route('routine.show', $routine['id']),
-        $exerciseId !== null => route('exercise.resource', $exerciseId),
-        default => route('routine.index'),
-    };
+    $backUrl = $exerciseId !== null ? route('exercise.resource', $exerciseId) : route('routine.index');
 @endphp
 @extends('layouts.layout')
 
-@section('title', ($isEdit ? 'Editar rutina' : 'Nueva rutina') . ' | Mbarete App')
+@section('title', 'Nueva rutina | Mbarete App')
 
 @section('css')
     @vite(['resources/css/routine.css'])
@@ -23,17 +17,14 @@
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Volver</span>
             </a>
-            <h1>{{ $isEdit ? 'Editar rutina' : 'Nueva rutina' }}</h1>
+            <h1>Nueva rutina</h1>
 
             @if ($errors->any())
                 <div class="alert alert-danger">{{ $errors->first() }}</div>
             @endif
 
-            <form method="POST" action="{{ $isEdit ? route('routine.update', $routine['id']) : route('routine.store') }}" class="routine-form">
+            <form method="POST" action="{{ route('routine.store') }}" class="routine-form">
                 @csrf
-                @if ($isEdit)
-                    @method('PUT')
-                @endif
                 @if ($exerciseId)
                     <input type="hidden" name="exercise_id" value="{{ $exerciseId }}">
                 @endif
@@ -45,7 +36,7 @@
                         class="form-control @error('name') is-invalid @enderror"
                         id="name"
                         name="name"
-                        value="{{ old('name', $routine['name'] ?? '') }}"
+                        value="{{ old('name') }}"
                         placeholder="Pecho y triceps"
                         minlength="3"
                         maxlength="100"
@@ -60,7 +51,7 @@
                         name="description"
                         rows="2"
                         maxlength="255"
-                        placeholder="Opcional">{{ old('description', $routine['description'] ?? '') }}</textarea>
+                        placeholder="Opcional">{{ old('description') }}</textarea>
                 </div>
 
                 <div class="routine-form-row mb-4">
@@ -71,7 +62,7 @@
                             class="form-control @error('frequency') is-invalid @enderror"
                             id="frequency"
                             name="frequency"
-                            value="{{ old('frequency', $routine['frequency'] ?? 3) }}"
+                            value="{{ old('frequency', 3) }}"
                             min="1"
                             max="7"
                             required>
@@ -83,7 +74,7 @@
                             class="form-control @error('rest_minutes') is-invalid @enderror"
                             id="rest_minutes"
                             name="rest_minutes"
-                            value="{{ old('rest_minutes', $routine['restMinutes'] ?? 1) }}"
+                            value="{{ old('rest_minutes', 1) }}"
                             min="0"
                             max="30"
                             step="0.5"
@@ -91,9 +82,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">
-                    {{ $isEdit ? 'Guardar cambios' : 'Crear rutina' }}
-                </button>
+                <button type="submit" class="btn btn-primary w-100">Crear rutina</button>
             </form>
         </div>
     </section>

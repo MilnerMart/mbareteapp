@@ -221,11 +221,6 @@ class ApiClientService
         return $this->put('/me/gyms/'.$id.'/visibility', ['is_public' => $isPublic]);
     }
 
-    public function updateRoutineExercise(int $id, int $exerciseId, array $params){
-        // el backend agrega o actualiza series y repeticiones del ejercicio
-        return $this->post('/routines/'.$id.'/exercises', ['exercise_id' => $exerciseId] + $params);
-    }
-
     public function getRoutines(){
         return $this->get('/routines');
     }
@@ -248,10 +243,6 @@ class ApiClientService
 
     public function addRoutineExercise(int $id, array $params){
         return $this->post('/routines/'.$id.'/exercises', $params);
-    }
-
-    public function removeRoutineExercise(int $id, int $exerciseId){
-        return $this->delete('/routines/'.$id.'/exercises/'.$exerciseId);
     }
 
     public function assignRoutine(int $id, int $userId){

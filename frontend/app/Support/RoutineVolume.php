@@ -43,7 +43,7 @@ class RoutineVolume
         ], $isActivity);
     }
 
-    static function buildFields(array $exercise, bool $isActivity = false): array
+    static function buildFields(array $exercise, bool $isActivity = false, ?string $namePrefix = null): array
     {
         $values = [
             'duration_minutes' => $exercise['duration_minutes'] ?? null,
@@ -56,6 +56,7 @@ class RoutineVolume
             'withMinutes' => filled($values['duration_minutes']),
             'withSets' => filled($values['sets']) || filled($values['reps']),
             'notesPlaceholder' => $isActivity ? self::activityNotesPlaceholder : self::muscleNotesPlaceholder,
+            'names' => array_combine(array_keys($values), array_map(fn(string $key) => $namePrefix ? $namePrefix.'['.$key.']' : $key, array_keys($values))),
         ];
     }
 }

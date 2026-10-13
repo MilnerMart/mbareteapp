@@ -116,3 +116,29 @@ document.addEventListener('change', (event) => {
         syncToggleFields(event.target);
     }
 });
+
+// Formularios con data-confirm-submit: piden confirmar antes de guardar.
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('form[data-confirm-submit]');
+
+    if (!form || form.dataset.confirmed === 'true') {
+        return;
+    }
+
+    event.preventDefault();
+
+    const result = await Swal.fire({
+        icon: 'question',
+        title: form.dataset.confirmTitle || 'Confirmar',
+        text: form.dataset.confirmText || '',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Seguir editando',
+        confirmButtonColor: '#c1121f',
+    });
+
+    if (result.isConfirmed) {
+        form.dataset.confirmed = 'true';
+        form.submit();
+    }
+});

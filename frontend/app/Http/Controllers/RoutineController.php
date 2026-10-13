@@ -78,7 +78,6 @@ class RoutineController extends Controller
             return $exercise + [
                 'volume' => RoutineVolume::format($exercise),
                 'detailVolume' => RoutineVolume::formatDetail($exercise, $isActivity),
-                'volumeFields' => RoutineVolume::buildFields($exercise, $isActivity),
             ];
         }, $routine['exercises'] ?? []);
         $data['routine'] = $routine;
@@ -91,12 +90,30 @@ class RoutineController extends Controller
             return redirect()->route('routine.index');
         }
 
+        // se edita en el navegador con la misma vista de la rutina: cada dato con su lapiz, y se guarda todo junto
         $data['routine'] = $routine;
-        return $this->renderView('routines.form', compact('data'));
+        $data['fields'] = [
+            'name' => old('name', $routine['name']),
+            'description' => old('description', $routine['description'] ?? ''),
+            'frequency' => old('frequency', $routine['frequency']),
+            'rest_minutes' => old('rest_minutes', $routine['restMinutes']),
+        ];
+        $data['exercises'] = array_map(fn(array $exercise) => [
+            'id' => $exercise['id'],
+            'name' => $exercise['name'],
+            'volume' => RoutineVolume::format($exercise),
+            'notes' => $exercise['notes'] ?? null,
+            'volumeFields' => RoutineVolume::buildFields($exercise, ($exercise['muscleKind'] ?? null) === 'activity', 'exercises['.$exercise['id'].']'),
+        ], $routine['exercises'] ?? []);
+        return $this->renderView('routines.edit', compact('data'));
     }
 
     public function update(Request $request, int $id): RedirectResponse{
-        $response = $this->apiClient->updateRoutine($id, $this->validateRoutine($request));
+        $params = $this->validateRoutine($request);
+        if($request->boolean('sync_exercises')){
+            $params['exercises'] = $this->validateRoutineExercises($request);
+        }
+        $response = $this->apiClient->updateRoutine($id, $params);
 
         if(!$this->isApiSuccess($response)){
             return back()
@@ -142,38 +159,6 @@ class RoutineController extends Controller
         return back()->with('routine_saved', 'Ejercicio agregado a la rutina.');
     }
 
-    public function updateExercise(Request $request, int $id, int $exerciseId): RedirectResponse{
-        $validated = $request->validate([
-            'sets' => ['nullable', 'integer', 'min:1', 'max:20'],
-            'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
-            'notes' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $response = $this->apiClient->updateRoutineExercise($id, $exerciseId, [
-            'sets' => $validated['sets'] ?? null,
-            'reps' => $validated['reps'] ?? null,
-            'duration_minutes' => $validated['duration_minutes'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        if(!$this->isApiSuccess($response)){
-            return back()->withErrors(['routine' => $this->apiErrorMessage($response, 'No pudimos actualizar el ejercicio.')]);
-        }
-
-        return back()->with('routine_saved', 'Indicaciones del ejercicio actualizadas.');
-    }
-
-    public function removeExercise(int $id, int $exerciseId): RedirectResponse{
-        $response = $this->apiClient->removeRoutineExercise($id, $exerciseId);
-
-        if(!$this->isApiSuccess($response)){
-            return back()->withErrors(['routine' => $this->apiErrorMessage($response, 'No pudimos quitar el ejercicio.')]);
-        }
-
-        return back()->with('routine_saved', 'Ejercicio quitado de la rutina.');
-    }
-
     public function assign(Request $request): RedirectResponse{
         $validated = $request->validate([
             'routine_id' => ['required', 'integer'],
@@ -197,6 +182,30 @@ class RoutineController extends Controller
         }
 
         return back()->with(['gym_saved' => 'Rutina quitada.', 'routine_saved' => 'Usuario quitado de la rutina.']);
+    }
+
+    // los campos llegan como exercises[id][...] en el orden en que quedaron en pantalla
+    private function validateRoutineExercises(Request $request): array
+    {
+        $validated = $request->validate([
+            'exercises' => ['nullable', 'array', 'max:100'],
+            'exercises.*.sets' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'exercises.*.reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'exercises.*.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'exercises.*.notes' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $exerciseList = [];
+        foreach ($validated['exercises'] ?? [] as $exerciseId => $values) {
+            $exerciseList[] = [
+                'exercise_id' => (int)$exerciseId,
+                'sets' => $values['sets'] ?? null,
+                'reps' => $values['reps'] ?? null,
+                'duration_minutes' => $values['duration_minutes'] ?? null,
+                'notes' => $values['notes'] ?? null,
+            ];
+        }
+        return $exerciseList;
     }
 
     private function validateRoutine(Request $request): array

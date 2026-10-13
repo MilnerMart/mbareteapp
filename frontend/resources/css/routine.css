@@ -196,7 +196,6 @@
 
 .routine-exercise-name {
     color: #ffffff;
-    flex: 1 1 180px;
     font-weight: 600;
     text-decoration: none;
 }
@@ -433,7 +432,6 @@
 
 .routine-exercise-notes {
     color: #9a9a9a;
-    flex: 1 1 100%;
     font-size: .85rem;
     font-style: italic;
     margin: 0;
@@ -477,4 +475,128 @@
     flex: 0 0 auto;
     gap: .5rem;
     margin-left: auto;
+}
+
+/* nombre, y debajo minutos o series-repeticiones y la nota */
+.routine-exercise-info {
+    align-items: flex-start;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+}
+
+.routine-exercise-info .routine-exercise-name {
+    overflow-wrap: anywhere;
+}
+
+/* subir y bajar el ejercicio dentro de la rutina */
+.routine-exercise-order {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.routine-order-btn {
+    align-items: center;
+    background-color: #0b0b0b;
+    border: 1px solid #303030;
+    color: #d8d8d8;
+    display: flex;
+    font-size: .65rem;
+    height: 18px;
+    justify-content: center;
+    padding: 0;
+    width: 26px;
+}
+
+.routine-order-btn:hover,
+.routine-order-btn:focus {
+    border-color: #c1121f;
+    color: #ffffff;
+}
+
+.routine-order-btn:disabled {
+    border-color: #1f1f1f;
+    color: #444444;
+}
+
+@media (max-width: 576px) {
+    .routine-exercise {
+        gap: .6rem .55rem;
+        padding: .7rem .75rem;
+    }
+
+    .routine-exercise::before {
+        min-width: .8rem;
+    }
+
+    .routine-exercise-actions {
+        gap: .3rem;
+    }
+
+    .routine-exercise-actions .routine-icon-btn {
+        height: 32px;
+        width: 32px;
+    }
+}
+
+/* edicion de la rutina: misma vista, cada dato con su lapiz y cada ejercicio con su panel de tiempo, series y notas */
+.routine-edit-header {
+    display: grid;
+    flex: 1 1 280px;
+    gap: .35rem;
+    min-width: 0;
+}
+
+.routine-inline {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.routine-inline h1,
+.routine-inline .routine-card-desc {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.routine-inline > .form-control {
+    flex: 1 1 240px;
+}
+
+.routine-icon-btn.routine-inline-btn-sm {
+    font-size: .75rem;
+    height: 28px;
+    width: 28px;
+}
+
+.routine-btn-save {
+    align-items: center;
+    display: inline-flex;
+    font-weight: 700;
+    gap: .5rem;
+}
+
+.routine-exercise > .routine-exercise-edit {
+    flex: 1 1 100%;
+}
+
+.routine-meta .routine-icon-btn i {
+    color: inherit;
+    margin-right: 0;
+}
+
+.routine-inline-label {
+    align-items: center;
+    display: inline-flex;
+    gap: .35rem;
+}
+
+.routine-inline-label > .routine-inline-number {
+    padding: .2rem .45rem;
+    width: 4.5rem;
 }
