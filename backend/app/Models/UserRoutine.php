@@ -45,17 +45,22 @@ class UserRoutine {
 
     /**
      * Rutinas asignadas agrupadas por usuario: [userId => [['id'=>, 'name'=>], ...]]
+     * Con $viewerId solo las que ese usuario creo o asigno: un entrenador no ve lo que asignaron
+     * otros entrenadores (el alumno puede estar en varios gimnasios) ni el admin.
      */
-    static function queryRoutineMapByUserIds(DbConnector $dbConnect, array $userIdList): array{
+    static function queryRoutineMapByUserIds(DbConnector $dbConnect, array $userIdList, ?int $viewerId = null): array{
         if(!$userIdList){
             return [];
         }
-        $rowList = self::allocDbTable($dbConnect, 'ur')
+        $query = self::allocDbTable($dbConnect, 'ur')
         ->join(DbSchema::tableRoutines.' as r', 'r.id', '=', 'ur.routine_id')
         ->whereIn('ur.user_id', $userIdList)
         ->where('r.status', '!=', EntityStatus::statusIdDeleted)
-        ->orderBy('r.name')
-        ->get(['ur.user_id', 'r.id', 'r.name']);
+        ->orderBy('r.name');
+        if($viewerId !== null){
+            $query->where(fn(Builder $where) => $where->where('r.owner_id', $viewerId)->orWhere('ur.assigned_by', $viewerId));
+        }
+        $rowList = $query->get(['ur.user_id', 'r.id', 'r.name']);
 
         $routineMap = [];
         foreach ($rowList as $row) {

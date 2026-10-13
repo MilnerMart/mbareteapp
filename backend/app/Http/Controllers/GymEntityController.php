@@ -94,7 +94,9 @@ class GymEntityController extends Controller {
         $gym = $this->queryAccessibleGymOrFail($request, $id);
         $userIdList = GymUser::queryUserIdListByGymId($this->getDbConnector(), $gym->getEntityId());
         $userList = User::whereIn('id', $userIdList)->get()->sortBy(fn(User $user) => array_search($user->id, $userIdList));
-        $routineMap = UserRoutine::queryRoutineMapByUserIds($this->getDbConnector(), $userIdList);
+        $viewer = $request->user();
+        $routineMap = UserRoutine::queryRoutineMapByUserIds($this->getDbConnector(), $userIdList,
+            $viewer->hasSeeAllPermit($this->getDbConnector()) ? null : $viewer->id);
 
         $model = [];
         foreach ($userList as $user) {
