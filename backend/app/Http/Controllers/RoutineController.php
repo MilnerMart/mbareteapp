@@ -125,6 +125,8 @@ class RoutineController extends Controller
             $exercise->getEntityId(),
             $validated['sets'] ?? null,
             $validated['reps'] ?? null,
+            $validated['duration_minutes'] ?? null,
+            $validated['notes'] ?? null,
         );
 
         return $this->successApiResponse(RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId()), 201);

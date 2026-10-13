@@ -90,6 +90,14 @@ class Muscle extends BaseEntity {
         return $this->kind;
     }
 
+    function getKindSlug(): string{
+        return self::kindSlugFromId($this->kind);
+    }
+
+    static function kindSlugFromId(?int $kind): string{
+        return self::kindSlugMap[$kind] ?? self::kindSlugMap[self::kindMuscle];
+    }
+
     function setKind(int $kind): void{
         if(!isset(self::kindSlugMap[$kind])){
             throw PublicException::validationError('Tipo de grupo invalido: '.$kind);
@@ -107,7 +115,7 @@ class Muscle extends BaseEntity {
             'id' => $this->getEntityId(),
             'name' =>  $this->getName(),
             'slug' =>  $this->getSlug(),
-            'kind' => self::kindSlugMap[$this->kind],
+            'kind' => $this->getKindSlug(),
             'recommended_rest_days' => $this->getRestDays(),
             'description' => $this->getDescription(),
         ] + $this->buildReviewApiModel();

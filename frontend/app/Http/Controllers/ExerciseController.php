@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
 use App\Support\AuthPermits;
+use App\Support\RoutineVolume;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,8 @@ class ExerciseController extends Controller
         $data['exercise'] = $exercise;
         $data['exerciseResources'] = $this->apiClient->getExerciseResources($exerciseId);
         $data['exerciseId'] = $exerciseId;
+        // en actividades (cardio, atletismo...) se proponen minutos; en musculos, series y repeticiones
+        $data['routineVolumeFields'] = RoutineVolume::buildNewFields(($exercise['muscleKind'] ?? null) === 'activity');
         // solo las rutinas que el usuario puede modificar
         $data['editableRoutines'] = array_values(array_filter($this->apiClient->getRoutines() ?? [], fn($routine) => $routine['canEdit']));
         return $this->renderView('exercises.resources', compact('data'));

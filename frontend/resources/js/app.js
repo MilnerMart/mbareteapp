@@ -94,3 +94,25 @@ document.addEventListener('click', (event) => {
         icon.classList.toggle('fa-eye-slash', isHidden);
     }
 });
+
+// Casillas con data-toggle-fields: muestran u ocultan un grupo de campos. Los ocultos se deshabilitan y no se envian.
+const syncToggleFields = (checkbox) => {
+    const group = document.getElementById(checkbox.dataset.toggleFields);
+
+    if (!group) {
+        return;
+    }
+
+    group.hidden = !checkbox.checked;
+    group.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.disabled = !checkbox.checked;
+    });
+};
+
+document.querySelectorAll('[data-toggle-fields]').forEach(syncToggleFields);
+
+document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-toggle-fields]')) {
+        syncToggleFields(event.target);
+    }
+});

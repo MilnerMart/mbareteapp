@@ -3,8 +3,10 @@
     $kindLabel = $isActivity ? 'actividad' : 'musculo';
 @endphp
 <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex justify-content-center mb-4">
-    <div class="card" style="width: 18rem;">
-        <a href="{{ route('exercise.group', $muscle['id']) }}"><img src="{{ asset($muscle['image_url'] ?? 'images/leoncioRest.png') }}" alt="{{ $muscle['name'] }}" class="card-img-top"></a>
+    <div class="card catalog-card" style="width: 18rem;">
+        <a href="{{ route('exercise.group', $muscle['id']) }}" class="catalog-card-media card-img-top">
+            <img src="{{ asset($muscle['image_url'] ?? 'images/leoncioRest.png') }}" alt="{{ $muscle['name'] }}">
+        </a>
         <div class="card-body">
             <h5 class="card-title text-center">{{ $muscle['name'] }}</h5>
             @if (!($muscle['isPublic'] ?? true))
@@ -14,7 +16,7 @@
             @endif
             <p class="card-text justify-content-center">{{ $muscle['description'] }}</p>
             @if ($isAdmin)
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 catalog-card-actions">
                     <a href="{{ route('muscle.edit', $muscle['id']) }}" class="btn btn-outline-secondary btn-sm flex-fill">
                         <i class="fa-solid fa-pen"></i>
                         <span>Editar</span>

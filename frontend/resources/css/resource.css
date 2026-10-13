@@ -15,6 +15,11 @@
     justify-content: center;
 }
 
+/* los dibujos de algunos proveedores tienen fondo transparente: sobre negro no se verian */
+.exercise-image-wrapper:has(> img) {
+    background: #ffffff;
+}
+
 .exercise-image {
     width: 100%;
     height: 100%;

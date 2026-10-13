@@ -75,6 +75,7 @@ class ExerciseController extends Controller
         $model = $exercise->buildApiModel();
         $model['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
         $model['imageAttribution'] = $this->getResourceService()->obtainAttribution($resource);
+        $model['muscleKind'] = Muscle::queryByDbId($dbConnector, $exercise->getMuscleId())?->getKindSlug();
         $model['canManageResources'] = $this->canManageExerciseResources($request->user('sanctum'), $exercise);
         return $this->successApiResponse($model, 200);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
+use App\Support\RoutineVolume;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -71,6 +72,15 @@ class RoutineController extends Controller
             return redirect()->route('routine.index');
         }
 
+        // en actividades (cardio, atletismo...) no se muestra el descanso entre series
+        $routine['exercises'] = array_map(function(array $exercise){
+            $isActivity = ($exercise['muscleKind'] ?? null) === 'activity';
+            return $exercise + [
+                'volume' => RoutineVolume::format($exercise),
+                'detailVolume' => RoutineVolume::formatDetail($exercise, $isActivity),
+                'volumeFields' => RoutineVolume::buildFields($exercise, $isActivity),
+            ];
+        }, $routine['exercises'] ?? []);
         $data['routine'] = $routine;
         return $this->renderView('routines.show', compact('data'));
     }
@@ -113,12 +123,16 @@ class RoutineController extends Controller
             'exercise_id' => ['required', 'integer'],
             'sets' => ['nullable', 'integer', 'min:1', 'max:20'],
             'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'notes' => ['nullable', 'string', 'max:255'],
         ]);
 
         $response = $this->apiClient->addRoutineExercise($validated['routine_id'], [
             'exercise_id' => $validated['exercise_id'],
             'sets' => $validated['sets'] ?? null,
             'reps' => $validated['reps'] ?? null,
+            'duration_minutes' => $validated['duration_minutes'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         if(!$this->isApiSuccess($response)){
@@ -132,18 +146,22 @@ class RoutineController extends Controller
         $validated = $request->validate([
             'sets' => ['nullable', 'integer', 'min:1', 'max:20'],
             'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'notes' => ['nullable', 'string', 'max:255'],
         ]);
 
         $response = $this->apiClient->updateRoutineExercise($id, $exerciseId, [
             'sets' => $validated['sets'] ?? null,
             'reps' => $validated['reps'] ?? null,
+            'duration_minutes' => $validated['duration_minutes'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         if(!$this->isApiSuccess($response)){
             return back()->withErrors(['routine' => $this->apiErrorMessage($response, 'No pudimos actualizar el ejercicio.')]);
         }
 
-        return back()->with('routine_saved', 'Series y repeticiones actualizadas.');
+        return back()->with('routine_saved', 'Indicaciones del ejercicio actualizadas.');
     }
 
     public function removeExercise(int $id, int $exerciseId): RedirectResponse{

@@ -15,22 +15,27 @@ class RoutineExercise {
 
     private int $routineId, $exerciseId;
 
-    private ?int $sets, $reps;
+    private ?int $sets, $reps, $durationMinutes;
 
-    public static function allocNew(int $routineId, int $exerciseId, ?int $sets, ?int $reps):self{
+    private ?string $notes;
+
+    public static function allocNew(int $routineId, int $exerciseId, ?int $sets, ?int $reps, ?int $durationMinutes = null, ?string $notes = null):self{
         $self = new self();
         $self->routineId = $routineId;
         $self->exerciseId = $exerciseId;
         $self->sets = $sets;
         $self->reps = $reps;
+        $self->durationMinutes = $durationMinutes;
+        $self->notes = $notes !== null && trim($notes) !== '' ? trim($notes) : null;
         return $self;
     }
 
     /**
-     * Si el ejercicio ya esta en la rutina actualiza series y repeticiones.
+     * Si el ejercicio ya esta en la rutina actualiza series, repeticiones, minutos y notas.
      */
-    static function addOrUpdateRoutineExercise(DbConnector $dbConnect, int $routineId, int $exerciseId, ?int $sets, ?int $reps): void{
-        $self = self::allocNew($routineId, $exerciseId, $sets, $reps);
+    static function addOrUpdateRoutineExercise(DbConnector $dbConnect, int $routineId, int $exerciseId, ?int $sets, ?int $reps,
+        ?int $durationMinutes = null, ?string $notes = null): void{
+        $self = self::allocNew($routineId, $exerciseId, $sets, $reps, $durationMinutes, $notes);
         $self->writeToDb($dbConnect);
     }
 
@@ -44,18 +49,22 @@ class RoutineExercise {
     static function queryExerciseListByRoutineId(DbConnector $dbConnect, int $routineId): array{
         return self::allocDbTable($dbConnect, 're')
         ->join(DbSchema::tableExercise.' as e', 'e.id', '=', 're.exercise_id')
+        ->leftJoin(DbSchema::tableMuscles.' as m', 'm.id', '=', 'e.muscle_id')
         ->where('re.routine_id', $routineId)
         ->where('e.status', '!=', EntityStatus::statusIdDeleted)
         ->orderBy('re.id')
-        ->get(['e.id', 'e.name', 'e.description', 'e.muscle_id', 'e.recommended_rest_time', 're.sets', 're.reps'])
+        ->get(['e.id', 'e.name', 'e.description', 'e.muscle_id', 'e.recommended_rest_time', 're.sets', 're.reps', 're.duration_minutes', 're.notes', 'm.kind as muscle_kind'])
         ->map(fn(stdClass $row) => [
             'id' => $row->id,
             'name' => $row->name,
             'description' => $row->description,
             'muscle_id' => $row->muscle_id,
+            'muscleKind' => Muscle::kindSlugFromId($row->muscle_kind !== null ? (int)$row->muscle_kind : null),
             'recommended_rest_time' => $row->recommended_rest_time,
             'sets' => $row->sets,
             'reps' => $row->reps,
+            'duration_minutes' => $row->duration_minutes,
+            'notes' => $row->notes,
         ])->all();
     }
 
@@ -70,6 +79,8 @@ class RoutineExercise {
         $row->exercise_id = $this->exerciseId;
         $row->sets = $this->sets;
         $row->reps = $this->reps;
+        $row->duration_minutes = $this->durationMinutes;
+        $row->notes = $this->notes;
         $row->created_at = $now;
         $row->updated_at = $now;
         return $row;
@@ -77,7 +88,7 @@ class RoutineExercise {
 
     private function writeToDb(DbConnector $dbConnector): void{
         $writeArray = (array)$this->routineExercise2Row($dbConnector);
-        self::allocDbTable($dbConnector)->upsert($writeArray, ['routine_id', 'exercise_id'], ['sets', 'reps', 'updated_at']);
+        self::allocDbTable($dbConnector)->upsert($writeArray, ['routine_id', 'exercise_id'], ['sets', 'reps', 'duration_minutes', 'notes', 'updated_at']);
     }
 
 }

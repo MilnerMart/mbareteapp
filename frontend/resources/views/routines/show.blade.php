@@ -12,9 +12,8 @@
         'name' => $exercise['name'],
         'description' => $exercise['description'] ?? null,
         'resources' => $exercise['resources'] ?? [],
-        'sets' => $exercise['sets'] ?? null,
-        'reps' => $exercise['reps'] ?? null,
-        'restSeconds' => $exercise['recommended_rest_time'] ?? null,
+        'volume' => $exercise['detailVolume'],
+        'notes' => $exercise['notes'] ?? null,
     ]);
 @endphp
 @extends('layouts.layout')
@@ -93,39 +92,39 @@
                             {{ $exercise['name'] }}
                         </button>
                         <span class="routine-exercise-volume">
-                            {{ $exercise['sets'] ?? '-' }} series × {{ $exercise['reps'] ?? '-' }} reps
+                            {{ $exercise['volume'] }}
                         </span>
-                        @if ($canEdit)
-                            <button type="button" class="btn routine-icon-btn routine-exercise-edit-toggle" aria-expanded="false"
-                                aria-controls="volume_form_{{ $exercise['id'] }}"
-                                title="Editar series y repeticiones" aria-label="Editar series y repeticiones de {{ $exercise['name'] }}">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                        @endif
-                        <button type="button" class="btn routine-icon-btn routine-exercise-toggle" aria-pressed="false"
-                            title="Marcar como hecho" aria-label="Marcar {{ $exercise['name'] }} como hecho">
-                            <i class="fa-solid fa-check"></i>
-                        </button>
-                        @if ($canEdit)
-                            <form method="POST" action="{{ route('routine.exercises.remove', [$routine['id'], $exercise['id']]) }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn routine-icon-btn" title="Quitar de la rutina" aria-label="Quitar {{ $exercise['name'] }} de la rutina">
-                                    <i class="fa-solid fa-xmark"></i>
+                        <div class="routine-exercise-actions">
+                            @if ($canEdit)
+                                <button type="button" class="btn routine-icon-btn routine-exercise-edit-toggle" aria-expanded="false"
+                                    aria-controls="volume_form_{{ $exercise['id'] }}"
+                                    title="Editar indicaciones" aria-label="Editar indicaciones de {{ $exercise['name'] }}">
+                                    <i class="fa-solid fa-pen"></i>
                                 </button>
-                            </form>
+                            @endif
+                            <button type="button" class="btn routine-icon-btn routine-exercise-toggle" aria-pressed="false"
+                                title="Marcar como hecho" aria-label="Marcar {{ $exercise['name'] }} como hecho">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            @if ($canEdit)
+                                <form method="POST" action="{{ route('routine.exercises.remove', [$routine['id'], $exercise['id']]) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn routine-icon-btn" title="Quitar de la rutina" aria-label="Quitar {{ $exercise['name'] }} de la rutina">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                        @if (!empty($exercise['notes']))
+                            <p class="routine-exercise-notes">{{ $exercise['notes'] }}</p>
+                        @endif
+                        @if ($canEdit)
                             <form method="POST" action="{{ route('routine.exercises.update', [$routine['id'], $exercise['id']]) }}"
                                   id="volume_form_{{ $exercise['id'] }}" class="routine-form routine-exercise-form" hidden>
                                 @csrf
                                 @method('PUT')
-                                <div>
-                                    <label for="sets_{{ $exercise['id'] }}" class="form-label">Series</label>
-                                    <input type="number" id="sets_{{ $exercise['id'] }}" name="sets" class="form-control" value="{{ $exercise['sets'] }}" min="1" max="20">
-                                </div>
-                                <div>
-                                    <label for="reps_{{ $exercise['id'] }}" class="form-label">Repeticiones</label>
-                                    <input type="number" id="reps_{{ $exercise['id'] }}" name="reps" class="form-control" value="{{ $exercise['reps'] }}" min="1" max="100">
-                                </div>
+                                @include('routines._volume-fields', ['fieldId' => $exercise['id'], 'fields' => $exercise['volumeFields']])
                                 <button type="submit" class="btn btn-primary">Guardar</button>
                             </form>
                         @endif
@@ -212,9 +211,11 @@
                 }
             });
             $('<p>', { class: 'routine-exercise-detail-meta' })
-                .text(`${exercise.sets ?? '-'} series × ${exercise.reps ?? '-'} reps`
-                    + (exercise.restSeconds ? ` · ${exercise.restSeconds} s de descanso` : ''))
+                .text(exercise.volume)
                 .appendTo($container);
+            if (exercise.notes) {
+                $('<p>', { class: 'routine-exercise-notes' }).text(exercise.notes).appendTo($container);
+            }
             $('<p>').text(exercise.description || 'Este ejercicio no tiene descripcion.').appendTo($container);
             return $container.get(0);
         };

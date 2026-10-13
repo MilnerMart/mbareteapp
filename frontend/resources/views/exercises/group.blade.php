@@ -36,12 +36,12 @@
         <div class="row justify-content-center">
             @foreach ($exerciseGroup as $exercise)
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex justify-content-center mb-4">
-                    <div class="card" style="width: 25rem; border-radius: 10%;">
+                    <div class="card catalog-card" style="width: 25rem; border-radius: 10%;">
                         @if (!($exercise['isPublic'] ?? true))
                             <span class="catalog-private-badge catalog-private-badge-floating"><i class="fa-solid fa-lock"></i> Privado</span>
                         @endif
-                        <div class="media-attribution-host">
-                            <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}" class="card-img-top" style="border-radius: 10%;"></a>
+                        <div class="media-attribution-host catalog-card-media catalog-card-media-exercise" style="border-radius: 10%;">
+                            <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}"></a>
                             @include('layouts._partials.media-attribution', ['attribution' => $exercise['imageAttribution'] ?? null])
                         </div>
                         <div class="card-body pb-0">
@@ -50,7 +50,7 @@
                             </h5>
                         </div>
                         @if ($isAdmin)
-                            <div class="card-body d-flex gap-2">
+                            <div class="card-body d-flex gap-2 catalog-card-actions">
                                 <a href="{{ route('exercise.edit', $exercise['id']) }}" class="btn btn-outline-secondary btn-sm flex-fill">
                                     <i class="fa-solid fa-pen"></i>
                                     <span>Editar</span>

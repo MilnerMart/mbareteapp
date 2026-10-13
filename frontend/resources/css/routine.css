@@ -430,3 +430,51 @@
 .routine-exercise-detail .routine-exercise-detail-meta {
     font-weight: 700;
 }
+
+.routine-exercise-notes {
+    color: #9a9a9a;
+    flex: 1 1 100%;
+    font-size: .85rem;
+    font-style: italic;
+    margin: 0;
+}
+
+.routine-volume-fields,
+.routine-exercise-form > .routine-volume-fields {
+    display: grid;
+    flex: 1 1 100%;
+    gap: .6rem;
+}
+
+.routine-volume-toggle {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: .5rem;
+    margin: 0;
+}
+
+.routine-volume-toggle input {
+    accent-color: #c1121f;
+    height: 1.05rem;
+    width: 1.05rem;
+}
+
+.routine-volume-group {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-left: 1.55rem;
+}
+
+.routine-volume-group[hidden] {
+    display: none;
+}
+
+/* editar, hecho y quitar van siempre juntos, a la derecha */
+.routine-exercise-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: .5rem;
+    margin-left: auto;
+}

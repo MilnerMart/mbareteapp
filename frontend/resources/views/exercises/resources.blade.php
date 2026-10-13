@@ -80,15 +80,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="routine-form-row mb-3">
-                        <div>
-                            <label for="sets" class="form-label">Series</label>
-                            <input type="number" id="sets" name="sets" class="form-control" value="{{ old('sets', 3) }}" min="1" max="20">
-                        </div>
-                        <div>
-                            <label for="reps" class="form-label">Repeticiones</label>
-                            <input type="number" id="reps" name="reps" class="form-control" value="{{ old('reps', 12) }}" min="1" max="100">
-                        </div>
+                    <div class="mb-3">
+                        @include('routines._volume-fields', ['fieldId' => 'new', 'fields' => $data['routineVolumeFields']])
                     </div>
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fa-solid fa-plus me-2"></i>

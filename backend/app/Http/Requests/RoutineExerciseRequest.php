@@ -23,6 +23,8 @@ class RoutineExerciseRequest extends FormRequest
             'exercise_id' => ['required', 'integer', 'exists:exercises,id'],
             'sets' => ['nullable', 'integer', 'min:1', 'max:20'],
             'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'notes' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

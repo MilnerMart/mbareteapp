@@ -311,3 +311,59 @@
     color: #8a8a8a;
     font-size: .75rem;
 }
+
+/* tarjetas del catalogo: la imagen ocupa siempre el mismo marco sin deformarse y los botones quedan alineados abajo */
+.catalog-card {
+    height: 100%;
+}
+
+.catalog-card-media {
+    aspect-ratio: 1 / 1;
+    background: #0b0b0b;
+    display: block;
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.catalog-card-media > a {
+    border-radius: inherit;
+    display: block;
+    height: 100%;
+}
+
+.catalog-card-media img {
+    border-radius: inherit;
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* los ejercicios mezclan fotos y dibujos con fondo transparente de distintas proporciones: se ven completos sobre blanco */
+.catalog-card-media-exercise {
+    aspect-ratio: 3 / 2;
+    background: #ffffff;
+}
+
+.catalog-card-media-exercise img {
+    object-fit: contain;
+}
+
+.catalog-card > .card-body:has(> .catalog-card-actions) {
+    display: flex;
+    flex-direction: column;
+}
+
+.catalog-card-actions {
+    margin-top: auto;
+}
+
+.catalog-card > .card-body.catalog-card-actions {
+    align-items: flex-start;
+    flex: 0 0 auto;
+}
+
+.catalog-public-media-item img {
+    background: #ffffff;
+}

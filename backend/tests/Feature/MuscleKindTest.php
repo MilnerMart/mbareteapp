@@ -68,6 +68,44 @@ class MuscleKindTest extends TestCase
         $this->createGroup($token, 'Natacion', 'otro')->assertUnprocessable();
     }
 
+    public function test_routine_activity_exercise_keeps_minutes_and_notes(): void
+    {
+        $token = $this->login(static::adminEmail);
+        $cardioId = collect($this->getJson('/api/v1/muscle')->json('data'))->firstWhere('slug', 'cardio')['id'];
+        $exerciseId = collect($this->getJson('/api/v1/exercise/group/'.$cardioId)->json('data'))->firstWhere('name', 'Correr en cinta')['id'];
+        $this->getJson('/api/v1/exercise/'.$exerciseId)->assertOk()->assertJsonPath('data.muscleKind', 'activity');
+
+        $routineId = $this->actingWithToken($token)->postJson('/api/v1/routines', [
+            'name' => 'Rutina con cardio', 'frequency' => 3, 'rest_minutes' => 1,
+        ])->assertCreated()->json('data.id');
+
+        $this->actingWithToken($token)->postJson('/api/v1/routines/'.$routineId.'/exercises', [
+            'exercise_id' => $exerciseId,
+            'duration_minutes' => 10,
+            'notes' => '  Al terminar la rutina, ritmo suave  ',
+        ])->assertCreated()
+            ->assertJsonPath('data.0.duration_minutes', 10)
+            ->assertJsonPath('data.0.muscleKind', 'activity')
+            ->assertJsonPath('data.0.sets', null)
+            ->assertJsonPath('data.0.notes', 'Al terminar la rutina, ritmo suave');
+
+        $this->actingWithToken($token)->postJson('/api/v1/routines/'.$routineId.'/exercises', [
+            'exercise_id' => $exerciseId,
+            'sets' => 2,
+            'reps' => 10,
+            'notes' => 'Pasadas de 10 metros',
+        ])->assertCreated()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.duration_minutes', null)
+            ->assertJsonPath('data.0.sets', 2)
+            ->assertJsonPath('data.0.notes', 'Pasadas de 10 metros');
+
+        $this->actingWithToken($token)->postJson('/api/v1/routines/'.$routineId.'/exercises', [
+            'exercise_id' => $exerciseId,
+            'duration_minutes' => 601,
+        ])->assertUnprocessable();
+    }
+
     private function createGroup(string $token, string $name, ?string $kind = null)
     {
         $response = $this->actingWithToken($token)->post('/api/v1/muscle', array_filter([
