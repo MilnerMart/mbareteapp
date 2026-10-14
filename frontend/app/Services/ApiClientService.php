@@ -179,6 +179,22 @@ class ApiClientService
         return $this->get('/user/'.$id.'/logs', array_filter(['page' => $page, 'model' => $model]));
     }
 
+    public function getCalendar(string $month){
+        return $this->get('/me/calendar', ['month' => $month]);
+    }
+
+    public function createCalendarNote(array $params){
+        return $this->post('/me/calendar/notes', $params);
+    }
+
+    public function updateCalendarNote(int $id, array $params){
+        return $this->put('/me/calendar/notes/'.$id, $params);
+    }
+
+    public function deleteCalendarNote(int $id){
+        return $this->delete('/me/calendar/notes/'.$id);
+    }
+
     public function getNotifications(){
         return $this->get('/me/notifications');
     }

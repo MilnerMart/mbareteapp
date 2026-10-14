@@ -22,5 +22,6 @@ class DbSchema{
     tableCoreConfigs = 'core_configs',
     tableUserNotifications = 'user_notifications',
     tableEntityLogs = 'entity_logs',
+    tableCalendarNotes = 'calendar_notes',
     tableUsers = 'users';
 }

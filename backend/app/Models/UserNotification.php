@@ -19,7 +19,7 @@ class UserNotification extends BaseEntity {
 
     private const myTable = DbSchema::tableUserNotifications;
 
-    const typeIdTicketReceived = 10, typeIdTicketResubmitted = 20, typeIdTicketResolved = 30, typeIdRoutineAssigned = 40;
+    const typeIdTicketReceived = 10, typeIdTicketResubmitted = 20, typeIdTicketResolved = 30, typeIdRoutineAssigned = 40, typeIdReminder = 50;
 
     const listLimit = 20;
 
@@ -28,6 +28,7 @@ class UserNotification extends BaseEntity {
         self::typeIdTicketResubmitted => 'ticket-resubmitted',
         self::typeIdTicketResolved => 'ticket-resolved',
         self::typeIdRoutineAssigned => 'routine-assigned',
+        self::typeIdReminder => 'reminder',
     ];
 
     private int $userId, $type;
@@ -101,6 +102,14 @@ class UserNotification extends BaseEntity {
         self::addNewList($dbConnect, [$userId], self::typeIdRoutineAssigned, $routine->getEntityId(), [
             'routineName' => $routine->getName(),
             'assignerName' => $assigner->getFullName(),
+        ]);
+    }
+
+    static function addReminder(DbConnector $dbConnect, CalendarNote $note): void{
+        self::addNewList($dbConnect, [$note->getUserId()], self::typeIdReminder, $note->getEntityId(), [
+            'title' => $note->getTitle(),
+            'noteOn' => $note->getNoteOn(),
+            'daysLeft' => $note->daysLeft(),
         ]);
     }
 

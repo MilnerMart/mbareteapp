@@ -9,6 +9,7 @@ use App\Db\DbConnector;
 use App\Db\DbSchema;
 use App\HasDbData;
 use App\Helpers\BaseHelper;
+use DateTimeImmutable;
 use Illuminate\Database\Query\Builder;
 use stdClass;
 
@@ -143,6 +144,17 @@ class EntityLog extends BaseEntity {
 
     static function allocDbTable(DbConnector $dbConnect, ?string $alias = null): Builder{
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
+    }
+
+    static function queryListByUserIdAndRange(DbConnector $dbConnect, int $userId, DateTimeImmutable $from, DateTimeImmutable $to): array{
+        $query = self::allocDbTable($dbConnect)
+        ->where('user_id', $userId)
+        ->where('status', '!=', EntityStatus::statusIdDeleted)
+        ->where('created_at', '>=', $dbConnect->toDbDate($from))
+        ->where('created_at', '<', $dbConnect->toDbDate($to))
+        ->orderBy('created_at')->orderBy('id')
+        ->select();
+        return $dbConnect->fetchAll($query, [self::class, 'row2EntityLog']);
     }
 
     static function queryPageByUserId(DbConnector $dbConnect, int $userId, int $page, ?int $refModelId = null, int $pageSize = self::pageSize): array{

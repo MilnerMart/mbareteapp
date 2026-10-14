@@ -50,6 +50,31 @@ class RoutineExerciseLog {
             ['sets', 'reps', 'duration_minutes', 'weight_kg', 'updated_at']);
     }
 
+    // por dia y rutina: cuantos ejercicios marco y cuantos tiene hoy la rutina (completa si hizo todos)
+    static function queryTrainingDayList(DbConnector $dbConnect, int $userId, string $fromDay, string $toDay): array{
+        $totalQuery = RoutineExercise::allocDbTable($dbConnect, 're')
+        ->selectRaw('count(*)')->whereColumn('re.routine_id', 'l.routine_id');
+        $rowList = self::allocDbTable($dbConnect, 'l')
+        ->join(DbSchema::tableRoutines.' as r', 'r.id', '=', 'l.routine_id')
+        ->where('l.user_id', $userId)
+        ->whereBetween('l.done_on', [$fromDay, $toDay])
+        ->groupBy('l.done_on', 'l.routine_id', 'r.name')
+        ->orderBy('l.done_on')->orderBy('r.name')
+        ->select('l.done_on', 'l.routine_id', 'r.name')
+        ->selectRaw('count(distinct l.exercise_id) as done_count')
+        ->selectSub($totalQuery, 'total_count')
+        ->get();
+
+        return $rowList->map(fn($row) => [
+            'day' => substr((string)$row->done_on, 0, 10),
+            'routineId' => (int)$row->routine_id,
+            'routineName' => $row->name,
+            'doneCount' => (int)$row->done_count,
+            'totalCount' => (int)$row->total_count,
+            'isCompleted' => (int)$row->total_count > 0 && (int)$row->done_count >= (int)$row->total_count,
+        ])->all();
+    }
+
     static function queryDoneTodayWeightMap(DbConnector $dbConnect, int $userId, int $routineId): array{
         $weightMap = [];
         foreach (self::allocDbTable($dbConnect)->where('user_id', $userId)->where('routine_id', $routineId)

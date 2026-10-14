@@ -1,0 +1,361 @@
+.calendar-page {
+    color: #e5e5e5;
+}
+
+.calendar-header {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.calendar-header h1 {
+    color: #ffffff;
+    margin: 0;
+}
+
+.calendar-eyebrow {
+    color: #8f8f8f;
+    font-size: .8rem;
+    text-transform: uppercase;
+}
+
+.calendar-nav {
+    align-items: center;
+    display: flex;
+    gap: .5rem;
+}
+
+.calendar-month {
+    color: #ffffff;
+    font-weight: 600;
+    min-width: 9.5rem;
+    text-align: center;
+}
+
+.calendar-nav-btn,
+.calendar-today-btn,
+.calendar-icon-btn {
+    align-items: center;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #e5e5e5;
+    display: inline-flex;
+    height: 2.25rem;
+    justify-content: center;
+    min-width: 2.25rem;
+    text-decoration: none;
+}
+
+.calendar-today-btn {
+    padding: 0 .8rem;
+}
+
+.calendar-nav-btn:hover,
+.calendar-today-btn:hover,
+.calendar-icon-btn:hover {
+    border-color: #c1121f;
+    color: #ffffff;
+}
+
+.calendar-layout {
+    align-items: start;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.calendar-grid-card,
+.calendar-day-detail {
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.calendar-row {
+    display: grid;
+    gap: .35rem;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin-bottom: .35rem;
+}
+
+.calendar-weekdays span {
+    color: #8f8f8f;
+    font-size: .75rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.calendar-day {
+    aspect-ratio: 1 / 1;
+    background: #181818;
+    border: 1px solid #242424;
+    border-radius: 8px;
+    color: #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    padding: .3rem .35rem;
+    text-decoration: none;
+}
+
+.calendar-day:hover {
+    border-color: #c1121f;
+    color: #ffffff;
+}
+
+.calendar-day.is-other-month {
+    background: transparent;
+    color: #555555;
+}
+
+.calendar-day.is-today .calendar-day-number {
+    background: #c1121f;
+    border-radius: 999px;
+    color: #ffffff;
+    padding: 0 .4rem;
+}
+
+.calendar-day.is-selected {
+    border-color: #c1121f;
+    box-shadow: 0 0 0 1px #c1121f inset;
+}
+
+.calendar-day.is-completed {
+    background: rgba(46, 160, 67, .12);
+}
+
+.calendar-day-number {
+    align-self: flex-start;
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.calendar-day-marks {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: .7rem;
+    gap: .25rem;
+}
+
+.mark-training {
+    color: #3fb950;
+}
+
+.mark-action {
+    color: #c1121f;
+    font-size: .5rem;
+    margin-top: .1rem;
+}
+
+.mark-note {
+    color: #ffc145;
+}
+
+.calendar-legend {
+    color: #8f8f8f;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: .8rem;
+    gap: .4rem 1rem;
+    list-style: none;
+    margin: .75rem 0 0;
+    padding: 0;
+}
+
+.calendar-day-detail h2 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: .75rem;
+}
+
+.calendar-section-title {
+    color: #8f8f8f;
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    margin: 1rem 0 .5rem;
+    text-transform: uppercase;
+}
+
+.calendar-empty {
+    color: #8f8f8f;
+}
+
+.calendar-list {
+    display: grid;
+    gap: .5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.calendar-item,
+.calendar-note {
+    align-items: flex-start;
+    background: #181818;
+    border: 1px solid #242424;
+    border-radius: 8px;
+    display: flex;
+    gap: .7rem;
+    padding: .6rem .75rem;
+}
+
+.calendar-item a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.calendar-item a:hover {
+    color: #ff6b6b;
+    text-decoration: underline;
+}
+
+.calendar-item-icon {
+    color: #c1121f;
+    margin-top: .2rem;
+    width: 1rem;
+}
+
+.calendar-item.is-completed .calendar-item-icon {
+    color: #3fb950;
+}
+
+.calendar-item.is-highlight .calendar-item-icon {
+    color: #ffc145;
+}
+
+.calendar-item-text {
+    color: #ffffff;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.calendar-item-text small {
+    color: #8f8f8f;
+    display: block;
+}
+
+.calendar-item time {
+    color: #8f8f8f;
+    font-size: .8rem;
+}
+
+.calendar-note-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.calendar-note-body strong {
+    color: #ffffff;
+}
+
+.calendar-note-body p {
+    color: #bdbdbd;
+    font-size: .9rem;
+    margin: .2rem 0 0;
+    white-space: pre-line;
+}
+
+.calendar-note-reminder {
+    color: #ffc145;
+    display: inline-block;
+    font-size: .8rem;
+    margin-top: .3rem;
+}
+
+.calendar-note-actions {
+    display: flex;
+    gap: .35rem;
+}
+
+.calendar-note-actions form {
+    margin: 0;
+}
+
+.calendar-note-form {
+    border-top: 1px solid #2a2a2a;
+    margin-top: 1.25rem;
+    padding-top: .25rem;
+}
+
+.calendar-note-form .form-label {
+    color: #e5e5e5;
+    font-size: .85rem;
+    margin: .6rem 0 .25rem;
+}
+
+.calendar-note-form .form-label small {
+    color: #8f8f8f;
+}
+
+
+.calendar-form-hint {
+    color: #8f8f8f;
+    font-size: .8rem;
+    margin: .4rem 0 .75rem;
+}
+
+.calendar-form-actions {
+    display: flex;
+    gap: .5rem;
+    justify-content: flex-end;
+}
+
+.calendar-cancel-btn {
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    color: #e5e5e5;
+}
+
+@media (max-width: 991.98px) {
+    .calendar-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .calendar-grid-card,
+    .calendar-day-detail {
+        padding: .6rem;
+    }
+
+    .calendar-row {
+        gap: .2rem;
+    }
+
+    .calendar-day {
+        padding: .2rem;
+    }
+
+    .calendar-day-number {
+        font-size: .8rem;
+    }
+
+    .calendar-day-marks {
+        font-size: .55rem;
+        gap: .15rem;
+    }
+}
+
+.calendar-remind-days {
+    margin: .25rem 0 0;
+}
+
+.calendar-remind-days legend {
+    float: none;
+    width: auto;
+}
+
+.calendar-remind-days .form-check-label {
+    color: #e5e5e5;
+    font-size: .9rem;
+}

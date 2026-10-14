@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 
 /**
  * Textos y enlaces de la campanita a partir de los avisos que devuelve el backend (type + data).
@@ -51,6 +52,16 @@ class NotificationLabels
                 'Te asignaron la rutina '.($data['routineName'] ?? ''),
                 [isset($data['assignerName']) ? 'por '.$data['assignerName'] : null],
             ],
+            'reminder' => [
+                'fa-solid fa-calendar-day',
+                'Recordatorio: '.($data['title'] ?? ''),
+                [match ($data['daysLeft'] ?? null) {
+                    0 => 'Es hoy',
+                    1 => 'Es mañana',
+                    2 => 'Es pasado mañana',
+                    default => null,
+                }, isset($data['noteOn']) ? Carbon::parse($data['noteOn'])->format('d/m/Y') : null],
+            ],
             default => ['fa-solid fa-bell', 'Tienes un aviso nuevo', []],
         };
 
@@ -88,6 +99,9 @@ class NotificationLabels
             'ticket-received', 'ticket-resubmitted' => route('ticket.index'),
             'ticket-resolved' => $refId ? route('ticket.show', $refId) : null,
             'routine-assigned' => $refId ? route('routine.show', $refId) : null,
+            'reminder' => isset($notification['data']['noteOn'])
+                ? CalendarMonth::dayUrl(CarbonImmutable::parse($notification['data']['noteOn'], CalendarMonth::timezone))
+                : route('calendar.index'),
             default => null,
         };
     }

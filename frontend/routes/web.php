@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\GymController;
@@ -47,6 +48,13 @@ Route::middleware('frontend.auth')->group(function () {
     Route::put('/profile/{id}', [UserController::class, 'updateProfile'])->name('user.profile.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
+
+    Route::prefix('/calendar')->group(function () {
+        Route::get('/', [CalendarController::class, 'index'])->name('calendar.index');
+        Route::post('/notes', [CalendarController::class, 'store'])->name('calendar.notes.store');
+        Route::put('/notes/{id}', [CalendarController::class, 'update'])->whereNumber('id')->name('calendar.notes.update');
+        Route::delete('/notes/{id}', [CalendarController::class, 'destroy'])->whereNumber('id')->name('calendar.notes.destroy');
+    });
 
     Route::get('/notifications/{id}', [NotificationController::class, 'open'])->whereNumber('id')->name('notification.open');
     Route::post('/notifications/read', [NotificationController::class, 'readAll'])->name('notification.read-all');

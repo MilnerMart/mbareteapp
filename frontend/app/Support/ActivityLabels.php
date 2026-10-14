@@ -35,11 +35,32 @@ class ActivityLabels
         'gym' => 'el gimnasio',
     ];
 
-    private const actionVerbMap = [
-        'created' => 'Creo',
-        'updated' => 'Modifico',
-        'deleted' => 'Elimino',
+    // [tercera persona (lo lee el admin), segunda persona (lo lee el propio usuario en su calendario)]
+    private const verbMap = [
+        'created' => ['Creo', 'Creaste'],
+        'updated' => ['Modifico', 'Modificaste'],
+        'deleted' => ['Elimino', 'Eliminaste'],
+        'sent' => ['Envio', 'Enviaste'],
+        'approved' => ['Aprobo', 'Aprobaste'],
+        'rejected' => ['Rechazo', 'Rechazaste'],
+        'resubmitted' => ['Reenvio', 'Reenviaste'],
+        'added' => ['Agrego', 'Agregaste'],
+        'removed' => ['Quito', 'Quitaste'],
+        'assigned' => ['Asigno', 'Asignaste'],
+        'unassigned' => ['Le quito', 'Le quitaste'],
+        'changed' => ['Cambio', 'Cambiaste'],
+        'shown' => ['Se mostro', 'Te mostraste'],
+        'hidden' => ['Se oculto', 'Te ocultaste'],
+        'ranked-up' => ['Subio', 'Subiste'],
+        'profile-updated' => ['Actualizo su perfil', 'Actualizaste tu perfil'],
+        'photo-changed' => ['Cambio su foto de perfil', 'Cambiaste tu foto de perfil'],
+        'pending' => ['Quedo pendiente de aprobacion', 'Quedo pendiente de aprobacion'],
     ];
+
+    private static function verb(string $key, bool $isOwn): string
+    {
+        return self::verbMap[$key][$isOwn ? 1 : 0];
+    }
 
     /**
      * Agrupa los registros por dia: [['dateLabel' => '13/10/2026', 'items' => [...]], ...]
@@ -56,7 +77,8 @@ class ActivityLabels
         return array_values($dayList);
     }
 
-    static function buildItem(array $entityLog): array
+    // $isOwn: el texto le habla al propio usuario ("Creaste...") en vez de describirlo ("Creo...")
+    static function buildItem(array $entityLog, bool $isOwn = false): array
     {
         $data = $entityLog['data'] ?? [];
         $model = $entityLog['model'] ?? null;
@@ -68,27 +90,27 @@ class ActivityLabels
         $requesterSuffix = isset($data['requesterName']) ? ' de '.$data['requesterName'] : '';
 
         $text = match (true) {
-            $model === 'user' => self::userText($action, $data),
-            $model === 'ticket' && $action === 'created' => 'Envio '.$subject,
-            $action === 'approved' => 'Aprobo '.$subject.$requesterSuffix,
-            $action === 'rejected' => 'Rechazo '.$subject.$requesterSuffix,
-            $action === 'resubmitted' => 'Reenvio '.$subject,
-            $action === 'exercise-added' => 'Agrego el ejercicio «'.($data['exerciseName'] ?? '-').'» a '.$subject,
-            $action === 'exercise-removed' => 'Quito el ejercicio «'.($data['exerciseName'] ?? '-').'» de '.$subject,
-            $action === 'assigned' => 'Asigno '.$subject.' a '.($data['targetUserName'] ?? 'un alumno'),
-            $action === 'unassigned' => 'Le quito '.$subject.' a '.($data['targetUserName'] ?? 'un alumno'),
-            $action === 'resource-added' => 'Agrego una imagen publica a '.$subject,
-            $action === 'resource-removed' => 'Quito una imagen publica de '.$subject,
-            $action === 'image-updated' => 'Cambio la imagen de '.$subject,
-            $action === 'member-removed' => 'Quito a '.($data['targetUserName'] ?? 'un alumno').' de '.$subject,
+            $model === 'user' => self::userText($action, $data, $isOwn),
+            $model === 'ticket' && $action === 'created' => self::verb('sent', $isOwn).' '.$subject,
+            $action === 'approved' => self::verb('approved', $isOwn).' '.$subject.$requesterSuffix,
+            $action === 'rejected' => self::verb('rejected', $isOwn).' '.$subject.$requesterSuffix,
+            $action === 'resubmitted' => self::verb('resubmitted', $isOwn).' '.$subject,
+            $action === 'exercise-added' => self::verb('added', $isOwn).' el ejercicio «'.($data['exerciseName'] ?? '-').'» a '.$subject,
+            $action === 'exercise-removed' => self::verb('removed', $isOwn).' el ejercicio «'.($data['exerciseName'] ?? '-').'» de '.$subject,
+            $action === 'assigned' => self::verb('assigned', $isOwn).' '.$subject.' a '.($data['targetUserName'] ?? 'un alumno'),
+            $action === 'unassigned' => self::verb('unassigned', $isOwn).' '.$subject.' a '.($data['targetUserName'] ?? 'un alumno'),
+            $action === 'resource-added' => self::verb('added', $isOwn).' una imagen publica a '.$subject,
+            $action === 'resource-removed' => self::verb('removed', $isOwn).' una imagen publica de '.$subject,
+            $action === 'image-updated' => self::verb('changed', $isOwn).' la imagen de '.$subject,
+            $action === 'member-removed' => self::verb('removed', $isOwn).' a '.($data['targetUserName'] ?? 'un alumno').' de '.$subject,
             $action === 'visibility-changed' => ($data['isPublic'] ?? false)
-                ? 'Se mostro en la lista de alumnos de '.$subject
-                : 'Se oculto de la lista de alumnos de '.$subject,
-            default => (self::actionVerbMap[$action] ?? 'Actualizo').' '.$subject,
+                ? self::verb('shown', $isOwn).' en la lista de alumnos de '.$subject
+                : self::verb('hidden', $isOwn).' de la lista de alumnos de '.$subject,
+            default => self::verb(isset(self::verbMap[$action]) ? $action : 'updated', $isOwn).' '.$subject,
         };
 
         $note = match (true) {
-            ($data['pendingReview'] ?? false) => 'Quedo pendiente de aprobacion',
+            ($data['pendingReview'] ?? false) => self::verb('pending', $isOwn),
             isset($data['note']) => '“'.$data['note'].'”',
             default => null,
         };
@@ -102,12 +124,12 @@ class ActivityLabels
         ];
     }
 
-    private static function userText(?string $action, array $data): string
+    private static function userText(?string $action, array $data, bool $isOwn): string
     {
         return match ($action) {
-            'rank-up' => 'Subio al rango '.ProfileLabels::rankLabel($data['rank'] ?? null, $data['gender'] ?? null),
-            'image-updated' => 'Cambio su foto de perfil',
-            default => 'Actualizo su perfil'.(empty($data['fields']) ? '' : ': '.implode(', ', array_map(
+            'rank-up' => self::verb('ranked-up', $isOwn).' al rango '.ProfileLabels::rankLabel($data['rank'] ?? null, $data['gender'] ?? null),
+            'image-updated' => self::verb('photo-changed', $isOwn),
+            default => self::verb('profile-updated', $isOwn).(empty($data['fields']) ? '' : ': '.implode(', ', array_map(
                 fn(string $field) => ProfileLabels::profileFieldLabelMap[$field] ?? $field, $data['fields']))),
         };
     }

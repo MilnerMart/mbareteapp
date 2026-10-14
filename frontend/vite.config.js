@@ -8,6 +8,7 @@ export default defineConfig({
             input: [
                 'resources/css/activity.css',
                 'resources/css/app.css',
+                'resources/css/calendar.css',
                 'resources/css/catalog.css',
                 'resources/css/config.css',
                 'resources/css/group.css',
