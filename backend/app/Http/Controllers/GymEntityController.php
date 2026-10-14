@@ -6,6 +6,7 @@ use App\Core\CoreModel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GymEntityRequest;
 use App\Http\Requests\GymImageRequest;
+use App\Http\Requests\GymJoinRequest;
 use App\Http\Requests\GymVisibilityRequest;
 use App\Http\Resources\UserResource;
 use App\Models\EntityLog;
@@ -13,11 +14,13 @@ use App\Models\Gym;
 use App\Models\GymUser;
 use App\Models\Permit;
 use App\Models\Resource;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Models\UserRoutine;
 use App\PublicException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class GymEntityController extends Controller {
 
@@ -46,10 +49,12 @@ class GymEntityController extends Controller {
         $dbConnector = $this->getDbConnector();
         $user = $this->canManageGymsOrFail($request);
         $validated = $request->validated();
+        $ownerId = $this->resolveOwnerId($user, $validated);
+        $this->gymLimitOrFail($ownerId);
         $gym = Gym::allocNew(
             $validated['name'],
             $validated['slug'],
-            $this->resolveOwnerId($user, $validated),
+            $ownerId,
         );
         $gym->writeToDb($dbConnector);
         EntityLog::addNew($dbConnector, $user->id, $gym, EntityLog::actionIdCreated, $gym->getName());
@@ -72,6 +77,7 @@ class GymEntityController extends Controller {
             $dirty = true;
         }
         if($gym->getOwnerId() !== $ownerId){
+            $this->gymLimitOrFail($ownerId);
             $gym->setOwnerId($ownerId);
             $dirty = true;
         }
@@ -156,6 +162,34 @@ class GymEntityController extends Controller {
         return $this->successApiResponse($model);
     }
 
+    // el alumno pide entrar a un gimnasio con su codigo: queda un ticket para que el dueño lo acepte
+    public function requestJoin(GymJoinRequest $request): JsonResponse {
+        $dbConnector = $this->getDbConnector();
+        $user = $this->belongsToGymOrFail($request);
+        $gymCode = Str::lower(trim($request->validated()['gym_code']));
+        $gym = Gym::queryBySlug($dbConnector, $gymCode)
+            ?? throw PublicException::validationError('No existe un gimnasio con el codigo: '.$gymCode);
+        if($gym->getSlug() === Gym::baseGymSlug || GymUser::isMember($dbConnector, $gym->getEntityId(), $user->id)){
+            throw PublicException::validationError('Ya perteneces a '.$gym->getName());
+        }
+        if($gym->isOwnedBy($user->id)){
+            throw PublicException::validationError('Eres el entrenador de '.$gym->getName());
+        }
+        // de momento solo se pide desde el gimnasio base: quien ya esta en otro no puede sumar uno mas
+        if(GymUser::hasNonBaseMembership($dbConnector, $user->id)){
+            throw PublicException::validationError('Ya perteneces a un gimnasio. Por ahora solo puedes estar en uno');
+        }
+        $pendingTicket = Ticket::queryPendingGymJoin($dbConnector, $user->id);
+        if($pendingTicket){
+            throw PublicException::validationError('Ya tienes la solicitud '.$pendingTicket->getTicketNumber().' esperando respuesta del entrenador');
+        }
+
+        $ticket = $dbConnector->getEnvConecction()->transaction(
+            fn() => Ticket::addNewTicket($dbConnector, Ticket::typeIdGymJoin, $user->id, $gym->getEntityId())
+        );
+        return $this->successApiResponse(Ticket::buildApiModelList($dbConnector, [$ticket])[0], 201);
+    }
+
     public function updateMemberVisibility(GymVisibilityRequest $request, string $id): JsonResponse {
         $this->belongsToGymOrFail($request);
         $isPublic = (bool)$request->validated()['is_public'];
@@ -215,6 +249,17 @@ class GymEntityController extends Controller {
     /**
      * Solo el admin puede asignar el gimnasio a otro usuario.
      */
+    private function gymLimitOrFail(int $ownerId): void {
+        $dbConnector = $this->getDbConnector();
+        $owner = User::find($ownerId);
+        if(!$owner || $owner->hasSeeAllPermit($dbConnector)){
+            return;
+        }
+        if(count(Gym::queryListByOwnerId($dbConnector, $ownerId)) >= Gym::maxGymsPerTrainer){
+            throw PublicException::validationError('Por ahora cada entrenador puede tener un solo gimnasio');
+        }
+    }
+
     private function resolveOwnerId(User $user, array $validated, ?int $currentOwnerId = null): int {
         if(!empty($validated['owner_id']) && $user->hasSeeAllPermit($this->getDbConnector())){
             return (int)$validated['owner_id'];

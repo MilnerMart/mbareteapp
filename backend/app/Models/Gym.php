@@ -116,6 +116,9 @@ class Gym extends BaseEntity {
         return $dbConnect->fetchAll($query, [self::class, 'row2Gym']);
     }
 
+    // de momento cada entrenador gestiona un solo gimnasio (el admin no tiene limite)
+    const maxGymsPerTrainer = 1;
+
     static function queryListByOwnerId(DbConnector $dbConnect, int $ownerId):array{
         $query = self::allocSelectQuery($dbConnect)->where('g.owner_id', $ownerId);
         return $dbConnect->fetchAll($query, [self::class, 'row2Gym']);

@@ -35,12 +35,12 @@
                 @if (!$memberGym)
                     @include('gyms._base-switch', ['baseGym' => $data['baseGym'], 'showBaseGym' => $data['showBaseGym'], 'route' => $data['memberRoute']])
                 @endif
-                @unless ($memberGym)
+                @if (!$memberGym && $data['canCreateGym'])
                     <a href="{{ route('gym.create') }}" class="btn btn-primary">
                         <i class="fa-solid fa-plus"></i>
                         <span>Nuevo gimnasio</span>
                     </a>
-                @endunless
+                @endif
             </div>
         </div>
 

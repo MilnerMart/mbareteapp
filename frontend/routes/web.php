@@ -79,6 +79,7 @@ Route::middleware('frontend.auth')->group(function () {
     Route::middleware('frontend.member')->prefix('/my-gym')->group(function () {
         Route::get('/', [GymController::class, 'memberIndex'])->name('gym.member');
         Route::put('/{id}/visibility', [GymController::class, 'updateMemberVisibility'])->name('gym.member.visibility');
+        Route::post('/join', [GymController::class, 'requestJoin'])->name('gym.member.join');
     });
 
     Route::get('/my-requests/{id}', [TicketController::class, 'show'])->whereNumber('id')->name('ticket.show');

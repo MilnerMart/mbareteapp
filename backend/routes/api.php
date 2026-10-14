@@ -64,6 +64,7 @@ Route::prefix('/v1')->group(function(){
         });
 
         Route::get('/me/gyms', [GymEntityController::class, 'memberIndex']);
+        Route::post('/me/gyms/join', [GymEntityController::class, 'requestJoin']);
         Route::put('/me/gyms/{id}/visibility', [GymEntityController::class, 'updateMemberVisibility']);
         Route::get('/me/tickets', [TicketController::class, 'myIndex']);
         Route::get('/me/notifications', [NotificationController::class, 'index']);

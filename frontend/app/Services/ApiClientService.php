@@ -78,6 +78,8 @@ class ApiClientService
     /**
      * Las urls de imagenes del backend (http://backend/images/...) pasan a /images/... para que el
      * navegador las pida al front, que las sirve via MediaController.
+     * Las relativas (images/leoncioBiceps.png, imagenes propias del front) se vuelven absolutas: sin la barra
+     * el navegador las resuelve contra la pagina actual (/gym/images/...).
      */
     private function localizeImageUrls($value)
     {
@@ -88,6 +90,9 @@ class ApiClientService
         $prefix = MediaController::backendOrigin().'/images/';
         if(is_string($value) && str_starts_with($value, $prefix)){
             return '/images/'.substr($value, strlen($prefix));
+        }
+        if(is_string($value) && str_starts_with($value, 'images/')){
+            return '/'.$value;
         }
 
         return $value;
@@ -236,6 +241,10 @@ class ApiClientService
 
     public function getMemberGyms(){
         return $this->get('/me/gyms');
+    }
+
+    public function requestGymJoin(string $gymCode){
+        return $this->post('/me/gyms/join', ['gym_code' => $gymCode]);
     }
 
     public function updateMemberGymVisibility(int $id, bool $isPublic){

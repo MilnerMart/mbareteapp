@@ -686,3 +686,40 @@
 .user-detail-activity {
     margin-top: .6rem;
 }
+
+/* el alumno que solo esta en el gimnasio base pide unirse a otro con su codigo */
+.gym-join-form {
+    background-color: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+}
+
+.gym-join-form .form-label {
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: .2rem;
+}
+
+.gym-join-hint {
+    color: #8f8f8f;
+    font-size: .85rem;
+    margin-bottom: .75rem;
+}
+
+.gym-join-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.gym-join-row .form-control {
+    flex: 1 1 220px;
+}
+
+.gym-join-pending {
+    background: rgba(193, 18, 31, .12);
+    border: 1px solid rgba(193, 18, 31, .45);
+    color: #ffffff;
+}

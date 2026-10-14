@@ -32,6 +32,20 @@ class GymUser {
         ->orderBy('created_at')->pluck('user_id')->all();
     }
 
+    // pertenece a algun gimnasio ademas del base
+    static function hasNonBaseMembership(DbConnector $dbConnect, int $userId): bool{
+        return self::allocDbTable($dbConnect, 'gu')
+        ->join(DbSchema::tableGymEntity.' as g', 'g.id', '=', 'gu.gym_id')
+        ->where('gu.user_id', $userId)
+        ->where('g.slug', '!=', Gym::baseGymSlug)
+        ->where('g.status', '!=', EntityStatus::statusIdDeleted)
+        ->exists();
+    }
+
+    static function isMember(DbConnector $dbConnect, int $gymId, int $userId): bool{
+        return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('user_id', $userId)->exists();
+    }
+
     static function removeGymUser(DbConnector $dbConnect, int $gymId, int $userId): bool{
         return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('user_id', $userId)->delete() > 0;
     }

@@ -391,6 +391,13 @@ class Ticket extends BaseEntity {
         return $dbConnect->fetchAll($query, [self::class, 'row2Ticket']);
     }
 
+    static function queryPendingGymJoin(DbConnector $dbConnect, int $requesterId):?self{
+        $query = self::allocSelectQuery($dbConnect, self::stateIdPending)
+        ->where('t.type', self::typeIdGymJoin)
+        ->where('t.requester_id', $requesterId);
+        return $dbConnect->fetchSingle($query, [self::class, 'row2Ticket']);
+    }
+
     static function queryByDbId(DbConnector $dbConnect, ?int $dbId):?self{
         $query = self::allocSelectQuery($dbConnect, null)->where('t.id', $dbId);
         return $dbConnect->fetchSingle($query, [self::class ,'row2Ticket']);

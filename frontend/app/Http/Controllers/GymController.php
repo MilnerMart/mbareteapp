@@ -10,6 +10,8 @@ use Illuminate\View\View;
 
 class GymController extends Controller
 {
+    private const gymLimitMessage = 'Por ahora cada entrenador puede tener un solo gimnasio.';
+
     private ApiClientService $apiClient;
 
     public function __construct(ApiClientService $apiClient){
@@ -22,13 +24,12 @@ class GymController extends Controller
      */
     public function index(Request $request): View{
         $memberData = $this->buildMemberGymData($request);
+        $managedGyms = $this->apiClient->getGyms() ?? [];
         $data = $memberData + [
-            'gyms' => $memberData['memberGym'] ? [] : $this->mergeMemberGyms(
-                $this->apiClient->getGyms() ?? [],
-                $memberData['visibleMemberGyms']
-            ),
+            'gyms' => $memberData['memberGym'] ? [] : $this->mergeMemberGyms($managedGyms, $memberData['visibleMemberGyms']),
             'isAdmin' => AuthPermits::isAdmin(),
             'memberRoute' => 'gym.index',
+            'canCreateGym' => $this->canCreateGym($managedGyms),
         ];
         return $this->renderView('gyms.index', compact('data'));
     }
@@ -43,7 +44,34 @@ class GymController extends Controller
             'isAdmin' => false,
             'memberRoute' => 'gym.member',
         ];
+        $data['pendingJoinList'] = array_values(array_map(fn(array $ticket) => [
+            'number' => $ticket['number'],
+            'gymName' => $ticket['refs']['gym']['name'] ?? 'el gimnasio',
+        ], array_filter($this->apiClient->getMyTickets() ?? [],
+            fn(array $ticket) => ($ticket['type'] ?? null) === 'gym-join' && ($ticket['state'] ?? null) === 'pending')));
+        // solo quien esta unicamente en el gimnasio base y no espera respuesta de otro puede pedir unirse
+        $data['canJoinGym'] = !$memberData['memberGym'] && !$memberData['hasOwnGym'] && !$data['pendingJoinList'];
+        $data['isJoinFormOpen'] = (bool)session('errors')?->has('gym_code');
         return $this->renderView('gyms.member', compact('data'));
+    }
+
+    public function requestJoin(Request $request): RedirectResponse{
+        $validated = $request->validate([
+            'gym_code' => ['required', 'string', 'max:50'],
+        ], [
+            'gym_code.required' => 'Ingresa el codigo del gimnasio.',
+        ]);
+
+        $response = $this->apiClient->requestGymJoin($validated['gym_code']);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors([
+                'gym_code' => $this->apiErrorMessage($response, 'No pudimos enviar tu solicitud.'),
+            ])->withInput();
+        }
+
+        $gymName = $response['data']['refs']['gym']['name'] ?? 'el gimnasio';
+        return back()->with('gym_saved', 'Enviamos tu solicitud '.$response['data']['number'].' para unirte a '.$gymName
+            .'. Te avisaremos cuando el entrenador la acepte.');
     }
 
     /**
@@ -60,6 +88,7 @@ class GymController extends Controller
 
         return [
             'baseGym' => collect($memberGyms)->firstWhere('isBase', true),
+            'hasOwnGym' => collect($memberGyms)->contains(fn($gym) => !($gym['isBase'] ?? false)),
             'showBaseGym' => $showBaseGym,
             'visibleMemberGyms' => array_values(array_filter($memberGyms, fn($gym) => $showBaseGym || !($gym['isBase'] ?? false))),
             'memberGym' => collect($memberGyms)->firstWhere('id', (int) $request->query('member')),
@@ -99,7 +128,10 @@ class GymController extends Controller
             : 'Ya no apareces en la lista de alumnos.');
     }
 
-    public function create(): View{
+    public function create(): RedirectResponse|View{
+        if(!$this->canCreateGym($this->apiClient->getGyms() ?? [])){
+            return redirect()->route('gym.index')->withErrors(['name' => self::gymLimitMessage]);
+        }
         $data['gym'] = null;
         $data['isAdmin'] = AuthPermits::isAdmin();
         return $this->renderView('gyms.form', compact('data'));
@@ -115,6 +147,12 @@ class GymController extends Controller
         }
 
         return redirect()->route('gym.index')->with('gym_saved', 'Gimnasio creado.');
+    }
+
+    // de momento el entrenador gestiona un solo gimnasio; el backend tambien lo valida
+    private function canCreateGym(array $managedGyms): bool{
+        $userId = (int) session('auth_user.id');
+        return AuthPermits::isAdmin() || !collect($managedGyms)->contains(fn(array $gym) => (int)($gym['ownerId'] ?? 0) === $userId);
     }
 
     public function show(int $id): RedirectResponse|View{
