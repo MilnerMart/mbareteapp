@@ -92,7 +92,7 @@ class UserController extends Controller{
 
         $user = $response['user'];
         $data['userName'] = trim(($user['name'] ?? '').' '.($user['last_name'] ?? '')) ?: 'Usuario';
-        $data['userImageUrl'] = $user['profile_image_url'] ?? asset('images/leoncioBiceps.png');
+        $data['userImageUrl'] = $user['profile_image_url'] ?? asset('images/chavukuBiceps.png');
         $data['dayList'] = ActivityLabels::buildDayList($response['items'] ?? []);
         $data['filterList'] = array_map(fn(?string $filterModel, string $label) => [
             'label' => $label,
@@ -163,7 +163,7 @@ class UserController extends Controller{
         return [
             'id' => $userInfo['id'],
             'fullName' => trim(($userInfo['name'] ?? '').' '.($userInfo['last_name'] ?? '')) ?: 'Usuario',
-            'imageUrl' => $userInfo['profile_image_url'] ?? asset('images/leoncioBiceps.png'),
+            'imageUrl' => $userInfo['profile_image_url'] ?? asset('images/chavukuBiceps.png'),
             'goalLabel' => ProfileLabels::goalLabel($userInfo['goal'] ?? null),
             'rankLabel' => ProfileLabels::rankLabel($userInfo['progress']['rank'] ?? null, $userInfo['gender'] ?? null),
             'statList' => [

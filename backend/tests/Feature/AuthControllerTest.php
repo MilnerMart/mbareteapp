@@ -16,9 +16,9 @@ class AuthControllerTest extends TestCase
     public function test_user_can_register_and_receive_sanctum_token(): void
     {
         $response = $this->postJson('/api/v1/auth/register', [
-            'name' => 'Leoncio',
+            'name' => 'Chavuku',
             'last_name' => 'Gym',
-            'email' => 'leoncio@example.com',
+            'email' => 'chavuku@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'age' => 30,

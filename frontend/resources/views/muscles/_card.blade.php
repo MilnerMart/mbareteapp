@@ -5,7 +5,7 @@
 <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex justify-content-center mb-4">
     <div class="card catalog-card" style="width: 18rem;">
         <a href="{{ route('exercise.group', $muscle['id']) }}" class="catalog-card-media card-img-top">
-            <img src="{{ asset($muscle['image_url'] ?? 'images/leoncioRest.png') }}" alt="{{ $muscle['name'] }}">
+            <img src="{{ asset($muscle['image_url'] ?? 'images/chavukuRest.png') }}" alt="{{ $muscle['name'] }}">
         </a>
         <div class="card-body">
             <h5 class="card-title text-center">{{ $muscle['name'] }}</h5>

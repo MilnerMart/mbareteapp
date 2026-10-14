@@ -147,7 +147,7 @@
                             $assignedName = trim(($assignedUser['name'] ?? '') . ' ' . ($assignedUser['last_name'] ?? ''));
                         @endphp
                         <li class="routine-user">
-                            <img src="{{ $assignedUser['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}" alt="" class="routine-user-avatar">
+                            <img src="{{ $assignedUser['profile_image_url'] ?? asset('images/chavukuBiceps.png') }}" alt="" class="routine-user-avatar">
                             <div class="routine-user-info">
                                 <strong>{{ $assignedName ?: 'Usuario' }}</strong>
                                 <span>{{ $assignedUser['email'] }}</span>

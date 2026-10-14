@@ -20,7 +20,7 @@
 
             @if ($owner)
                 <div class="gym-owner">
-                    <img src="{{ $owner['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}" alt="" class="gym-student-avatar">
+                    <img src="{{ $owner['profile_image_url'] ?? asset('images/chavukuBiceps.png') }}" alt="" class="gym-student-avatar">
                     <div>
                         <span class="gym-owner-label">Entrenador</span>
                         <strong>{{ $ownerName ?: 'Entrenador' }}</strong>
@@ -56,7 +56,7 @@
             <ul class="gym-public-students">
                 @foreach ($gym['publicStudents'] as $student)
                     <li>
-                        <img src="{{ $student['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}" alt="" class="gym-student-avatar">
+                        <img src="{{ $student['profile_image_url'] ?? asset('images/chavukuBiceps.png') }}" alt="" class="gym-student-avatar">
                         <span>{{ trim($student['name'] . ' ' . $student['last_name']) }}</span>
                     </li>
                 @endforeach

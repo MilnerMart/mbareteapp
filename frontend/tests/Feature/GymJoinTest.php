@@ -35,7 +35,7 @@ class GymJoinTest extends TestCase
                 str_ends_with($path, '/me/gyms') => Http::response(['success' => true, 'data' => $this->memberGyms]),
                 str_ends_with($path, '/me/tickets') => Http::response(['success' => true, 'data' => $this->myTickets]),
                 str_ends_with($path, '/user/5') => Http::response(['success' => true, 'data' => [
-                    'favorites' => ['muscle' => ['image_url' => 'images/leoncioBiceps.png']],
+                    'favorites' => ['muscle' => ['image_url' => 'images/chavukuBiceps.png']],
                 ]]),
                 default => Http::response(['success' => true, 'data' => []]),
             };
@@ -96,6 +96,6 @@ class GymJoinTest extends TestCase
     {
         $userInfo = app(ApiClientService::class)->getUser(5);
 
-        $this->assertSame('/images/leoncioBiceps.png', $userInfo['favorites']['muscle']['image_url']);
+        $this->assertSame('/images/chavukuBiceps.png', $userInfo['favorites']['muscle']['image_url']);
     }
 }

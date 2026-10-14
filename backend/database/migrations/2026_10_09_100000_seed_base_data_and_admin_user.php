@@ -43,7 +43,7 @@ return new class extends Migration
         $gymId = DB::table('gym_entities')->where('slug', Gym::baseGymSlug)->value('id');
         if (!$gymId) {
             $gymId = DB::table('gym_entities')->insertGetId([
-                'name' => env('BASE_GYM_NAME', 'Leoncio Gym'),
+                'name' => env('BASE_GYM_NAME', 'Chavuku Gym'),
                 'slug' => Gym::baseGymSlug,
                 'owner_id' => $adminId,
                 'status' => EntityStatus::statusIdActive,

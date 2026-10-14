@@ -1,6 +1,6 @@
 @extends('layouts.layout')
 
-@section('title', 'Ingresar | Leoncio Gym')
+@section('title', 'Ingresar | Chavuku Gym')
 
 @section('css')
     @vite(['resources/css/login.css'])
@@ -33,7 +33,7 @@
             <div class="col-lg-6 login-form-column">
                 <div class="login-panel">
                     <div class="login-brand">
-                        <img src="{{ asset('images/LeoncioLogo.png') }}" alt="Leoncio Gym">
+                        <img src="{{ asset('images/ChavukuLogo.png') }}" alt="Chavuku Gym">
                         <div>
                             <span>Bienvenido</span>
                             <strong>Iniciar sesion</strong>

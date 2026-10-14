@@ -19,7 +19,7 @@
 
             <div class="register-panel">
                 <div class="register-brand">
-                    <img src="{{ asset('images/LeoncioLogo.png') }}" alt="Mbarete App">
+                    <img src="{{ asset('images/ChavukuLogo.png') }}" alt="Mbarete App">
                     <div>
                         <span>Nuevo perfil</span>
                         <strong>Registrarme</strong>

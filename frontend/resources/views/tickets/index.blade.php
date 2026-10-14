@@ -72,7 +72,7 @@
                         <div class="ticket-item-body">
                             @unless ($isSent)
                                 <img
-                                    src="{{ $requester['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}"
+                                    src="{{ $requester['profile_image_url'] ?? asset('images/chavukuBiceps.png') }}"
                                     alt=""
                                     class="ticket-avatar">
                             @endunless

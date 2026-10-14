@@ -41,7 +41,7 @@
                             <span class="catalog-private-badge catalog-private-badge-floating"><i class="fa-solid fa-lock"></i> Privado</span>
                         @endif
                         <div class="media-attribution-host catalog-card-media catalog-card-media-exercise" style="border-radius: 10%;">
-                            <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/leoncioRest.png') }}" alt="{{ $exercise['name'] }}"></a>
+                            <a href="{{ route('exercise.resource', $exercise['id']) }}"><img src="{{ asset($exercise['image'] ?? 'images/chavukuRest.png') }}" alt="{{ $exercise['name'] }}"></a>
                             @include('layouts._partials.media-attribution', ['attribution' => $exercise['imageAttribution'] ?? null])
                         </div>
                         <div class="card-body pb-0">
@@ -74,7 +74,7 @@
         </div>
     @else
         <div class="empty-exercises-wrapper">
-            <img src="{{ asset('images/leoncioRest.png') }}" alt="Leoncio descansando" class="leoncio-rest-img">
+            <img src="{{ asset('images/chavukuRest.png') }}" alt="Chavuku descansando" class="chavuku-rest-img">
         </div>
     @endif    
 @endsection

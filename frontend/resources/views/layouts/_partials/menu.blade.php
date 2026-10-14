@@ -3,7 +3,7 @@
         <div class="container">
 
             <div class="logo-container">
-                <img src="{{ asset('images/LeoncioLogo.png') }}" alt="logo">
+                <img src="{{ asset('images/ChavukuLogo.png') }}" alt="logo">
             </div>
             <button 
                 class="navbar-toggler" 

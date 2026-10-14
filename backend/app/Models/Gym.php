@@ -17,9 +17,9 @@ class Gym extends BaseEntity {
 
     private const myTable = DbSchema::tableGymEntity;
 
-    const leoncioGymSlug = 'leoncion-gym';
+    const chavukuGymSlug = 'chavuku-gym';
 
-    const baseGymSlug = self::leoncioGymSlug;
+    const baseGymSlug = self::chavukuGymSlug;
 
     private string $name, $slug;
 

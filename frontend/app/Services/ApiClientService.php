@@ -78,7 +78,7 @@ class ApiClientService
     /**
      * Las urls de imagenes del backend (http://backend/images/...) pasan a /images/... para que el
      * navegador las pida al front, que las sirve via MediaController.
-     * Las relativas (images/leoncioBiceps.png, imagenes propias del front) se vuelven absolutas: sin la barra
+     * Las relativas (images/chavukuBiceps.png, imagenes propias del front) se vuelven absolutas: sin la barra
      * el navegador las resuelve contra la pagina actual (/gym/images/...).
      */
     private function localizeImageUrls($value)

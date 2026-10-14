@@ -94,7 +94,7 @@
                         @endphp
                         <li class="gym-student @if ($isAdmin) is-clickable @endif" @if ($isAdmin) data-user-detail-card @endif>
                             <img
-                                src="{{ $student['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}"
+                                src="{{ $student['profile_image_url'] ?? asset('images/chavukuBiceps.png') }}"
                                 alt=""
                                 class="gym-student-avatar">
                             <div class="gym-student-info">

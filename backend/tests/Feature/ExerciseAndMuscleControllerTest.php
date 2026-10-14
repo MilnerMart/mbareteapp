@@ -32,7 +32,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
             'slug' => 'pectorales',
             'description' => 'Grupo muscular del pecho',
             'recommended_rest_days' => 2,
-            'image_url' => 'images/leoncioPecs.png',
+            'image_url' => 'images/chavukuPecs.png',
         ])->assertUnauthorized();
     }
 
@@ -45,7 +45,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
             'slug' => 'pectorales',
             'description' => 'Grupo muscular del pecho',
             'recommended_rest_days' => 2,
-            'image_url' => 'images/leoncioPecs.png',
+            'image_url' => 'images/chavukuPecs.png',
         ]);
 
         $create->assertCreated()
@@ -59,7 +59,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
             'slug' => 'pectoral-mayor',
             'description' => 'Grupo muscular actualizado',
             'recommended_rest_days' => 3,
-            'image_url' => 'images/leoncioPecs.png',
+            'image_url' => 'images/chavukuPecs.png',
         ])->assertOk()
             ->assertJsonPath('data.name', 'Pectoral Mayor')
             ->assertJsonPath('data.recommended_rest_days', 3);
@@ -83,7 +83,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
             'muscle_id' => $muscle->id,
             'description' => 'Ejercicio de biceps con mancuerna',
             'recommended_rest_time' => 2,
-            'image' => 'images/leoncioCurl.png',
+            'image' => 'images/chavukuCurl.png',
             'video' => null,
             'gif' => null,
         ]);
@@ -100,7 +100,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
             'muscle_id' => $muscle->id,
             'description' => 'Ejercicio actualizado con mancuerna',
             'recommended_rest_time' => 3,
-            'image' => 'images/leoncioCurl.png',
+            'image' => 'images/chavukuCurl.png',
             'video' => null,
             'gif' => null,
         ])->assertOk()
@@ -110,7 +110,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/exercise/'.$exerciseId.'/resource', [
             'name' => 'Imagen tecnica',
             'kind' => Resource::kindImg,
-            'url' => 'images/leoncioCurl.png',
+            'url' => 'images/chavukuCurl.png',
             'status' => 1,
         ])->assertCreated()
             ->assertJsonPath('success', true);
@@ -135,7 +135,7 @@ class ExerciseAndMuscleControllerTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/exercise/'.$exercise->id.'/resource', [
             'name' => 'Archivo raro',
             'kind' => 99,
-            'url' => 'images/leoncioCurl.png',
+            'url' => 'images/chavukuCurl.png',
             'status' => 1,
         ])->assertUnprocessable()
             ->assertJsonValidationErrors(['kind']);
