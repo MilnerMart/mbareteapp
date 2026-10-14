@@ -73,27 +73,30 @@ class EntityLogTest extends TestCase
         $exerciseId = DB::table('exercises')->value('id');
         $routineId = $this->actingWithToken($trainerToken)->postJson('/api/v1/routines', ['name' => 'Cardio', 'frequency' => 3, 'rest_minutes' => 1])
             ->assertCreated()->json('data.id');
-        $this->actingWithToken($trainerToken)->postJson('/api/v1/routines/'.$routineId.'/exercises', ['exercise_id' => $exerciseId, 'duration_minutes' => 10])
+        $this->actingWithToken($trainerToken)->postJson('/api/v1/routines/'.$routineId.'/exercises', ['exercise_id' => $exerciseId, 'duration_minutes' => 40])
             ->assertCreated();
-        DB::table('routine_exercise_logs')->insert([
-            'user_id' => $trainerId, 'routine_id' => $routineId, 'exercise_id' => $exerciseId, 'done_on' => '2026-01-01',
-            'duration_minutes' => 135, 'created_at' => now(), 'updated_at' => now(),
-        ]);
+        // cada dia suma como mucho 60 puntos: hacen falta los dos dias de antes y hoy para llegar a 150
+        foreach (['2026-01-01' => 130, '2026-01-02' => 60] as $doneOn => $minutes) {
+            DB::table('routine_exercise_logs')->insert([
+                'user_id' => $trainerId, 'routine_id' => $routineId, 'exercise_id' => $exerciseId, 'done_on' => $doneOn,
+                'duration_minutes' => $minutes, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
         foreach ([[$exerciseId], [], [$exerciseId]] as $doneList) {
             $this->actingWithToken($trainerToken)->putJson('/api/v1/routines/'.$routineId.'/done', [
                 'exercises' => array_map(fn(int $id) => ['exercise_id' => $id], $doneList),
             ])->assertOk();
         }
 
-        $logs = $this->actingWithToken($adminToken)->getJson('/api/v1/user/'.$trainerId.'/logs')->assertOk()
-            ->assertJsonPath('data.items.0.action', 'rank-up')
-            ->assertJsonPath('data.items.0.model', 'user')
-            ->assertJsonPath('data.items.0.data.rank', 'beginner')
-            ->assertJsonPath('data.items.0.data.previousRank', 'novice');
-        $this->assertSame(['rank-up', 'exercise-added', 'created', 'updated', 'resubmitted', 'created'],
-            array_column($logs->json('data.items'), 'action'));
-        $this->assertSame(['weight'], $logs->json('data.items.3.data.fields'));
-        $this->assertSame('ticket', $logs->json('data.items.5.model'));
+        // los logros que se desbloquean al entrenar tambien quedan en el registro; aca se miran aparte
+        $items = $this->actingWithToken($adminToken)->getJson('/api/v1/user/'.$trainerId.'/logs')->assertOk()->json('data.items');
+        $achievementItems = array_values(array_filter($items, fn(array $item) => $item['action'] === 'achievement'));
+        $items = array_values(array_filter($items, fn(array $item) => $item['action'] !== 'achievement'));
+        $this->assertNotEmpty($achievementItems);
+        $this->assertSame(['user', 'beginner', 'novice'], [$items[0]['model'], $items[0]['data']['rank'], $items[0]['data']['previousRank']]);
+        $this->assertSame(['rank-up', 'exercise-added', 'created', 'updated', 'resubmitted', 'created'], array_column($items, 'action'));
+        $this->assertSame(['weight'], $items[3]['data']['fields']);
+        $this->assertSame('ticket', $items[5]['model']);
     }
 
     public function test_admin_logs_include_assignments_and_catalog_and_can_be_filtered(): void

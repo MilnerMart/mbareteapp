@@ -120,6 +120,8 @@ Route::prefix('/v1')->group(function(){
             Route::delete('/providers/{id}', [ConfigController::class, 'providerDestroy']);
             Route::post('/providers/{id}/configs', [ConfigController::class, 'providerConfigStore']);
             Route::delete('/provider-configs/{id}', [ConfigController::class, 'providerConfigDestroy']);
+            Route::get('/progress', [ConfigController::class, 'progressIndex']);
+            Route::put('/progress', [ConfigController::class, 'progressUpdate']);
             Route::get('/core', [ConfigController::class, 'coreIndex']);
             Route::put('/core', [ConfigController::class, 'coreUpdate']);
         });

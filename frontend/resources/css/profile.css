@@ -459,3 +459,143 @@
     font-size: .8rem;
     margin: 0;
 }
+
+/* logros: el trofeo abre la lista */
+.profile-trophy {
+    cursor: pointer;
+    font: inherit;
+}
+
+.profile-trophy.has-achievements {
+    border-color: #ffc145;
+    color: #ffc145;
+}
+
+.profile-trophy:hover,
+.profile-trophy:focus-visible {
+    border-color: #ffc145;
+    color: #ffffff;
+}
+
+.achievements-modal {
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    color: #e5e5e5;
+}
+
+.achievements-modal .modal-header {
+    border-bottom-color: #2a2a2a;
+}
+
+.achievements-modal .modal-title {
+    color: #ffffff;
+    font-size: 1.3rem;
+}
+
+.achievements-modal .modal-title i {
+    color: #ffc145;
+}
+
+.achievements-modal .modal-title small {
+    color: #8f8f8f;
+    font-size: .85rem;
+    margin-left: .35rem;
+}
+
+.achievements-empty {
+    color: #8f8f8f;
+}
+
+.achievements-group {
+    color: #8f8f8f;
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    margin: 1rem 0 .5rem;
+    text-transform: uppercase;
+}
+
+.achievements-list {
+    display: grid;
+    gap: .6rem;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.achievement {
+    align-items: flex-start;
+    background: #181818;
+    border: 1px solid #242424;
+    border-radius: 8px;
+    display: flex;
+    gap: .75rem;
+    padding: .7rem;
+}
+
+.achievement-icon {
+    align-items: center;
+    background: #222222;
+    border-radius: 50%;
+    color: #5c5c5c;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1.1rem;
+    height: 2.6rem;
+    justify-content: center;
+    width: 2.6rem;
+}
+
+.achievement.is-unlocked {
+    border-color: rgba(255, 193, 69, .45);
+}
+
+.achievement.is-unlocked .achievement-icon {
+    background: rgba(255, 193, 69, .15);
+    color: #ffc145;
+}
+
+.achievement-body {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+}
+
+.achievement-body strong {
+    color: #ffffff;
+}
+
+.achievement:not(.is-unlocked) .achievement-body strong {
+    color: #bdbdbd;
+}
+
+.achievement-message {
+    color: #a8a8a8;
+    font-size: .85rem;
+}
+
+.achievement-date {
+    color: #8f8f8f;
+    font-size: .78rem;
+}
+
+.achievement.is-unlocked .achievement-date {
+    color: #ffc145;
+}
+
+.achievement-progress {
+    background: #262626;
+    border-radius: 999px;
+    display: block;
+    height: .35rem;
+    margin-top: .25rem;
+    overflow: hidden;
+}
+
+.achievement-progress span {
+    background: #c1121f;
+    display: block;
+    height: 100%;
+}

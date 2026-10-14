@@ -23,5 +23,7 @@ class DbSchema{
     tableUserNotifications = 'user_notifications',
     tableEntityLogs = 'entity_logs',
     tableCalendarNotes = 'calendar_notes',
+    tableUserAchievements = 'user_achievements',
+    tableAppSettings = 'app_settings',
     tableUsers = 'users';
 }

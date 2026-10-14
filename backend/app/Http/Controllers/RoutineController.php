@@ -16,6 +16,7 @@ use App\Models\Routine;
 use App\Models\RoutineExercise;
 use App\Models\RoutineExerciseLog;
 use App\Models\User;
+use App\Models\UserAchievement;
 use App\Models\UserNotification;
 use App\Models\UserProgress;
 use App\Models\UserRoutine;
@@ -178,14 +179,15 @@ class RoutineController extends Controller
 
         $previousRank = UserProgress::build($dbConnector, $request->user()->id)['rank'];
         RoutineExerciseLog::syncDoneToday($dbConnector, $request->user()->id, $routine->getEntityId(), $weightKgMap);
-        $this->addRankUpLog($request->user(), $previousRank);
+        $progress = UserProgress::build($dbConnector, $request->user()->id);
+        $this->addRankUpLog($request->user(), $previousRank, $progress['rank']);
+        UserAchievement::unlockReached($dbConnector, $request->user(), $progress);
         return $this->successApiResponse(['doneExerciseIds' => $exerciseIdList]);
     }
 
     // el marcado del dia no se registra, solo cuando con eso llega por primera vez a un rango mas alto
-    private function addRankUpLog(User $user, string $previousRank): void {
+    private function addRankUpLog(User $user, string $previousRank, string $rank): void {
         $dbConnector = $this->getDbConnector();
-        $rank = UserProgress::build($dbConnector, $user->id)['rank'];
         if(!UserProgress::isHigherRank($rank, $previousRank)
             || EntityLog::existsWithData($dbConnector, $user->id, CoreModel::userModelId, EntityLog::actionIdRankUp, 'rank', $rank)){
             return;

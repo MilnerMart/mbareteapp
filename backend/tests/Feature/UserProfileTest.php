@@ -128,9 +128,16 @@ class UserProfileTest extends TestCase
             ->assertJsonPath('data.progress.nextRankPoints', 150)
             ->assertJsonPath('data.progress.progressPercent', 62);
 
+        // una sesion larga no alcanza: cada dia suma como mucho 60 puntos (hace 5 dias: 10 + 80 min = 90 -> 60)
         $this->insertLog($userId, $routineId, $walkId, $today->subDays(5)->toDateString(), ['duration_minutes' => 60]);
         $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()
-            ->assertJsonPath('data.progress.points', 154)
+            ->assertJsonPath('data.progress.points', 124)
+            ->assertJsonPath('data.progress.rank', 'novice');
+
+        // otro dia mas de entrenamiento y llega
+        $this->insertLog($userId, $routineId, $walkId, $today->subDays(3)->toDateString(), ['duration_minutes' => 30]);
+        $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()
+            ->assertJsonPath('data.progress.points', 164)
             ->assertJsonPath('data.progress.rank', 'beginner')
             ->assertJsonPath('data.progress.nextRank', 'steady');
     }

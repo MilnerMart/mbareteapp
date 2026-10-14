@@ -54,6 +54,7 @@ class ActivityLabels
         'ranked-up' => ['Subio', 'Subiste'],
         'profile-updated' => ['Actualizo su perfil', 'Actualizaste tu perfil'],
         'photo-changed' => ['Cambio su foto de perfil', 'Cambiaste tu foto de perfil'],
+        'unlocked' => ['Desbloqueo el logro', 'Desbloqueaste el logro'],
         'pending' => ['Quedo pendiente de aprobacion', 'Quedo pendiente de aprobacion'],
     ];
 
@@ -116,17 +117,22 @@ class ActivityLabels
         };
 
         return [
-            'icon' => $action === 'rank-up' ? 'fa-solid fa-medal' : (self::modelIconMap[$model] ?? 'fa-solid fa-clock-rotate-left'),
+            'icon' => match ($action) {
+                'rank-up' => 'fa-solid fa-medal',
+                'achievement' => AchievementLabels::icon($data['achievement'] ?? null),
+                default => self::modelIconMap[$model] ?? 'fa-solid fa-clock-rotate-left',
+            },
             'text' => $text,
             'note' => $note,
             'isDelete' => in_array($action, ['deleted', 'rejected'], true),
-            'isHighlight' => $action === 'rank-up',
+            'isHighlight' => in_array($action, ['rank-up', 'achievement'], true),
         ];
     }
 
     private static function userText(?string $action, array $data, bool $isOwn): string
     {
         return match ($action) {
+            'achievement' => self::verb('unlocked', $isOwn).' «'.AchievementLabels::title($data['achievement'] ?? null).'»',
             'rank-up' => self::verb('ranked-up', $isOwn).' al rango '.ProfileLabels::rankLabel($data['rank'] ?? null, $data['gender'] ?? null),
             'image-updated' => self::verb('photo-changed', $isOwn),
             default => self::verb('profile-updated', $isOwn).(empty($data['fields']) ? '' : ': '.implode(', ', array_map(

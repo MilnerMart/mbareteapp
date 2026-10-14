@@ -379,6 +379,14 @@ class ApiClientService
         return $this->delete('/config/provider-configs/'.$id);
     }
 
+    public function getProgressSettings(){
+        return $this->get('/config/progress');
+    }
+
+    public function updateProgressSettings(array $settings){
+        return $this->put('/config/progress', $settings);
+    }
+
     public function getCoreConfig(){
         return $this->get('/config/core');
     }

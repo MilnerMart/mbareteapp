@@ -18,7 +18,6 @@ class CalendarNote extends BaseEntity {
 
     private const myTable = DbSchema::tableCalendarNotes;
 
-    // dias de anticipacion con que se puede avisar: 2 dias antes, el dia anterior y el mismo dia
     const remindDayList = [2, 1, 0];
 
     private int $userId;
@@ -56,7 +55,6 @@ class CalendarNote extends BaseEntity {
         return $this->remindDays;
     }
 
-    // si cambia el dia o los avisos se vuelve a avisar (devuelve true); los que ya quedaron en el pasado no se mandan
     function edit(string $noteOn, string $title, ?string $body, array $remindDays): bool{
         $remindDays = array_values(array_intersect(self::remindDayList, array_map('intval', $remindDays)));
         $isRescheduled = !isset($this->noteOn) || $this->noteOn !== $noteOn || $this->remindDays !== $remindDays;
@@ -102,7 +100,6 @@ class CalendarNote extends BaseEntity {
         ];
     }
 
-    // sin tareas programadas: se llama al consultar la campanita. Si se juntaron varios avisos (no entro en dias) va uno solo
     static function notifyDueReminders(DbConnector $dbConnect, int $userId): void{
         $lastDay = (new DateTimeImmutable(self::today()))->modify('+'.max(self::remindDayList).' days')->format('Y-m-d');
         $query = self::allocSelectQuery($dbConnect, $userId)

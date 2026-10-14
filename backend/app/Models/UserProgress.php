@@ -8,22 +8,10 @@ use Carbon\CarbonImmutable;
 
 class UserProgress {
 
-    const pointsPerDay = 10, pointsPerStreakDay = 5, pointsPerMinute = 1, kgPerPoint = 100;
-
     const secondsPerRep = 3, defaultReps = 10, defaultRestSeconds = 60, fallbackMinutes = 2;
 
-    const rankPointMap = [
-        'novice' => 0,
-        'beginner' => 150,
-        'steady' => 400,
-        'intermediate' => 900,
-        'advanced' => 1800,
-        'elite' => 3500,
-        'beast' => 6000,
-    ];
-
     static function isHigherRank(string $rank, string $thanRank): bool{
-        return (self::rankPointMap[$rank] ?? 0) > (self::rankPointMap[$thanRank] ?? 0);
+        return ProgressSettings::isHigherRank($rank, $thanRank);
     }
 
     static function build(DbConnector $dbConnect, int $userId): array{
@@ -32,33 +20,42 @@ class UserProgress {
             ->where('l.user_id', $userId)
             ->get(['l.done_on', 'l.sets', 'l.reps', 'l.duration_minutes', 'l.weight_kg', 'e.recommended_rest_time']);
 
-        $minutes = 0;
-        $kilos = 0.0;
-        $daySet = [];
+        $dayMap = [];
         foreach ($rowList as $row) {
-            $daySet[substr((string)$row->done_on, 0, 10)] = true;
-            $minutes += self::estimateMinutes($row);
+            $day = substr((string)$row->done_on, 0, 10);
+            $dayMap[$day] ??= ['minutes' => 0, 'kilos' => 0.0];
+            $dayMap[$day]['minutes'] += self::estimateMinutes($row);
             if($row->weight_kg !== null && $row->sets && $row->reps){
-                $kilos += (float)$row->weight_kg * (int)$row->sets * (int)$row->reps;
+                $dayMap[$day]['kilos'] += (float)$row->weight_kg * (int)$row->sets * (int)$row->reps;
             }
         }
-        $dayList = array_keys($daySet);
-        sort($dayList);
-        [$streakDays, $bestStreak, $currentStreak] = self::countStreaks($dayList);
+        ksort($dayMap);
+        $dayList = array_keys($dayMap);
+        [, $bestStreak, $currentStreak] = self::countStreaks($dayList);
 
-        $points = count($dayList) * self::pointsPerDay
-            + $streakDays * self::pointsPerStreakDay
-            + $minutes * self::pointsPerMinute
-            + intdiv((int)$kilos, self::kgPerPoint);
+        // lo que vale cada cosa, el tope por dia y lo que pide cada rango los configura el admin (ProgressSettings).
+        // El tope hace que una sola sesion larga no alcance para subir de rango: hace falta volver otros dias.
+        $settings = ProgressSettings::load($dbConnect);
+        $points = 0;
+        $previousDay = null;
+        foreach ($dayMap as $day => $dayTotals) {
+            $isStreakDay = $previousDay && CarbonImmutable::parse($previousDay)->addDay()->isSameDay(CarbonImmutable::parse($day));
+            $dayPoints = $settings->scoring('pointsPerDay')
+                + ($isStreakDay ? $settings->scoring('pointsPerStreakDay') : 0)
+                + $dayTotals['minutes'] * $settings->scoring('pointsPerMinute')
+                + intdiv((int)$dayTotals['kilos'], $settings->scoring('kgPerPoint'));
+            $points += min($dayPoints, $settings->scoring('maxPointsPerDay'));
+            $previousDay = $day;
+        }
 
         return [
             'points' => $points,
             'trainingDays' => count($dayList),
             'currentStreak' => $currentStreak,
             'bestStreak' => $bestStreak,
-            'minutes' => $minutes,
-            'kilos' => (int)round($kilos),
-        ] + self::buildRankModel($points);
+            'minutes' => array_sum(array_column($dayMap, 'minutes')),
+            'kilos' => (int)round(array_sum(array_column($dayMap, 'kilos'))),
+        ] + $settings->buildRankModel($points);
     }
 
     private static function estimateMinutes(object $row): int{
@@ -91,25 +88,5 @@ class UserProgress {
         $today = CarbonImmutable::parse(RoutineExerciseLog::today());
         $isAlive = $previous && ($previous->isSameDay($today) || $previous->addDay()->isSameDay($today));
         return [$streakDays, $bestStreak, $isAlive ? $streak : 0];
-    }
-
-    private static function buildRankModel(int $points): array{
-        $rank = array_key_first(self::rankPointMap);
-        $nextRank = null;
-        foreach (self::rankPointMap as $slug => $minPoints) {
-            if($points >= $minPoints){
-                $rank = $slug;
-            } elseif($nextRank === null){
-                $nextRank = $slug;
-            }
-        }
-        $rankPoints = self::rankPointMap[$rank];
-        $nextPoints = $nextRank ? self::rankPointMap[$nextRank] : null;
-        return [
-            'rank' => $rank,
-            'nextRank' => $nextRank,
-            'nextRankPoints' => $nextPoints,
-            'progressPercent' => $nextPoints ? (int)floor(100 * ($points - $rankPoints) / ($nextPoints - $rankPoints)) : 100,
-        ];
     }
 }

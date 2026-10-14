@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Core\EntityStatus;
 use App\Http\Requests\CoreConfigRequest;
+use App\Http\Requests\ProgressSettingsRequest;
 use App\Http\Requests\ProviderConfigRequest;
 use App\Http\Requests\ProviderRequest;
 use App\Models\CoreConfig;
+use App\Models\ProgressSettings;
 use App\Models\Provider;
 use App\Models\ProviderConfig;
 use App\PublicException;
@@ -127,6 +129,18 @@ class ConfigController extends Controller
         CoreConfig::clearProviderConfigIdList($dbConnector, [$providerConfig->getEntityId()]);
 
         return $this->successApiResponse();
+    }
+
+    public function progressIndex(Request $request): JsonResponse {
+        $this->allowConfigPermitOrFail($request->user());
+        return $this->successApiResponse(ProgressSettings::load($this->getDbConnector())->buildApiModel());
+    }
+
+    public function progressUpdate(ProgressSettingsRequest $request): JsonResponse {
+        $this->allowConfigPermitOrFail($request->user());
+        $validated = $request->validated();
+        $settings = ProgressSettings::saveOrFail($this->getDbConnector(), $validated['scoring'], $validated['ranks']);
+        return $this->successApiResponse($settings->buildApiModel());
     }
 
     public function coreIndex(Request $request): JsonResponse {

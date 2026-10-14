@@ -62,6 +62,11 @@ class NotificationLabels
                     default => null,
                 }, isset($data['noteOn']) ? Carbon::parse($data['noteOn'])->format('d/m/Y') : null],
             ],
+            'achievement' => [
+                AchievementLabels::icon($data['achievement'] ?? null),
+                '¡Nuevo logro! '.AchievementLabels::title($data['achievement'] ?? null),
+                [AchievementLabels::message($data['achievement'] ?? null)],
+            ],
             default => ['fa-solid fa-bell', 'Tienes un aviso nuevo', []],
         };
 
@@ -102,6 +107,7 @@ class NotificationLabels
             'reminder' => isset($notification['data']['noteOn'])
                 ? CalendarMonth::dayUrl(CarbonImmutable::parse($notification['data']['noteOn'], CalendarMonth::timezone))
                 : route('calendar.index'),
+            'achievement' => route('user.profile', ['id' => session('auth_user.id'), 'logros' => 1]),
             default => null,
         };
     }

@@ -4,6 +4,7 @@
     $tickets = $data['tickets'];
     $isOwnProfile = $data['isOwnProfile'];
     $progress = $data['progress'];
+    $achievements = $data['achievements'];
 @endphp
 @extends('layouts.layout')
 @section('title', $profile['fullName'].' | Mbarete App')
@@ -53,6 +54,12 @@
                         <i class="fa-solid fa-medal"></i>
                         <span>{{ $profile['rankLabel'] }}</span>
                     </span>
+                    <button type="button" @class(['profile-chip', 'profile-trophy', 'has-achievements' => $achievements['unlockedCount'] > 0])
+                        data-bs-toggle="modal" data-bs-target="#achievementsModal"
+                        aria-label="Ver logros: {{ $achievements['unlockedCount'] }} de {{ $achievements['totalCount'] }}">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span>{{ $achievements['unlockedCount'] }}/{{ $achievements['totalCount'] }}</span>
+                    </button>
                 </div>
 
                 <dl class="profile-stats">
@@ -168,6 +175,7 @@
                 </dl>
                 <p class="profile-rank-hint">
                     Sumas puntos por cada dia entrenado, por mantener la racha, por los minutos entrenados y por los kilos que levantas.
+                    Cada dia suma hasta un tope de puntos: la constancia vale mas que una sola sesion larga.
                     Se cuentan los ejercicios que guardas como hechos en tus rutinas.
                 </p>
             </div>
@@ -228,6 +236,48 @@
             </section>
         @endif
     </div>
+
+    <div class="modal fade" id="achievementsModal" tabindex="-1" aria-labelledby="achievementsTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content achievements-modal">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="achievementsTitle">
+                        <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+                        Logros <small>{{ $achievements['unlockedCount'] }} de {{ $achievements['totalCount'] }}</small>
+                    </h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!$achievements['unlockedCount'])
+                        <p class="achievements-empty">{{ $achievements['emptyText'] }}</p>
+                    @endif
+                    @foreach ($achievements['groupList'] as $group)
+                        <h3 class="achievements-group">{{ $group['title'] }}</h3>
+                        <ul class="achievements-list">
+                            @foreach ($group['items'] as $achievement)
+                                <li @class(['achievement', 'is-unlocked' => $achievement['isUnlocked']])>
+                                    <span class="achievement-icon" aria-hidden="true"><i class="{{ $achievement['icon'] }}"></i></span>
+                                    <div class="achievement-body">
+                                        <strong>{{ $achievement['title'] }}</strong>
+                                        <span class="achievement-message">{{ $achievement['message'] }}</span>
+                                        @if ($achievement['isUnlocked'])
+                                            <span class="achievement-date"><i class="fa-solid fa-check" aria-hidden="true"></i> {{ $achievement['dateLabel'] }}</span>
+                                        @else
+                                            <span class="achievement-progress" role="progressbar" aria-label="Avance de {{ $achievement['title'] }}"
+                                                aria-valuenow="{{ $achievement['progressPercent'] }}" aria-valuemin="0" aria-valuemax="100">
+                                                <span style="width: {{ $achievement['progressPercent'] }}%"></span>
+                                            </span>
+                                            <span class="achievement-date">{{ $achievement['progressText'] }}</span>
+                                        @endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @if ($isOwnProfile)
@@ -235,6 +285,10 @@
         {{-- module: corre despues de app.js, que es quien expone jQuery --}}
         <script type="module">
             // el lapiz y cancelar abren o cierran el editor; nada se guarda hasta confirmar
+            @if ($data['openAchievements'])
+                window.bootstrap.Modal.getOrCreateInstance(document.getElementById('achievementsModal')).show();
+            @endif
+
             $('[data-profile-edit-toggle]').on('click', () => {
                 const $panel = $('#profile-edit');
                 const isOpening = $panel.prop('hidden');

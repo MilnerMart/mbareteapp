@@ -22,7 +22,7 @@ class EntityLog extends BaseEntity {
     const actionIdCreated = 10, actionIdUpdated = 20, actionIdDeleted = 30, actionIdAssigned = 40, actionIdUnassigned = 50,
         actionIdExerciseAdded = 60, actionIdExerciseRemoved = 70, actionIdResourceAdded = 80, actionIdResourceRemoved = 90,
         actionIdImageUpdated = 100, actionIdApproved = 110, actionIdRejected = 120, actionIdResubmitted = 130,
-        actionIdMemberRemoved = 140, actionIdVisibilityChanged = 150, actionIdRankUp = 160;
+        actionIdMemberRemoved = 140, actionIdVisibilityChanged = 150, actionIdRankUp = 160, actionIdAchievement = 170;
 
     const pageSize = 30;
 
@@ -43,6 +43,7 @@ class EntityLog extends BaseEntity {
         self::actionIdMemberRemoved => 'member-removed',
         self::actionIdVisibilityChanged => 'visibility-changed',
         self::actionIdRankUp => 'rank-up',
+        self::actionIdAchievement => 'achievement',
     ];
 
     private const modelSlugMap = [

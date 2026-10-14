@@ -398,3 +398,26 @@
     margin-top: 1.25rem;
     padding-top: 1rem;
 }
+
+/* rangos: puntos y dias minimos de cada uno */
+.config-rank-table {
+    display: grid;
+    gap: .5rem;
+}
+
+.config-rank-row {
+    align-items: center;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: minmax(110px, 1fr) minmax(0, 2fr);
+}
+
+.config-rank-row strong {
+    color: #ffffff;
+}
+
+.config-rank-head {
+    color: #8f8f8f;
+    font-size: .75rem;
+    text-transform: uppercase;
+}

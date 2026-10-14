@@ -17,6 +17,7 @@ use App\Models\Routine;
 use App\Models\RoutineExercise;
 use App\Models\RoutineExerciseLog;
 use App\Models\User;
+use App\Models\UserAchievement;
 use App\Models\UserProgress;
 use App\Models\UserRoutine;
 use App\PublicException;
@@ -172,9 +173,15 @@ class UserController extends Controller
             ];
         }
 
+        $progress = UserProgress::build($dbConnector, $user->id);
+        // quien ya tenia historial recibe sus logros al abrir su perfil, sin esperar a entrenar de nuevo
+        if((int)$viewer->id === (int)$user->id){
+            UserAchievement::unlockReached($dbConnector, $user, $progress);
+        }
         return UserResource::make($user)->resolve() + [
             'favorites' => $favorites,
-            'progress' => UserProgress::build($dbConnector, $user->id),
+            'progress' => $progress,
+            'achievements' => UserAchievement::buildApiList($dbConnector, $user->id, $progress),
         ];
     }
 

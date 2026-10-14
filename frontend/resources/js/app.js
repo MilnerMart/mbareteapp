@@ -1,4 +1,4 @@
-import 'bootstrap';
+import * as bootstrap from 'bootstrap';
 import $ from 'jquery';
 import Swal from 'sweetalert2';
 
@@ -7,6 +7,9 @@ window.$ = window.jQuery = $;
 
 
 window.Swal = Swal;
+
+// para abrir modales desde el codigo (ej. los logros al llegar desde la campanita)
+window.bootstrap = bootstrap;
 
 // Formularios con data-confirm-delete: piden escribir "eliminar" antes de enviarse.
 const CONFIRM_DELETE_WORD = 'eliminar';

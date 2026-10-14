@@ -126,6 +126,8 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::middleware('frontend.config')->prefix('/config')->group(function () {
         Route::get('/', [ConfigController::class, 'index'])->name('config.index');
+        Route::get('/progress', [ConfigController::class, 'progress'])->name('config.progress');
+        Route::put('/progress', [ConfigController::class, 'updateProgress'])->name('config.progress.update');
         Route::get('/core', [ConfigController::class, 'core'])->name('config.core');
         Route::put('/core', [ConfigController::class, 'updateCore'])->name('config.core.update');
         Route::get('/providers', [ConfigController::class, 'providers'])->name('config.providers');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
+use App\Support\ProfileLabels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -28,6 +29,22 @@ class ConfigController extends Controller
             'icon' => 'fa-solid fa-plug',
             'route' => 'config.providers',
         ],
+        [
+            'key' => 'progress',
+            'title' => 'Rangos y puntos',
+            'description' => 'Cuantos puntos da entrenar y que hace falta para subir a cada rango.',
+            'icon' => 'fa-solid fa-medal',
+            'route' => 'config.progress',
+        ],
+    ];
+
+    // como suma puntos cada cosa (ProgressSettings::defaultScoring del backend)
+    const scoringFieldMap = [
+        'pointsPerDay' => ['label' => 'Puntos por dia entrenado', 'min' => 0],
+        'pointsPerStreakDay' => ['label' => 'Puntos extra por dia de racha', 'min' => 0],
+        'pointsPerMinute' => ['label' => 'Puntos por minuto entrenado', 'min' => 0],
+        'kgPerPoint' => ['label' => 'Kilos levantados por cada punto', 'min' => 1],
+        'maxPointsPerDay' => ['label' => 'Tope de puntos por dia', 'min' => 1],
     ];
 
     const capabilityMap = [
@@ -52,6 +69,46 @@ class ConfigController extends Controller
     public function index(): View{
         $data['sections'] = self::sectionList;
         return $this->renderView('config.index', compact('data'));
+    }
+
+    public function progress(): View{
+        $settings = $this->apiClient->getProgressSettings();
+        $data['loadFailed'] = !$settings;
+        $data['scoringFields'] = array_map(fn(string $key, array $field) => $field + [
+            'key' => $key,
+            'value' => old('scoring.'.$key, $settings['scoring'][$key] ?? ''),
+        ], array_keys(self::scoringFieldMap), self::scoringFieldMap);
+        $data['rankRows'] = array_map(fn(string $slug, array $rank) => [
+            'slug' => $slug,
+            'label' => ProfileLabels::rankLabel($slug),
+            'minPoints' => old('ranks.'.$slug.'.minPoints', $rank['minPoints']),
+            // el primer rango es el de entrada: siempre 0 puntos
+            'isFixed' => $slug === array_key_first($settings['ranks']),
+        ], array_keys($settings['ranks'] ?? []), $settings['ranks'] ?? []);
+        return $this->renderView('config.progress', compact('data'));
+    }
+
+    // se guarda todo junto en un solo pedido
+    public function updateProgress(Request $request): RedirectResponse{
+        $validated = $request->validate([
+            'scoring' => ['required', 'array'],
+            'scoring.*' => ['required', 'integer', 'min:0'],
+            'scoring.kgPerPoint' => ['required', 'integer', 'min:1'],
+            'scoring.maxPointsPerDay' => ['required', 'integer', 'min:1'],
+            'ranks' => ['required', 'array'],
+            'ranks.*.minPoints' => ['required', 'integer', 'min:0'],
+        ], [
+            'scoring.*.required' => 'Completa todos los puntos.',
+            'ranks.*.*.required' => 'Completa los puntos de cada rango.',
+            'scoring.kgPerPoint.min' => 'Los kilos por punto tienen que ser al menos 1.',
+            'scoring.maxPointsPerDay.min' => 'El tope de puntos por dia tiene que ser al menos 1.',
+        ]);
+
+        $response = $this->apiClient->updateProgressSettings($validated);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['progress' => $this->apiErrorMessage($response, 'No pudimos guardar los rangos.')])->withInput();
+        }
+        return redirect()->route('config.progress')->with('config_saved', 'Rangos y puntos guardados. Los niveles de todos se recalculan con estos valores.');
     }
 
     public function providers(): View{

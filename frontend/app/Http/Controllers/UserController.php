@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Rules\PersonName;
 use App\Services\ApiClientService;
+use App\Support\AchievementLabels;
 use App\Support\ActivityLabels;
 use App\Support\AuthPermits;
 use App\Support\NotificationInbox;
@@ -33,6 +34,9 @@ class UserController extends Controller{
         $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null);
         $data['favorites'] = $this->buildFavoriteList($userInfo['favorites'] ?? [], $data['isOwnProfile']);
         $data['form'] = $data['isOwnProfile'] ? $this->buildProfileForm($userInfo) : null;
+        $data['achievements'] = AchievementLabels::buildPanel($userInfo['achievements'] ?? [], $data['isOwnProfile']);
+        // ?logros=1 llega desde el aviso de la campanita y abre la lista de logros
+        $data['openAchievements'] = request()->boolean('logros');
 
         if($data['isOwnProfile'] && ($authUser = $this->apiClient->me())){
             // si le aprobaron el alta de entrenador, los permisos nuevos se reflejan sin volver a loguearse
@@ -174,6 +178,7 @@ class UserController extends Controller{
     private function buildProgressModel(array $progress, ?string $gender): array{
         $points = (int)($progress['points'] ?? 0);
         $nextRankPoints = $progress['nextRankPoints'] ?? null;
+
         $currentStreak = (int)($progress['currentStreak'] ?? 0);
         $bestStreak = (int)($progress['bestStreak'] ?? 0);
         return [
