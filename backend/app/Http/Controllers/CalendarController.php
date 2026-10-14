@@ -7,6 +7,7 @@ use App\Helpers\BaseHelper;
 use App\Http\Requests\CalendarNoteRequest;
 use App\Models\CalendarNote;
 use App\Models\EntityLog;
+use App\Models\ProgressEntry;
 use App\Models\RoutineExerciseLog;
 use App\PublicException;
 use DateTimeImmutable;
@@ -36,6 +37,7 @@ class CalendarController extends Controller {
             'trainings' => RoutineExerciseLog::queryTrainingDayList($dbConnector, $userId, $fromDay, $toDay),
             'notes' => array_map(fn(CalendarNote $note) => $note->buildApiModel(),
                 CalendarNote::queryListByUserIdAndRange($dbConnector, $userId, $fromDay, $toDay)),
+            'progressEntries' => ProgressEntry::buildApiModelListByUserId($dbConnector, $userId, $fromDay, $toDay),
         ]);
     }
 

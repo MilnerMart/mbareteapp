@@ -159,7 +159,10 @@
                             <form
                                 method="POST"
                                 action="{{ route('routine.unassign', [$routine['id'], $assignedUser['id']]) }}"
-                                onsubmit="return confirm('¿Quitar esta rutina a {{ addslashes($assignedName ?: 'este usuario') }}?')">
+                                data-confirm-remove
+                                data-confirm-title="Quitar rutina"
+                                data-confirm-button="Quitar"
+                                data-confirm-text="{{ $assignedName ?: 'Este usuario' }} dejara de tener la rutina «{{ $routine['name'] }}».">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn routine-remove-btn">

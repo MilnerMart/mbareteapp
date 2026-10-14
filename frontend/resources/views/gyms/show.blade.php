@@ -153,7 +153,10 @@
                                 <form
                                     method="POST"
                                     action="{{ route('gym.users.remove', [$gym['id'], $student['id']]) }}"
-                                    onsubmit="return confirm('¿Quitar a {{ addslashes($studentName ?: 'este alumno') }} del gimnasio?')">
+                                    data-confirm-delete
+                                    data-confirm-title="Quitar alumno"
+                                    data-confirm-button="Quitar"
+                                    data-confirm-text="{{ $studentName ?: 'Este alumno' }} dejara de pertenecer a {{ $gym['name'] }}. Para volver tendra que pedir unirse de nuevo.">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn gym-remove-btn">

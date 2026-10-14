@@ -1,6 +1,7 @@
 import * as bootstrap from 'bootstrap';
 import $ from 'jquery';
 import Swal from 'sweetalert2';
+import './searchable-select';
 
 // hacer global jQuery
 window.$ = window.jQuery = $;
@@ -11,7 +12,18 @@ window.Swal = Swal;
 // para abrir modales desde el codigo (ej. los logros al llegar desde la campanita)
 window.bootstrap = bootstrap;
 
-// Formularios con data-confirm-delete: piden escribir "eliminar" antes de enviarse.
+// Texto del aviso armado con nodos: los nombres que muestra (ej. un alumno) nunca se interpretan como HTML.
+const buildConfirmContent = (text, ...extraNodes) => {
+    const content = document.createElement('div');
+    if (text) {
+        content.append(text);
+    }
+    extraNodes.forEach((node) => content.append(node));
+    return content;
+};
+
+// Formularios con data-confirm-delete: piden escribir "eliminar" antes de enviarse (lo que no tiene vuelta atras
+// o afecta a otra persona). data-confirm-button cambia el texto del boton (ej. "Quitar").
 const CONFIRM_DELETE_WORD = 'eliminar';
 
 document.addEventListener('submit', async (event) => {
@@ -26,21 +38,48 @@ document.addEventListener('submit', async (event) => {
     const result = await Swal.fire({
         icon: 'warning',
         title: form.dataset.confirmTitle || 'Confirmar eliminacion',
-        html: `${form.dataset.confirmText || ''}<br>Escribi <b></b> para confirmar.`,
+        html: buildConfirmContent(form.dataset.confirmText, document.createElement('br'), 'Escribi ',
+            Object.assign(document.createElement('b'), { textContent: CONFIRM_DELETE_WORD }), ' para confirmar.'),
         input: 'text',
         inputPlaceholder: CONFIRM_DELETE_WORD,
         showCancelButton: true,
-        confirmButtonText: 'Eliminar',
+        confirmButtonText: form.dataset.confirmButton || 'Eliminar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#780000',
-        didOpen: (popup) => {
-            popup.querySelector('.swal2-html-container b').textContent = CONFIRM_DELETE_WORD;
-        },
+        focusCancel: true,
         inputValidator: (value) => {
             if (value.trim().toLowerCase() !== CONFIRM_DELETE_WORD) {
                 return `Escribi "${CONFIRM_DELETE_WORD}" para confirmar.`;
             }
         },
+    });
+
+    if (result.isConfirmed) {
+        form.dataset.confirmed = 'true';
+        form.submit();
+    }
+});
+
+// Formularios con data-confirm-remove: confirmacion simple (sin escribir nada) para quitar o borrar algo liviano,
+// como una anotacion o un registro. data-confirm-button cambia el texto del boton.
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('form[data-confirm-remove]');
+
+    if (!form || form.dataset.confirmed === 'true') {
+        return;
+    }
+
+    event.preventDefault();
+
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: form.dataset.confirmTitle || 'Confirmar',
+        html: buildConfirmContent(form.dataset.confirmText),
+        showCancelButton: true,
+        confirmButtonText: form.dataset.confirmButton || 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#780000',
+        focusCancel: true,
     });
 
     if (result.isConfirmed) {

@@ -15,6 +15,7 @@ export default defineConfig({
                 'resources/css/gym.css',
                 'resources/css/login.css',
                 'resources/css/profile.css',
+                'resources/css/progress.css',
                 'resources/css/register.css',
                 'resources/css/resource.css',
                 'resources/css/routine.css',

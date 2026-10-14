@@ -27,6 +27,7 @@ class CalendarMonth
         }
         $trainingMap = collect($calendar['trainings'] ?? [])->groupBy('day')->map->all()->all();
         $noteMap = collect($calendar['notes'] ?? [])->groupBy('noteOn')->map->all()->all();
+        $progressMap = collect($calendar['progressEntries'] ?? [])->groupBy('entryOn')->map->all()->all();
 
         $weekList = [];
         $dayIndex = 0;
@@ -47,6 +48,8 @@ class CalendarMonth
                 'hasCompleted' => collect($trainingList)->contains('isCompleted', true),
                 'actionCount' => $isCurrentMonth ? count($actionMap[$date] ?? []) : 0,
                 'noteCount' => count($noteList),
+                'hasProgress' => $isCurrentMonth && !empty($progressMap[$date]),
+                'hasPersonalBest' => $isCurrentMonth && collect($progressMap[$date] ?? [])->contains('isPersonalBest', true),
                 'hasReminder' => collect($noteList)->contains(fn(array $note) => !empty($note['remindDays'])),
                 'ariaLabel' => $day->locale('es')->translatedFormat('l j \d\e F'),
             ];
@@ -66,6 +69,7 @@ class CalendarMonth
             'trainingList' => array_map(fn(array $training) => self::buildTrainingItem($training), $trainingMap[$selectedDate] ?? []),
             'actionList' => $actionMap[$selectedDate] ?? [],
             'noteList' => array_map(fn(array $note) => self::buildNoteItem($note, $selectedDay), $noteMap[$selectedDate] ?? []),
+            'progressList' => array_map(fn(array $entry) => ProgressLabels::buildEntryItem($entry), $progressMap[$selectedDate] ?? []),
         ];
     }
 

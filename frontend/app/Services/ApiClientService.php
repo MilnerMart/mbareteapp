@@ -179,6 +179,18 @@ class ApiClientService
         return $this->get('/user/'.$id.'/logs', array_filter(['page' => $page, 'model' => $model]));
     }
 
+    public function getProgress(){
+        return $this->get('/me/progress');
+    }
+
+    public function createProgressEntry(array $params){
+        return $this->post('/me/progress', $params);
+    }
+
+    public function deleteProgressEntry(int $id){
+        return $this->delete('/me/progress/'.$id);
+    }
+
     public function getCalendar(string $month){
         return $this->get('/me/calendar', ['month' => $month]);
     }

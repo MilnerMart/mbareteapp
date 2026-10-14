@@ -25,5 +25,6 @@ class DbSchema{
     tableCalendarNotes = 'calendar_notes',
     tableUserAchievements = 'user_achievements',
     tableAppSettings = 'app_settings',
+    tableProgressEntries = 'progress_entries',
     tableUsers = 'users';
 }

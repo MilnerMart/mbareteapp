@@ -154,6 +154,10 @@
     margin-top: .1rem;
 }
 
+.mark-progress {
+    color: #58a6ff;
+}
+
 .mark-note {
     color: #ffc145;
 }

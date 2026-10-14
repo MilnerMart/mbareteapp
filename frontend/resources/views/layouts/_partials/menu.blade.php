@@ -28,6 +28,10 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('calendar.index') }}">Calendario</a>
                         </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('progress.index') }}">Progreso</a>
+                        </li>
                     @endif
 
                     {{-- quien gestiona gimnasios ve los suyos como alumno desde el selector de "Gimnasios" --}}

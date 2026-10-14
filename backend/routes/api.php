@@ -8,6 +8,7 @@ use App\Http\Controllers\GymEntityController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermitController;
+use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\PublicResourceController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
@@ -68,6 +69,9 @@ Route::prefix('/v1')->group(function(){
         Route::post('/me/gyms/join', [GymEntityController::class, 'requestJoin']);
         Route::put('/me/gyms/{id}/visibility', [GymEntityController::class, 'updateMemberVisibility']);
         Route::get('/me/tickets', [TicketController::class, 'myIndex']);
+        Route::get('/me/progress', [ProgressController::class, 'index']);
+        Route::post('/me/progress', [ProgressController::class, 'store']);
+        Route::delete('/me/progress/{id}', [ProgressController::class, 'destroy']);
         Route::get('/me/calendar', [CalendarController::class, 'index']);
         Route::post('/me/calendar/notes', [CalendarController::class, 'storeNote']);
         Route::put('/me/calendar/notes/{id}', [CalendarController::class, 'updateNote']);

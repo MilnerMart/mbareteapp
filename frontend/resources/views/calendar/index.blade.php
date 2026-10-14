@@ -59,6 +59,9 @@
                                         @if ($day['actionCount'])
                                             <i class="fa-solid fa-circle mark-action"></i>
                                         @endif
+                                        @if ($day['hasProgress'])
+                                            <i @class(['fa-solid', 'fa-trophy' => $day['hasPersonalBest'], 'fa-chart-line' => !$day['hasPersonalBest'], 'mark-progress'])></i>
+                                        @endif
                                         @if ($day['noteCount'])
                                             <i @class(['fa-solid', 'fa-bell' => $day['hasReminder'], 'fa-note-sticky' => !$day['hasReminder'], 'mark-note'])></i>
                                         @endif
@@ -72,6 +75,8 @@
                     <li><i class="fa-solid fa-circle-check mark-training"></i> Rutina completa</li>
                     <li><i class="fa-solid fa-dumbbell mark-training"></i> Entrenaste</li>
                     <li><i class="fa-solid fa-circle mark-action"></i> Actividad</li>
+                    <li><i class="fa-solid fa-chart-line mark-progress"></i> Progreso</li>
+                    <li><i class="fa-solid fa-trophy mark-progress"></i> Record</li>
                     <li><i class="fa-solid fa-note-sticky mark-note"></i> Anotacion</li>
                     <li><i class="fa-solid fa-bell mark-note"></i> Recordatorio</li>
                 </ul>
@@ -80,7 +85,7 @@
             <div class="calendar-day-detail">
                 <h2>{{ $data['selectedLabel'] }}</h2>
 
-                @if (empty($data['noteList']) && empty($data['trainingList']) && empty($data['actionList']))
+                @if (empty($data['noteList']) && empty($data['trainingList']) && empty($data['actionList']) && empty($data['progressList']))
                     <p class="calendar-empty">Nada registrado este dia.</p>
                 @endif
 
@@ -102,7 +107,9 @@
                                     <a href="{{ $note['editUrl'] }}" class="calendar-icon-btn" title="Editar" aria-label="Editar {{ $note['title'] }}">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-                                    <form method="POST" action="{{ $note['deleteUrl'] }}" onsubmit="return confirm('¿Eliminar esta anotacion?')">
+                                    <form method="POST" action="{{ $note['deleteUrl'] }}" data-confirm-remove
+                                        data-confirm-title="Eliminar anotacion"
+                                        data-confirm-text="Se elimina «{{ $note['title'] }}» y sus recordatorios.">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="calendar-icon-btn" title="Eliminar" aria-label="Eliminar {{ $note['title'] }}">
@@ -122,6 +129,23 @@
                             <li @class(['calendar-item', 'is-completed' => $training['isCompleted']])>
                                 <i class="{{ $training['icon'] }} calendar-item-icon" aria-hidden="true"></i>
                                 <a href="{{ $training['url'] }}">{{ $training['text'] }}</a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                @if (!empty($data['progressList']))
+                    <h3 class="calendar-section-title">Progreso</h3>
+                    <ul class="calendar-list">
+                        @foreach ($data['progressList'] as $entry)
+                            <li @class(['calendar-item', 'is-highlight' => $entry['isPersonalBest']])>
+                                <i class="{{ $entry['icon'] }} calendar-item-icon" aria-hidden="true"></i>
+                                <span class="calendar-item-text">
+                                    <a href="{{ route('progress.index') }}">{{ $entry['text'] }}</a>
+                                    @if ($entry['changeText'])
+                                        <small>{{ $entry['changeText'] }} desde el registro anterior</small>
+                                    @endif
+                                </span>
                             </li>
                         @endforeach
                     </ul>
