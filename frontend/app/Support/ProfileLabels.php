@@ -19,6 +19,17 @@ class ProfileLabels
         'unspecified' => 'Prefiero no especificar',
     ];
 
+    // nombres de los datos de perfil que el backend pide completar (User::requiredProfileFieldList)
+    const profileFieldLabelMap = [
+        'gender' => 'genero',
+        'weight' => 'peso',
+        'height' => 'altura',
+        'age' => 'edad',
+        'goal' => 'objetivo',
+        'name' => 'nombre',
+        'last_name' => 'apellido',
+    ];
+
     const rankLabelMap = [
         'novice' => 'Novato',
         'beginner' => 'Principiante',
@@ -38,6 +49,11 @@ class ProfileLabels
     static function goalLabel(?string $goal): ?string
     {
         return self::goalLabelMap[$goal] ?? null;
+    }
+
+    static function genderLabel(?string $gender): ?string
+    {
+        return self::genderLabelMap[$gender] ?? null;
     }
 
     static function rankLabel(?string $rank, ?string $gender = null): string

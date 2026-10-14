@@ -20,5 +20,7 @@ class DbSchema{
     tableProviders = 'providers',
     tableProviderConfigs = 'provider_configs',
     tableCoreConfigs = 'core_configs',
+    tableUserNotifications = 'user_notifications',
+    tableEntityLogs = 'entity_logs',
     tableUsers = 'users';
 }

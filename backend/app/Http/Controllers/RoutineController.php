@@ -7,6 +7,7 @@ use App\Http\Requests\RoutineExerciseRequest;
 use App\Http\Requests\RoutineRequest;
 use App\Http\Resources\UserResource;
 use App\Core\CoreModel;
+use App\Models\EntityLog;
 use App\Models\Exercise;
 use App\Models\GymUser;
 use App\Models\Permit;
@@ -15,6 +16,8 @@ use App\Models\Routine;
 use App\Models\RoutineExercise;
 use App\Models\RoutineExerciseLog;
 use App\Models\User;
+use App\Models\UserNotification;
+use App\Models\UserProgress;
 use App\Models\UserRoutine;
 use App\Core\EntityStatus;
 use App\PublicException;
@@ -63,7 +66,10 @@ class RoutineController extends Controller
             Routine::minutesToSeconds($validated['rest_minutes']),
         );
         $routine->setDescription($validated['description'] ?? null);
-        $routine->writeToDb($dbConnector);
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $routine, $request){
+            $routine->writeToDb($dbConnector);
+            EntityLog::addNew($dbConnector, $request->user()->id, $routine, EntityLog::actionIdCreated, $routine->getName());
+        });
 
         return $this->successApiResponse($routine->buildApiModel(), 201);
     }
@@ -97,8 +103,9 @@ class RoutineController extends Controller
         $routine->setFrequency($validated['frequency']);
         $routine->setRestTime(Routine::minutesToSeconds($validated['rest_minutes']));
         $routine->setDescription($validated['description'] ?? null);
-        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $routine, $validated){
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $routine, $validated, $request){
             $routine->writeToDb($dbConnector);
+            EntityLog::addNew($dbConnector, $request->user()->id, $routine, EntityLog::actionIdUpdated, $routine->getName());
             if(array_key_exists('exercises', $validated)){
                 $exerciseList = $validated['exercises'];
                 ksort($exerciseList);
@@ -115,7 +122,10 @@ class RoutineController extends Controller
         $dbConnector = $this->getDbConnector();
         $routine = $this->queryEditableRoutineOrFail($request, $id);
         $routine->setStatusId(EntityStatus::statusIdDeleted);
-        $routine->writeToDb($dbConnector);
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $routine, $request){
+            $routine->writeToDb($dbConnector);
+            EntityLog::addNew($dbConnector, $request->user()->id, $routine, EntityLog::actionIdDeleted, $routine->getName());
+        });
 
         return $this->successApiResponse(code: 200);
     }
@@ -138,6 +148,10 @@ class RoutineController extends Controller
             $validated['duration_minutes'] ?? null,
             $validated['notes'] ?? null,
         );
+        EntityLog::addNew($dbConnector, $request->user()->id, $routine, EntityLog::actionIdExerciseAdded, $routine->getName(), [
+            'exerciseId' => $exercise->getEntityId(),
+            'exerciseName' => $exercise->getName(),
+        ]);
 
         return $this->successApiResponse(RoutineExercise::queryExerciseListByRoutineId($dbConnector, $routine->getEntityId()), 201);
     }
@@ -162,8 +176,25 @@ class RoutineController extends Controller
             throw PublicException::validationError('Solo puedes marcar ejercicios que estan en esta rutina');
         }
 
+        $previousRank = UserProgress::build($dbConnector, $request->user()->id)['rank'];
         RoutineExerciseLog::syncDoneToday($dbConnector, $request->user()->id, $routine->getEntityId(), $weightKgMap);
+        $this->addRankUpLog($request->user(), $previousRank);
         return $this->successApiResponse(['doneExerciseIds' => $exerciseIdList]);
+    }
+
+    // el marcado del dia no se registra, solo cuando con eso llega por primera vez a un rango mas alto
+    private function addRankUpLog(User $user, string $previousRank): void {
+        $dbConnector = $this->getDbConnector();
+        $rank = UserProgress::build($dbConnector, $user->id)['rank'];
+        if(!UserProgress::isHigherRank($rank, $previousRank)
+            || EntityLog::existsWithData($dbConnector, $user->id, CoreModel::userModelId, EntityLog::actionIdRankUp, 'rank', $rank)){
+            return;
+        }
+        EntityLog::addNewForRef($dbConnector, $user->id, CoreModel::userModelId, $user->id, EntityLog::actionIdRankUp, $user->getFullName(), [
+            'rank' => $rank,
+            'previousRank' => $previousRank,
+            'gender' => $user->gender,
+        ]);
     }
 
     public function removeExercise(Request $request, string $id, string $exerciseId): JsonResponse {
@@ -172,6 +203,10 @@ class RoutineController extends Controller
         if(!RoutineExercise::removeRoutineExercise($dbConnector, $routine->getEntityId(), (int)$exerciseId)){
             throw PublicException::notFoundError('El ejercicio no esta en esta rutina');
         }
+        EntityLog::addNew($dbConnector, $request->user()->id, $routine, EntityLog::actionIdExerciseRemoved, $routine->getName(), [
+            'exerciseId' => (int)$exerciseId,
+            'exerciseName' => Exercise::queryByDbId($dbConnector, (int)$exerciseId)?->getName(),
+        ]);
 
         return $this->successApiResponse(code: 200);
     }
@@ -184,7 +219,15 @@ class RoutineController extends Controller
         $studentId = (int)$request->validated()['user_id'];
         $this->canAssignRoutineOrFail($user, $routine, $studentId);
 
-        UserRoutine::addNewUserRoutine($dbConnector, $studentId, $routine->getEntityId(), $user->id);
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $studentId, $routine, $user){
+            if(UserRoutine::addNewUserRoutine($dbConnector, $studentId, $routine->getEntityId(), $user->id)){
+                UserNotification::addRoutineAssigned($dbConnector, $studentId, $routine, $user);
+                EntityLog::addNew($dbConnector, $user->id, $routine, EntityLog::actionIdAssigned, $routine->getName(), [
+                    'targetUserId' => $studentId,
+                    'targetUserName' => User::queryFullNameById($dbConnector, $studentId),
+                ]);
+            }
+        });
         return $this->successApiResponse(code: 201);
     }
 
@@ -198,6 +241,10 @@ class RoutineController extends Controller
         if(!UserRoutine::removeUserRoutine($dbConnector, (int)$userId, $routine->getEntityId())){
             throw PublicException::notFoundError('La rutina no esta asignada a este alumno');
         }
+        EntityLog::addNew($dbConnector, $user->id, $routine, EntityLog::actionIdUnassigned, $routine->getName(), [
+            'targetUserId' => (int)$userId,
+            'targetUserName' => User::queryFullNameById($dbConnector, (int)$userId),
+        ]);
         return $this->successApiResponse(code: 200);
     }
 

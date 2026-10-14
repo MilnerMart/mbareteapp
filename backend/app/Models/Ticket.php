@@ -67,6 +67,8 @@ class Ticket extends BaseEntity {
     static function addNewTicket(DbConnector $dbConnect, int $type, int $requesterId, ?int $gymId = null): self{
         $self = self::allocNew($type, $requesterId, $gymId);
         $self->writeToDb($dbConnect);
+        $self->addCreatedLog($dbConnect);
+        UserNotification::addTicketReceivedList($dbConnect, $self);
         return $self;
     }
 
@@ -77,6 +79,8 @@ class Ticket extends BaseEntity {
         $self = self::allocNew($type, $requesterId);
         $self->_setDataItem('entityId', $entityId);
         $self->writeToDb($dbConnect);
+        $self->addCreatedLog($dbConnect);
+        UserNotification::addTicketReceivedList($dbConnect, $self);
         return $self;
     }
 
@@ -84,8 +88,18 @@ class Ticket extends BaseEntity {
         return CoreModel::ticketModelId;
     }
 
+    private function addCreatedLog(DbConnector $dbConnect): void{
+        EntityLog::addNew($dbConnect, $this->requesterId, $this, EntityLog::actionIdCreated, $this->getTicketNumber(), [
+            'ticketType' => $this->getTypeSlug(),
+        ]);
+    }
+
     function getType(): int{
         return $this->type;
+    }
+
+    function getTypeSlug(): ?string{
+        return self::typeSlugMap[$this->type] ?? null;
     }
 
     function getRequesterId(): int{
@@ -240,7 +254,7 @@ class Ticket extends BaseEntity {
         return [
             'id' => $this->getEntityId(),
             'number' => $this->getTicketNumber(),
-            'type' => self::typeSlugMap[$this->type] ?? null,
+            'type' => $this->getTypeSlug(),
             'state' => self::stateSlugMap[$this->state] ?? null,
             'requesterId' => $this->requesterId,
             'gymId' => $this->gymId,

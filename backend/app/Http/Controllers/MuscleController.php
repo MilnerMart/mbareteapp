@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\MuscleRequest;
+use App\Models\EntityLog;
 use App\Models\Exercise;
 use App\Models\Muscle;
 use App\Models\Resource;
@@ -50,6 +51,7 @@ class MuscleController extends Controller {
 
         [$resource, $ticket] = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $request, $muscle, $user, $isAdmin){
             $muscle->writeToDb($dbConnector);
+            EntityLog::addNew($dbConnector, $user->id, $muscle, EntityLog::actionIdCreated, $muscle->getName(), ['pendingReview' => !$isAdmin ?: null]);
             $resource = $this->saveMuscleImage($request, $muscle);
             $ticket = $isAdmin ? null
                 : Ticket::addNewCatalogTicket($dbConnector, Ticket::typeIdMuscleCreate, $user->id, $muscle->getEntityId());
@@ -110,7 +112,10 @@ class MuscleController extends Controller {
         if($dirty){
             $muscle->writeToDb($dbConnector);
         }
-        $this->saveMuscleImage($request, $muscle);
+        $resource = $this->saveMuscleImage($request, $muscle);
+        if($dirty || $resource){
+            EntityLog::addNew($dbConnector, $request->user()->id, $muscle, EntityLog::actionIdUpdated, $muscle->getName());
+        }
 
         $model = $muscle->buildApiModel();
         return $this->successApiResponse($model, 200);
@@ -128,6 +133,7 @@ class MuscleController extends Controller {
 
         $muscle->setStatusId(EntityStatus::statusIdInactive);
         $muscle->writeToDb($dbConnector);
+        EntityLog::addNew($dbConnector, $request->user()->id, $muscle, EntityLog::actionIdDeleted, $muscle->getName());
         return $this->successApiResponse(code: 200);
     }
 

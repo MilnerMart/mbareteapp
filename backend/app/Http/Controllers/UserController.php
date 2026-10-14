@@ -6,9 +6,13 @@ use App\Core\CoreModel;
 use App\Http\Requests\ProfileImageRequest;
 use App\Http\Requests\ProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Helpers\BaseHelper;
+use App\Models\EntityLog;
 use App\Models\Exercise;
+use App\Models\GymUser;
 use App\Models\Muscle;
 use App\Models\Resource;
+use App\Models\Role;
 use App\Models\Routine;
 use App\Models\RoutineExercise;
 use App\Models\RoutineExerciseLog;
@@ -38,7 +42,47 @@ class UserController extends Controller
 
         return $this->successApiResponse($this->buildProfileModel($user, $request->user()));
     }
-    
+    public function detail(Request $request, string $id): JsonResponse {
+        $viewer = $request->user();
+        $this->seeAllPermitOrFail($viewer);
+        $user = User::find($id);
+        if(!$user){
+            throw PublicException::notFoundError('Usuario no encontrado');
+        }
+
+        $dbConnector = $this->getDbConnector();
+        return $this->successApiResponse($this->buildProfileModel($user, $viewer) + [
+            'created_at' => BaseHelper::toDisplayDate($user->created_at),
+            'roles' => array_map(fn(Role $role) => $role->getName(), $user->queryRoleList($dbConnector)),
+            'gyms' => GymUser::queryGymNameMapByUserIds($dbConnector, [$user->id])[$user->id] ?? [],
+            'routines' => UserRoutine::queryRoutineMapByUserIds($dbConnector, [$user->id])[$user->id] ?? [],
+            'pending_profile_fields' => $user->getPendingProfileFieldList(),
+        ]);
+    }
+
+    // registro de actividad del usuario, de mas nuevo a mas viejo; model=routine|exercise|muscle|gym filtra por tipo
+    public function logs(Request $request, string $id): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
+        $user = User::find($id);
+        if(!$user){
+            throw PublicException::notFoundError('Usuario no encontrado');
+        }
+        $modelSlug = $request->query('model');
+        $refModelId = $modelSlug ? EntityLog::modelIdFromSlug($modelSlug) : null;
+        if($modelSlug && !$refModelId){
+            throw PublicException::validationError('Tipo de registro invalido: '.$modelSlug);
+        }
+
+        $page = max(1, (int)$request->query('page', 1));
+        [$entityLogList, $hasMore] = EntityLog::queryPageByUserId($this->getDbConnector(), $user->id, $page, $refModelId);
+        return $this->successApiResponse([
+            'user' => $user->buildPublicApiModel(),
+            'page' => $page,
+            'hasMore' => $hasMore,
+            'items' => array_map(fn(EntityLog $entityLog) => $entityLog->buildApiModel(), $entityLogList),
+        ]);
+    }
+
     public function update(Request $request, string $id){
         throw PublicException::notFoundError('No implementado');   
     }
@@ -53,7 +97,13 @@ class UserController extends Controller
         }
 
         $user->fill($request->validated());
+        $changedFieldList = array_keys($user->getDirty());
         $user->save();
+        if($changedFieldList){
+            EntityLog::addNewForRef($this->getDbConnector(), $user->id, CoreModel::userModelId, $user->id, EntityLog::actionIdUpdated, $user->getFullName(), [
+                'fields' => $changedFieldList,
+            ]);
+        }
 
         return $this->successApiResponse($this->buildProfileModel($user, $user));
     }
@@ -76,6 +126,7 @@ class UserController extends Controller
 
         $user->profile_image_url = $resourceKey;
         $user->save();
+        EntityLog::addNewForRef($this->getDbConnector(), $user->id, CoreModel::userModelId, $user->id, EntityLog::actionIdImageUpdated, $user->getFullName());
 
         return $this->successApiResponse(UserResource::make($user));
     }

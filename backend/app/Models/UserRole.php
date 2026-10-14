@@ -30,6 +30,14 @@ class UserRole {
         return self::allocDbTable($dbConnect)->where('user_id', $userId)->where('role_id', $roleId)->exists();
     }
 
+    static function queryUserIdListByRoleIds(DbConnector $dbConnect, array $roleIdList): array{
+        if(!$roleIdList){
+            return [];
+        }
+        return self::allocDbTable($dbConnect)->whereIn('role_id', $roleIdList)
+        ->distinct()->pluck('user_id')->map(fn($userId) => (int)$userId)->all();
+    }
+
     static private function allocDbTable(DbConnector $dbConnect, ?string $alias = null): Builder{
         return $dbConnect->getEnvConecction()->table(self::myTable, $alias);
     }

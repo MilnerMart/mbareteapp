@@ -22,6 +22,10 @@ class UserProgress {
         'beast' => 6000,
     ];
 
+    static function isHigherRank(string $rank, string $thanRank): bool{
+        return (self::rankPointMap[$rank] ?? 0) > (self::rankPointMap[$thanRank] ?? 0);
+    }
+
     static function build(DbConnector $dbConnect, int $userId): array{
         $rowList = RoutineExerciseLog::allocDbTable($dbConnect, 'l')
             ->join(DbSchema::tableExercise.' as e', 'e.id', '=', 'l.exercise_id')

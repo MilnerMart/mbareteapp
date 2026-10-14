@@ -8,6 +8,7 @@ use App\Http\Requests\GymEntityRequest;
 use App\Http\Requests\GymImageRequest;
 use App\Http\Requests\GymVisibilityRequest;
 use App\Http\Resources\UserResource;
+use App\Models\EntityLog;
 use App\Models\Gym;
 use App\Models\GymUser;
 use App\Models\Permit;
@@ -51,6 +52,7 @@ class GymEntityController extends Controller {
             $this->resolveOwnerId($user, $validated),
         );
         $gym->writeToDb($dbConnector);
+        EntityLog::addNew($dbConnector, $user->id, $gym, EntityLog::actionIdCreated, $gym->getName());
 
         return $this->successApiResponse($gym->buildApiModel(), 201);
     }
@@ -75,6 +77,7 @@ class GymEntityController extends Controller {
         }
         if($dirty){
             $gym->writeToDb($dbConnector);
+            EntityLog::addNew($dbConnector, $request->user()->id, $gym, EntityLog::actionIdUpdated, $gym->getName());
         }
 
         return $this->successApiResponse($this->buildGymModel($gym), 200);
@@ -86,6 +89,7 @@ class GymEntityController extends Controller {
 
         $this->getResourceService()->saveEntityImage($request->file('gym_image'), 'images/gyms', CoreModel::gymEntityModelId,
             $gym->getEntityId(), $gym->getName(), $gym->getSlug());
+        EntityLog::addNew($dbConnector, $request->user()->id, $gym, EntityLog::actionIdImageUpdated, $gym->getName());
 
         return $this->successApiResponse($this->buildGymModel($gym), 200);
     }
@@ -112,6 +116,10 @@ class GymEntityController extends Controller {
         if(!GymUser::removeGymUser($this->getDbConnector(), $gym->getEntityId(), (int)$userId)){
             throw PublicException::notFoundError('El alumno no pertenece a este gimnasio');
         }
+        EntityLog::addNew($this->getDbConnector(), $request->user()->id, $gym, EntityLog::actionIdMemberRemoved, $gym->getName(), [
+            'targetUserId' => (int)$userId,
+            'targetUserName' => User::queryFullNameById($this->getDbConnector(), (int)$userId),
+        ]);
 
         return $this->successApiResponse(code: 200);
     }
@@ -153,6 +161,12 @@ class GymEntityController extends Controller {
         $isPublic = (bool)$request->validated()['is_public'];
         if(!GymUser::updateVisibility($this->getDbConnector(), (int)$id, $request->user()->id, $isPublic)){
             throw PublicException::notFoundError('No perteneces a este gimnasio');
+        }
+        $gym = Gym::queryByDbId($this->getDbConnector(), (int)$id);
+        if($gym){
+            EntityLog::addNew($this->getDbConnector(), $request->user()->id, $gym, EntityLog::actionIdVisibilityChanged, $gym->getName(), [
+                'isPublic' => $isPublic,
+            ]);
         }
         return $this->successApiResponse(['isPublic' => $isPublic]);
     }

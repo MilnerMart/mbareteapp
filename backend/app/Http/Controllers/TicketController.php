@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TicketResolveRequest;
 use App\Http\Requests\TicketResubmitRequest;
+use App\Models\EntityLog;
 use App\Models\Exercise;
 use App\Models\Gym;
 use App\Models\GymUser;
@@ -11,6 +12,7 @@ use App\Models\Muscle;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Models\UserNotification;
 use App\Models\UserRole;
 use App\PublicException;
 use Illuminate\Http\JsonResponse;
@@ -67,7 +69,7 @@ class TicketController extends Controller {
         $this->canResolveOrFail($user, $ticket);
         $ticket->resolve(Ticket::stateIdApproved, $user->id, $request->validated()['note'] ?? null);
 
-        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket){
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket, $user){
             if($ticket->isGymJoin()){
                 if(!$ticket->getGymId() || !Gym::queryByDbId($dbConnector, $ticket->getGymId())){
                     throw PublicException::validationError('El gimnasio de la solicitud ya no existe');
@@ -81,6 +83,8 @@ class TicketController extends Controller {
             }
             $this->updateCatalogEntityState($ticket, Ticket::stateIdApproved);
             $ticket->writeToDb($dbConnector);
+            UserNotification::addTicketResolved($dbConnector, $ticket, $user);
+            $this->addTicketLog($ticket, $user->id, EntityLog::actionIdApproved);
         });
 
         return $this->successApiResponse(Ticket::buildApiModelList($this->getDbConnector(), [$ticket])[0]);
@@ -92,9 +96,11 @@ class TicketController extends Controller {
         $user = $request->user();
         $this->canResolveOrFail($user, $ticket);
         $ticket->resolve(Ticket::stateIdRejected, $user->id, $request->validated()['note'] ?? null);
-        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket){
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket, $user){
             $this->updateCatalogEntityState($ticket, Ticket::stateIdRejected);
             $ticket->writeToDb($dbConnector);
+            UserNotification::addTicketResolved($dbConnector, $ticket, $user);
+            $this->addTicketLog($ticket, $user->id, EntityLog::actionIdRejected);
         });
 
         return $this->successApiResponse(Ticket::buildApiModelList($this->getDbConnector(), [$ticket])[0]);
@@ -113,9 +119,19 @@ class TicketController extends Controller {
         $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket){
             $this->updateCatalogEntityState($ticket, Ticket::stateIdPending);
             $ticket->writeToDb($dbConnector);
+            UserNotification::addTicketReceivedList($dbConnector, $ticket, true);
+            $this->addTicketLog($ticket, $ticket->getRequesterId(), EntityLog::actionIdResubmitted);
         });
 
         return $this->successApiResponse(Ticket::buildApiModelList($dbConnector, [$ticket])[0]);
+    }
+
+    private function addTicketLog(Ticket $ticket, int $userId, int $action): void {
+        EntityLog::addNew($this->getDbConnector(), $userId, $ticket, $action, $ticket->getTicketNumber(), [
+            'ticketType' => $ticket->getTypeSlug(),
+            'requesterName' => User::queryFullNameById($this->getDbConnector(), $ticket->getRequesterId()),
+            'note' => $ticket->getResolutionNote() ?? ($action === EntityLog::actionIdResubmitted ? $ticket->getRequesterNote() : null),
+        ]);
     }
 
     /**

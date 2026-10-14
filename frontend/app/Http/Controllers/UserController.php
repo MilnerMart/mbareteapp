@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Rules\PersonName;
 use App\Services\ApiClientService;
+use App\Support\ActivityLabels;
 use App\Support\AuthPermits;
+use App\Support\NotificationInbox;
 use App\Support\ProfileLabels;
 use App\Support\TicketLabels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class UserController extends Controller{
 
@@ -44,6 +48,60 @@ class UserController extends Controller{
         return $this->renderView('users.profile', compact('data'));
     }
 
+    // ficha de solo lectura que el admin abre desde la tarjeta del alumno; se carga dentro de un modal
+    public function detail(int $id): Response{
+        $userInfo = $this->apiClient->getUserDetail($id);
+        if(!$userInfo){
+            return response('No pudimos cargar el perfil del usuario.', 404);
+        }
+
+        $data['profile'] = $this->buildProfileModel($userInfo);
+        $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null);
+        $data['favorites'] = $this->buildFavoriteList($userInfo['favorites'] ?? [], false);
+        $data['infoList'] = [
+            ['label' => 'Correo', 'value' => ($userInfo['email'] ?? '-').(($userInfo['email_verified'] ?? false) ? '' : ' (sin confirmar)')],
+            ['label' => 'Genero', 'value' => ProfileLabels::genderLabel($userInfo['gender'] ?? null) ?? 'Sin definir'],
+            ['label' => 'Objetivo', 'value' => ProfileLabels::goalLabel($userInfo['goal'] ?? null) ?? 'Sin definir'],
+            ['label' => 'Roles', 'value' => implode(', ', $userInfo['roles'] ?? []) ?: '-'],
+            ['label' => 'Gimnasios', 'value' => implode(', ', $userInfo['gyms'] ?? []) ?: '-'],
+            ['label' => 'Miembro desde', 'value' => TicketLabels::formatDate($userInfo['created_at'] ?? null)],
+        ];
+        $data['routines'] = array_map(fn(array $routine) => [
+            'name' => $routine['name'],
+            'url' => route('routine.show', $routine['id']),
+        ], $userInfo['routines'] ?? []);
+        $pendingLabelList = array_filter(array_map(fn(string $field) => ProfileLabels::profileFieldLabelMap[$field] ?? null, $userInfo['pending_profile_fields'] ?? []));
+        $data['activityUrl'] = route('user.activity', $id);
+        $data['pendingText'] = $pendingLabelList ? 'Datos sin completar: '.implode(', ', $pendingLabelList) : null;
+
+        return response()->view('users._detail', compact('data'));
+    }
+
+    // registro de actividad del usuario, solo para el admin
+    public function activity(Request $request, int $id): RedirectResponse|View{
+        $model = array_key_exists($request->query('model'), ActivityLabels::modelFilterMap) ? $request->query('model') : null;
+        $page = max(1, (int)$request->query('page', 1));
+        $response = $this->apiClient->getUserLogs($id, $page, $model);
+        if(!$response){
+            return back()->with('auth_error', 'No pudimos cargar el registro de actividad. Intenta de nuevo.');
+        }
+
+        $user = $response['user'];
+        $data['userName'] = trim(($user['name'] ?? '').' '.($user['last_name'] ?? '')) ?: 'Usuario';
+        $data['userImageUrl'] = $user['profile_image_url'] ?? asset('images/leoncioBiceps.png');
+        $data['dayList'] = ActivityLabels::buildDayList($response['items'] ?? []);
+        $data['filterList'] = array_map(fn(?string $filterModel, string $label) => [
+            'label' => $label,
+            'url' => route('user.activity', array_filter(['id' => $id, 'model' => $filterModel])),
+            'isActive' => $filterModel === $model,
+        ], [null, ...array_keys(ActivityLabels::modelFilterMap)], ['Todo', ...array_values(ActivityLabels::modelFilterMap)]);
+        $data['previousUrl'] = $page > 1 ? route('user.activity', array_filter(['id' => $id, 'model' => $model, 'page' => $page - 1])) : null;
+        $data['nextUrl'] = ($response['hasMore'] ?? false) ? route('user.activity', array_filter(['id' => $id, 'model' => $model, 'page' => $page + 1])) : null;
+        $data['emptyText'] = $model ? 'No hay actividad de este tipo.' : 'Todavia no hay actividad registrada.';
+
+        return $this->renderView('users.activity', compact('data'));
+    }
+
     public function updateProfile(Request $request, int $id): RedirectResponse{
         if((int) session('auth_user.id') !== $id){
             return redirect()->route('user.profile', $id);
@@ -71,6 +129,8 @@ class UserController extends Controller{
             'name' => $response['data']['name'],
             'last_name' => $response['data']['last_name'],
         ]));
+        // pudo completar datos que la campanita le pedia
+        NotificationInbox::forget();
         return redirect()->route('user.profile', $id)->with('profile_saved', 'Perfil actualizado.');
     }
 
@@ -186,7 +246,8 @@ class UserController extends Controller{
             ],
             'goalOptions' => ProfileLabels::goalLabelMap,
             'genderOptions' => ProfileLabels::genderLabelMap,
-            'isOpen' => (bool)session('errors')?->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender']),
+            // ?edit=1 llega desde la campanita cuando faltan datos del perfil
+            'isOpen' => request()->boolean('edit') || (bool)session('errors')?->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender']),
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\MediaController;
+use App\Support\NotificationInbox;
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\ResponseInterface;
 
@@ -31,7 +32,7 @@ class ApiClientService
     private function forgetRevokedSession(ResponseInterface $response): ResponseInterface
     {
         if($response->getStatusCode() === 401 && session()->has('auth_token')){
-            session()->forget(['auth_user', 'auth_token']);
+            session()->forget(['auth_user', 'auth_token', NotificationInbox::sessionKey]);
             session()->flash('auth_error', 'Tu sesion se cerro. Vuelve a ingresar.');
         }
         return $response;
@@ -163,6 +164,22 @@ class ApiClientService
 
     public function getUser(int $id){
         return $this->get('/user/'.$id);
+    }
+
+    public function getUserDetail(int $id){
+        return $this->get('/user/'.$id.'/detail');
+    }
+
+    public function getUserLogs(int $id, int $page, ?string $model){
+        return $this->get('/user/'.$id.'/logs', array_filter(['page' => $page, 'model' => $model]));
+    }
+
+    public function getNotifications(){
+        return $this->get('/me/notifications');
+    }
+
+    public function markNotificationsRead(?array $idList = null){
+        return $this->put('/me/notifications/read', $idList === null ? [] : ['ids' => $idList]);
     }
 
     public function updateProfile(int $id, array $params){

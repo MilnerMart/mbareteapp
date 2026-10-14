@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Rules\PersonName;
 use App\Services\ApiClientService;
+use App\Support\NotificationInbox;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 
@@ -34,6 +35,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        NotificationInbox::forget();
         $request->session()->put('auth_user', $response['data']['user']);
         $request->session()->put('auth_token', $response['data']['token']);
 
@@ -72,6 +74,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        NotificationInbox::forget();
         $request->session()->put('auth_user', $response['data']['user']);
         $request->session()->put('auth_token', $response['data']['token']);
 
@@ -175,7 +178,7 @@ class AuthController extends Controller
 
         // las sesiones abiertas de esa cuenta quedan cerradas en el backend
         if(strcasecmp((string) $request->session()->get('auth_user.email'), $response['data']['email']) === 0){
-            $request->session()->forget(['auth_user', 'auth_token']);
+            $request->session()->forget(['auth_user', 'auth_token', NotificationInbox::sessionKey]);
         }
         return redirect()->route('user.login')->with('auth_notice', 'Tu contraseña se cambio. Ya puedes ingresar con la nueva.');
     }

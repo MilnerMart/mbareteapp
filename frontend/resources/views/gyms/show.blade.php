@@ -12,7 +12,7 @@
 @section('title', $gym['name'] . ' | Mbarete App')
 
 @section('css')
-    @vite(['resources/css/gym.css'])
+    @vite(['resources/css/gym.css', 'resources/css/profile.css'])
 @endsection
 
 @section('content')
@@ -92,13 +92,21 @@
                         @php
                             $studentName = trim(($student['name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
                         @endphp
-                        <li class="gym-student">
+                        <li class="gym-student @if ($isAdmin) is-clickable @endif" @if ($isAdmin) data-user-detail-card @endif>
                             <img
                                 src="{{ $student['profile_image_url'] ?? asset('images/leoncioBiceps.png') }}"
                                 alt=""
                                 class="gym-student-avatar">
                             <div class="gym-student-info">
-                                <strong>{{ $studentName ?: 'Alumno' }}</strong>
+                                @if ($isAdmin)
+                                    {{-- el admin abre la ficha del alumno (solo lectura) tocando la tarjeta --}}
+                                    <button type="button" class="gym-student-open" data-bs-toggle="modal" data-bs-target="#userDetailModal"
+                                        data-user-detail-url="{{ route('user.detail', $student['id']) }}" title="Ver ficha del alumno">
+                                        {{ $studentName ?: 'Alumno' }}
+                                    </button>
+                                @else
+                                    <strong>{{ $studentName ?: 'Alumno' }}</strong>
+                                @endif
                                 <span>{{ $student['email'] }}</span>
                                 @if (!empty($student['routines']))
                                     <ul class="gym-student-routines" aria-label="Rutinas asignadas">
@@ -160,4 +168,50 @@
             @endif
         </div>
     </section>
+
+    @if ($isAdmin)
+        <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailTitle" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content user-detail-modal">
+                    <div class="modal-header">
+                        <span class="user-detail-readonly"><i class="fa-solid fa-eye" aria-hidden="true"></i> Ficha del alumno (solo lectura)</span>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body" data-user-detail-body></div>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
+
+@if ($isAdmin)
+    @section('js')
+        {{-- module: corre despues de app.js, que es quien expone jQuery --}}
+        <script type="module">
+            const $modalBody = $('[data-user-detail-body]');
+            const loadingHtml = '<p class="user-detail-status"><i class="fa-solid fa-spinner fa-spin"></i> Cargando ficha...</p>';
+
+            // toda la tarjeta abre la ficha, salvo los botones y formularios propios (asignar, quitar...)
+            $('[data-user-detail-card]').on('click', function (event) {
+                if ($(event.target).closest('a, button, form, select, input').length) {
+                    return;
+                }
+                this.querySelector('[data-user-detail-url]').click();
+            });
+
+            document.getElementById('userDetailModal').addEventListener('show.bs.modal', async (event) => {
+                const url = event.relatedTarget?.dataset.userDetailUrl;
+                $modalBody.html(loadingHtml);
+                try {
+                    const response = await fetch(url, { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+                    $modalBody.html(await response.text());
+                } catch (error) {
+                    $modalBody.html('<p class="user-detail-status">No pudimos cargar la ficha del alumno.</p>');
+                }
+            });
+        </script>
+    @endsection
+@endif

@@ -6,6 +6,7 @@ use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Http\Requests\ExerciseRequest;
 use App\Http\Requests\PublicResourceAttachRequest;
+use App\Models\EntityLog;
 use App\Models\Exercise;
 use App\Models\Muscle;
 use App\Models\Permit;
@@ -55,6 +56,7 @@ class ExerciseController extends Controller
 
         [$resource, $ticket] = $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $request, $exercise, $user, $isAdmin){
             $exercise->writeToDb($dbConnector);
+            EntityLog::addNew($dbConnector, $user->id, $exercise, EntityLog::actionIdCreated, $exercise->getName(), ['pendingReview' => !$isAdmin ?: null]);
             $resource = $this->saveExerciseResources($request, $exercise);
             $ticket = $isAdmin ? null
                 : Ticket::addNewCatalogTicket($dbConnector, Ticket::typeIdExerciseCreate, $user->id, $exercise->getEntityId());
@@ -97,6 +99,7 @@ class ExerciseController extends Controller
             $exercise->setIsPublic((bool)$validated['is_public']);
         }
         $exercise->writeToDb($dbConnector);
+        EntityLog::addNew($dbConnector, $request->user()->id, $exercise, EntityLog::actionIdUpdated, $exercise->getName());
 
         $resource = $this->saveExerciseResources($request, $exercise);
         $resource ??= Resource::queryByOwnerAndModelId($dbConnector, CoreModel::exerciseModelId, $exercise->getEntityId());
@@ -113,6 +116,7 @@ class ExerciseController extends Controller
 
         $exercise->setStatusId(EntityStatus::statusIdInactive);
         $exercise->writeToDb($dbConnector);
+        EntityLog::addNew($dbConnector, $request->user()->id, $exercise, EntityLog::actionIdDeleted, $exercise->getName());
         return $this->successApiResponse(code: 200);
     }
 
@@ -155,6 +159,9 @@ class ExerciseController extends Controller
         $this->manageExerciseResourcesOrFail($request->user(), $exercise);
 
         $resource = $this->getResourceService()->attachPublicResource(CoreModel::exerciseModelId, $exercise->getEntityId(), $request->validated()['key']);
+        EntityLog::addNew($this->getDbConnector(), $request->user()->id, $exercise, EntityLog::actionIdResourceAdded, $exercise->getName(), [
+            'resourceId' => $resource->getEntityId(),
+        ]);
         $model = $resource->buildApiModel();
         $model['url'] = $this->getResourceService()->obtainPublicUrl($resource);
         return $this->successApiResponse($model, 201);
@@ -175,6 +182,9 @@ class ExerciseController extends Controller
         }
         $resource->setStatusId(EntityStatus::statusIdDeleted);
         $resource->writeToDb($dbConnector);
+        EntityLog::addNew($dbConnector, $request->user()->id, $exercise, EntityLog::actionIdResourceRemoved, $exercise->getName(), [
+            'resourceId' => $resource->getEntityId(),
+        ]);
         return $this->successApiResponse();
     }
 

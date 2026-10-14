@@ -558,3 +558,131 @@
     gap: .75rem;
     padding: .6rem .8rem;
 }
+
+/* el admin abre la ficha del alumno tocando su tarjeta */
+.gym-student.is-clickable {
+    cursor: pointer;
+    transition: border-color .2s, background-color .2s;
+}
+
+.gym-student.is-clickable:hover {
+    background-color: #181818;
+    border-color: #c1121f;
+}
+
+.gym-student-open {
+    background: none;
+    border: 0;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 0;
+    text-align: left;
+}
+
+.gym-student-open:hover,
+.gym-student-open:focus-visible {
+    color: #ff6b6b;
+    text-decoration: underline;
+}
+
+.user-detail-modal {
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    color: #e5e5e5;
+}
+
+.user-detail-modal .modal-header {
+    border-bottom-color: #2a2a2a;
+}
+
+.user-detail-readonly {
+    color: #8f8f8f;
+    font-size: .85rem;
+}
+
+.user-detail-status {
+    color: #8f8f8f;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.user-detail-hero {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-detail-hero .profile-picture {
+    height: 88px;
+    margin: 0;
+    width: 88px;
+}
+
+.user-detail-name {
+    color: #ffffff;
+    font-size: 1.4rem;
+    margin-bottom: .35rem;
+}
+
+.user-detail-pending {
+    background: rgba(193, 18, 31, .12);
+    border: 1px solid rgba(193, 18, 31, .45);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: .9rem;
+    padding: .5rem .75rem;
+}
+
+.user-detail-info {
+    display: grid;
+    gap: .6rem 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin: 1rem 0 1.25rem;
+}
+
+.user-detail-info dt {
+    color: #8f8f8f;
+    font-size: .75rem;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.user-detail-info dd {
+    color: #ffffff;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.user-detail-routines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+}
+
+.user-detail-routines a {
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: .85rem;
+    padding: .3rem .8rem;
+    text-decoration: none;
+}
+
+.user-detail-routines a:hover {
+    border-color: #c1121f;
+}
+
+.user-detail .profile-section-title {
+    margin-top: 1.25rem;
+}
+
+.user-detail-activity {
+    margin-top: .6rem;
+}

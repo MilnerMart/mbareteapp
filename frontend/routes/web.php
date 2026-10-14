@@ -7,6 +7,7 @@ use App\Http\Controllers\GymController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\MuscleController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,9 @@ Route::middleware('frontend.auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
 
+    Route::get('/notifications/{id}', [NotificationController::class, 'open'])->whereNumber('id')->name('notification.open');
+    Route::post('/notifications/read', [NotificationController::class, 'readAll'])->name('notification.read-all');
+
     Route::post('/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])->name('user.verification.resend');
 
     Route::delete('/exercise/{id}/resource/{resourceId}', [ExerciseController::class, 'removeResource'])->whereNumber(['id', 'resourceId'])->name('exercise.resource.remove');
@@ -62,6 +66,8 @@ Route::middleware('frontend.auth')->group(function () {
     });
 
     Route::middleware('frontend.admin')->group(function () {
+        Route::get('/users/{id}/detail', [UserController::class, 'detail'])->whereNumber('id')->name('user.detail');
+        Route::get('/users/{id}/activity', [UserController::class, 'activity'])->whereNumber('id')->name('user.activity');
         Route::get('/muscle/{id}/edit', [MuscleController::class, 'edit'])->whereNumber('id')->name('muscle.edit');
         Route::put('/muscle/{id}', [MuscleController::class, 'update'])->whereNumber('id')->name('muscle.update');
         Route::delete('/muscle/{id}', [MuscleController::class, 'destroy'])->whereNumber('id')->name('muscle.destroy');

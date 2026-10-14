@@ -51,7 +51,7 @@ class Muscle extends BaseEntity {
     }
 
     function getModelId(): int{
-        return CoreModel::resourceModelId;
+        return CoreModel::muscleModelId;
     }
 
     function setName(string $name):void{

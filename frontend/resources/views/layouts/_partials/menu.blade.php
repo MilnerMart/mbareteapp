@@ -49,6 +49,51 @@
                         </li>
                     @endif
 
+                    @if($notificationPanel ?? null)
+                        <li class="nav-item dropdown nav-notifications">
+                            <button type="button" class="nav-link nav-bell @if ($notificationPanel['unreadCount']) has-unread @endif" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                                aria-expanded="false" aria-label="Avisos{{ $notificationPanel['unreadCount'] ? ', '.$notificationPanel['unreadCount'].' sin leer' : '' }}">
+                                <i class="fa-solid fa-bell"></i>
+                                @if ($notificationPanel['unreadCount'])
+                                    <span class="nav-bell-badge">{{ $notificationPanel['badgeText'] }}</span>
+                                @endif
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end notification-menu">
+                                <div class="notification-menu-header">
+                                    <strong>Avisos</strong>
+                                    @if ($notificationPanel['hasUnreadNotifications'])
+                                        <form method="POST" action="{{ route('notification.read-all') }}">
+                                            @csrf
+                                            <button type="submit" class="notification-read-all">Marcar todo como leido</button>
+                                        </form>
+                                    @endif
+                                </div>
+                                @if (empty($notificationPanel['items']))
+                                    <p class="notification-empty">No tienes avisos por ahora.</p>
+                                @else
+                                    <ul class="notification-list">
+                                        @foreach ($notificationPanel['items'] as $notification)
+                                            <li>
+                                                <a href="{{ $notification['url'] }}" class="notification-item @unless ($notification['isRead']) is-unread @endunless">
+                                                    <i class="{{ $notification['icon'] }} notification-icon" aria-hidden="true"></i>
+                                                    <span class="notification-body">
+                                                        <span class="notification-text">{{ $notification['text'] }}</span>
+                                                        @if ($notification['detail'])
+                                                            <span class="notification-detail">{{ $notification['detail'] }}</span>
+                                                        @endif
+                                                        @if ($notification['timeLabel'])
+                                                            <span class="notification-time">{{ $notification['timeLabel'] }}</span>
+                                                        @endif
+                                                    </span>
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </div>
+                        </li>
+                    @endif
+
                     @if(session('auth_user'))
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('user.profile', session('auth_user.id')) }}">Perfil</a>

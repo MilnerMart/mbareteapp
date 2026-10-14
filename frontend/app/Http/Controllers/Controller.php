@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Support\AuthPermits;
+use App\Support\NotificationInbox;
+use App\Support\NotificationLabels;
 use Illuminate\View\View;
 
 abstract class Controller
 {
     /**
-     * Renderiza la vista con los permisos que necesita el menu del layout.
+     * Renderiza la vista con los permisos y la campanita de avisos que necesita el menu del layout.
      */
     protected function renderView(string $view, array $data = []): View
     {
@@ -17,6 +19,7 @@ abstract class Controller
             'canBelongToGym' => AuthPermits::canBelongToGym(),
             'canCreateCatalog' => AuthPermits::canCreateCatalog(),
             'canConfigureApp' => AuthPermits::canConfigureApp(),
+            'notificationPanel' => session('auth_token') ? NotificationLabels::buildPanel(NotificationInbox::get()) : null,
         ]);
     }
 

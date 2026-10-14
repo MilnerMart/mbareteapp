@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\GymEntityController;
 use App\Http\Controllers\MuscleController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermitController;
 use App\Http\Controllers\PublicResourceController;
 use App\Http\Controllers\ResourceController;
@@ -39,6 +40,8 @@ Route::prefix('/v1')->group(function(){
         Route::post('/user/{id}/profile-image', [UserController::class, 'updateProfileImage']);
         Route::put('/user/{id}/profile', [UserController::class, 'updateProfile']);
         Route::get('/user/{id}', [UserController::class, 'show']);
+        Route::get('/user/{id}/detail', [UserController::class, 'detail']);
+        Route::get('/user/{id}/logs', [UserController::class, 'logs']);
 
         Route::post('/muscle', [MuscleController::class, 'store']);
         Route::put('/muscle/{id}', [MuscleController::class, 'update']);
@@ -63,6 +66,8 @@ Route::prefix('/v1')->group(function(){
         Route::get('/me/gyms', [GymEntityController::class, 'memberIndex']);
         Route::put('/me/gyms/{id}/visibility', [GymEntityController::class, 'updateMemberVisibility']);
         Route::get('/me/tickets', [TicketController::class, 'myIndex']);
+        Route::get('/me/notifications', [NotificationController::class, 'index']);
+        Route::put('/me/notifications/read', [NotificationController::class, 'markRead']);
 
         Route::prefix('tickets')->group(function(){
             Route::get('/', [TicketController::class, 'index']);

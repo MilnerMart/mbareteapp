@@ -32,6 +32,9 @@ class User extends Authenticatable
 
     const genderSlugList = ['male', 'female', 'unspecified'];
 
+    // datos de perfil que la campanita le pide completar; se agrega aca cualquier campo nuevo del perfil
+    const requiredProfileFieldList = ['gender', 'weight', 'height', 'age', 'goal'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -73,6 +76,31 @@ class User extends Authenticatable
 
     function hasSeeAllPermit(DbConnector $dbConnector): bool{
         return $this->hasPermit($dbConnector, Permit::seeAllPermitSlug);
+    }
+
+    function getFullName(): string{
+        return trim($this->name.' '.$this->last_name);
+    }
+
+    function getPendingProfileFieldList(): array{
+        return array_values(array_filter(self::requiredProfileFieldList, fn(string $field) => $this->{$field} === null || $this->{$field} === ''));
+    }
+
+    // por la conexion de los modelos: ve al usuario recien creado dentro de la transaccion del registro
+    static function queryFullNameById(DbConnector $dbConnector, int $userId): ?string{
+        $row = self::allocDbTable($dbConnector)->where('id', $userId)->first(['name', 'last_name']);
+        return $row ? trim($row->name.' '.$row->last_name) : null;
+    }
+
+    static function queryIdListWithPermit(DbConnector $dbConnector, string $permitSlug): array{
+        $roleIdList = [];
+        foreach (Role::queryList($dbConnector) as $role) {
+            /**  @var Role $role */
+            if(in_array($permitSlug, $role->getRolePermits() ?? [], true)){
+                $roleIdList[] = $role->getEntityId();
+            }
+        }
+        return UserRole::queryUserIdListByRoleIds($dbConnector, $roleIdList);
     }
 
     /**

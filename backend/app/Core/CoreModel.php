@@ -9,7 +9,7 @@ use App\Models\Role;
 class CoreModel{
 
     const exerciseModelId = 10, resourceModelId = 20, muscleModelId = 40, gymEntityModelId = 50, roleModelId = 60, routineModelId = 70, ticketModelId = 80,
-        providerModelId = 90, providerConfigModelId = 100, coreConfigModelId = 110;
+        providerModelId = 90, providerConfigModelId = 100, coreConfigModelId = 110, notificationModelId = 120, entityLogModelId = 130, userModelId = 140;
 
     private const _modelInfoMap = [
         self::exerciseModel => [

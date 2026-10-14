@@ -25,9 +25,10 @@ class UserRoutine {
         return $self;
     }
 
-    static function addNewUserRoutine(DbConnector $dbConnect, int $userId, int $routineId, ?int $assignedBy): void{
+    
+    static function addNewUserRoutine(DbConnector $dbConnect, int $userId, int $routineId, ?int $assignedBy): bool{
         $self = self::allocNew($userId, $routineId, $assignedBy);
-        $self->writeToDb($dbConnect);
+        return $self->writeToDb($dbConnect);
     }
 
     static function removeUserRoutine(DbConnector $dbConnect, int $userId, int $routineId): bool{
@@ -84,9 +85,9 @@ class UserRoutine {
         return $row;
     }
 
-    private function writeToDb(DbConnector $dbConnector): void{
+    private function writeToDb(DbConnector $dbConnector): bool{
         $writeArray = (array)$this->userRoutine2Row($dbConnector);
-        self::allocDbTable($dbConnector)->insertOrIgnore($writeArray);
+        return self::allocDbTable($dbConnector)->insertOrIgnore($writeArray) > 0;
     }
 
 }
