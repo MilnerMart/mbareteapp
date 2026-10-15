@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Rules\PersonName;
 use App\Services\ApiClientService;
 use App\Support\NotificationInbox;
+use App\Support\ThemePreference;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 
@@ -38,6 +39,7 @@ class AuthController extends Controller
         NotificationInbox::forget();
         $request->session()->put('auth_user', $response['data']['user']);
         $request->session()->put('auth_token', $response['data']['token']);
+        ThemePreference::syncAfterLogin($this->apiClient);
 
         return redirect()->route('muscle.index');
     }
@@ -77,6 +79,7 @@ class AuthController extends Controller
         NotificationInbox::forget();
         $request->session()->put('auth_user', $response['data']['user']);
         $request->session()->put('auth_token', $response['data']['token']);
+        ThemePreference::syncAfterLogin($this->apiClient);
 
         if($response['data']['verificationEmailSent'] ?? false){
             session()->flash('auth_notice', 'Te enviamos un correo a '.$response['data']['user']['email'].' para confirmar tu cuenta.');

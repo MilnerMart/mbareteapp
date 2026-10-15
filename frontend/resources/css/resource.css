@@ -17,7 +17,7 @@
 
 /* los dibujos de algunos proveedores tienen fondo transparente: sobre negro no se verian */
 .exercise-image-wrapper:has(> img) {
-    background: #ffffff;
+    background: var(--c-text-strong-ffffff);
 }
 
 .exercise-image {
@@ -52,7 +52,7 @@
 
 .exercise-resource-footer {
     align-items: center;
-    background: #101010;
+    background: var(--c-surface-deep-101010);
     display: flex;
     gap: .75rem;
     justify-content: space-between;
@@ -64,10 +64,10 @@
 }
 
 .exercise-resource-badge {
-    color: #b8b8b8;
+    color: var(--c-text-muted-b8b8b8);
     font-size: .85rem;
 }
 
 .exercise-resource-badge i {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }

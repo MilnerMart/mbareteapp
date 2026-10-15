@@ -219,6 +219,10 @@ class ApiClientService
         return $this->put('/user/'.$id.'/profile', $params);
     }
 
+    public function updateTheme(string $theme){
+        return $this->put('/me/theme', ['theme' => $theme]);
+    }
+
     public function updateProfileImage(int $id, UploadedFile $image){
         return $this->postWithImage('/user/'.$id.'/profile-image', [], 'profile_image', $image);
     }

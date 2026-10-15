@@ -1,5 +1,5 @@
 .calendar-page {
-    color: #e5e5e5;
+    color: var(--c-text-e5e5e5);
 }
 
 .calendar-header {
@@ -12,12 +12,12 @@
 }
 
 .calendar-header h1 {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     margin: 0;
 }
 
 .calendar-eyebrow {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .8rem;
     text-transform: uppercase;
 }
@@ -29,7 +29,7 @@
 }
 
 .calendar-month {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-weight: 600;
     min-width: 9.5rem;
     text-align: center;
@@ -39,10 +39,10 @@
 .calendar-today-btn,
 .calendar-icon-btn {
     align-items: center;
-    background: #161616;
-    border: 1px solid #2a2a2a;
+    background: var(--c-bg-soft-161616);
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
-    color: #e5e5e5;
+    color: var(--c-text-e5e5e5);
     display: inline-flex;
     height: 2.25rem;
     justify-content: center;
@@ -58,7 +58,7 @@
 .calendar-today-btn:hover,
 .calendar-icon-btn:hover {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .calendar-layout {
@@ -70,8 +70,8 @@
 
 .calendar-grid-card,
 .calendar-day-detail {
-    background: #121212;
-    border: 1px solid #2a2a2a;
+    background: var(--c-surface-deep-121212);
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     padding: 1rem;
 }
@@ -84,7 +84,7 @@
 }
 
 .calendar-weekdays span {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .75rem;
     text-align: center;
     text-transform: uppercase;
@@ -92,10 +92,10 @@
 
 .calendar-day {
     aspect-ratio: 1 / 1;
-    background: #181818;
-    border: 1px solid #242424;
+    background: var(--c-surface-181818);
+    border: 1px solid var(--c-surface-raised-242424);
     border-radius: 8px;
-    color: #e5e5e5;
+    color: var(--c-text-e5e5e5);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -106,12 +106,12 @@
 
 .calendar-day:hover {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .calendar-day.is-other-month {
     background: transparent;
-    color: #555555;
+    color: var(--c-text-faint-555555);
 }
 
 .calendar-day.is-today .calendar-day-number {
@@ -145,7 +145,7 @@
 }
 
 .mark-training {
-    color: #3fb950;
+    color: var(--c-green-3fb950);
 }
 
 .mark-action {
@@ -155,15 +155,15 @@
 }
 
 .mark-progress {
-    color: #58a6ff;
+    color: var(--c-blue-58a6ff);
 }
 
 .mark-note {
-    color: #ffc145;
+    color: var(--c-gold-ffc145);
 }
 
 .calendar-legend {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     display: flex;
     flex-wrap: wrap;
     font-size: .8rem;
@@ -174,13 +174,13 @@
 }
 
 .calendar-day-detail h2 {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: 1.2rem;
     margin-bottom: .75rem;
 }
 
 .calendar-section-title {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .8rem;
     font-weight: 600;
     letter-spacing: .04em;
@@ -189,7 +189,7 @@
 }
 
 .calendar-empty {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
 }
 
 .calendar-list {
@@ -203,8 +203,8 @@
 .calendar-item,
 .calendar-note {
     align-items: flex-start;
-    background: #181818;
-    border: 1px solid #242424;
+    background: var(--c-surface-181818);
+    border: 1px solid var(--c-surface-raised-242424);
     border-radius: 8px;
     display: flex;
     gap: .7rem;
@@ -212,12 +212,12 @@
 }
 
 .calendar-item a {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     text-decoration: none;
 }
 
 .calendar-item a:hover {
-    color: #ff6b6b;
+    color: var(--c-red-text-ff6b6b);
     text-decoration: underline;
 }
 
@@ -228,27 +228,27 @@
 }
 
 .calendar-item.is-completed .calendar-item-icon {
-    color: #3fb950;
+    color: var(--c-green-3fb950);
 }
 
 .calendar-item.is-highlight .calendar-item-icon {
-    color: #ffc145;
+    color: var(--c-gold-ffc145);
 }
 
 .calendar-item-text {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     flex: 1 1 auto;
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
 .calendar-item-text small {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     display: block;
 }
 
 .calendar-item time {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .8rem;
 }
 
@@ -259,18 +259,18 @@
 }
 
 .calendar-note-body strong {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .calendar-note-body p {
-    color: #bdbdbd;
+    color: var(--c-text-muted-bdbdbd);
     font-size: .9rem;
     margin: .2rem 0 0;
     white-space: pre-line;
 }
 
 .calendar-note-reminder {
-    color: #ffc145;
+    color: var(--c-gold-ffc145);
     display: inline-block;
     font-size: .8rem;
     margin-top: .3rem;
@@ -286,24 +286,24 @@
 }
 
 .calendar-note-form {
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid var(--c-border-2a2a2a);
     margin-bottom: 1.25rem;
     padding-bottom: .5rem;
 }
 
 .calendar-note-form .form-label {
-    color: #e5e5e5;
+    color: var(--c-text-e5e5e5);
     font-size: .85rem;
     margin: .6rem 0 .25rem;
 }
 
 .calendar-note-form .form-label small {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
 }
 
 
 .calendar-form-hint {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .8rem;
     margin: .4rem 0 .75rem;
 }
@@ -315,9 +315,9 @@
 }
 
 .calendar-cancel-btn {
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
-    color: #e5e5e5;
+    background: var(--c-surface-raised-1f1f1f);
+    border: 1px solid var(--c-border-2a2a2a);
+    color: var(--c-text-e5e5e5);
 }
 
 @media (max-width: 991.98px) {
@@ -360,6 +360,6 @@
 }
 
 .calendar-remind-days .form-check-label {
-    color: #e5e5e5;
+    color: var(--c-text-e5e5e5);
     font-size: .9rem;
 }

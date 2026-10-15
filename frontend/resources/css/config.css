@@ -7,13 +7,13 @@
 }
 
 .config-header h1 {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-weight: 800;
     margin: 0 0 .3rem;
 }
 
 .config-header p {
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     margin: 0;
 }
 
@@ -24,10 +24,10 @@
 }
 
 .config-card {
-    background: linear-gradient(145deg, #181818, #101010);
-    border: 1px solid #2a2a2a;
+    background: linear-gradient(145deg, var(--c-surface-181818), var(--c-surface-deep-101010));
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
-    color: #f5f5f5;
+    color: var(--c-text-strong-f5f5f5);
     display: flex;
     flex-direction: column;
     gap: .4rem;
@@ -39,7 +39,7 @@
 .config-card:not(.is-disabled):hover,
 .config-card:not(.is-disabled):focus {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .config-card.is-disabled {
@@ -52,21 +52,21 @@
 }
 
 .config-card-icon {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     font-size: 1.4rem;
     margin-bottom: .2rem;
 }
 
 .config-card-desc {
-    color: #b8b8b8;
+    color: var(--c-text-muted-b8b8b8);
     font-size: .9rem;
 }
 
 .config-card-badge {
     align-self: flex-start;
-    border: 1px solid #5a1a1f;
+    border: 1px solid var(--c-red-border-5a1a1f);
     border-radius: 999px;
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     font-size: .75rem;
     font-weight: 700;
     margin-top: .4rem;
@@ -75,7 +75,7 @@
 
 .config-back-link {
     align-items: center;
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     display: inline-flex;
     font-size: .9rem;
     gap: .4rem;
@@ -84,13 +84,13 @@
 }
 
 .config-back-link:hover {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .config-panel,
 .config-provider {
-    background: linear-gradient(145deg, #181818, #101010);
-    border: 1px solid #2a2a2a;
+    background: linear-gradient(145deg, var(--c-surface-181818), var(--c-surface-deep-101010));
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     margin-bottom: 1.5rem;
     padding: 1.25rem;
@@ -98,7 +98,7 @@
 
 .config-panel h2,
 .config-subtitle {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 1rem;
@@ -106,7 +106,7 @@
 
 .config-empty,
 .config-optional {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .9rem;
 }
 
@@ -124,18 +124,18 @@
 }
 
 .config-form .form-label {
-    color: #dddddd;
+    color: var(--c-text-dddddd);
 }
 
 .config-form .form-control,
 .config-form .form-select {
-    background-color: #0b0b0b;
-    border-color: #303030;
-    color: #f5f5f5;
+    background-color: var(--c-bg-0b0b0b);
+    border-color: var(--c-border-303030);
+    color: var(--c-text-strong-f5f5f5);
 }
 
 .config-form .form-control::placeholder {
-    color: #777;
+    color: var(--c-text-subtle-777);
 }
 
 .config-form .form-control:focus,
@@ -165,9 +165,9 @@
 
 .config-btn,
 .config-icon-btn {
-    background-color: #0b0b0b;
-    border: 1px solid #303030;
-    color: #d8d8d8;
+    background-color: var(--c-bg-0b0b0b);
+    border: 1px solid var(--c-border-303030);
+    color: var(--c-text-d8d8d8);
 }
 
 .config-btn:hover,
@@ -175,7 +175,7 @@
 .config-icon-btn:hover,
 .config-icon-btn:focus {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .config-icon-btn {
@@ -187,8 +187,8 @@
 
 .config-remove-btn {
     background-color: transparent;
-    border: 1px solid #5a1a1f;
-    color: #ff4d5a;
+    border: 1px solid var(--c-red-border-5a1a1f);
+    color: var(--c-red-text-ff4d5a);
 }
 
 .config-remove-btn:hover,
@@ -200,10 +200,10 @@
 
 .config-chip {
     align-items: center;
-    background-color: #0b0b0b;
-    border: 1px solid #303030;
+    background-color: var(--c-bg-0b0b0b);
+    border: 1px solid var(--c-border-303030);
     border-radius: 999px;
-    color: #d8d8d8;
+    color: var(--c-text-d8d8d8);
     display: inline-flex;
     font-size: .75rem;
     font-weight: 600;
@@ -212,7 +212,7 @@
 }
 
 .config-chip i {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .config-provider-head {
@@ -237,12 +237,12 @@
 }
 
 .config-provider-title strong {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: 1.1rem;
 }
 
 .config-provider-url {
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     font-size: .85rem;
     overflow-wrap: anywhere;
     width: 100%;
@@ -258,8 +258,8 @@
 
 .config-credential {
     align-items: center;
-    background-color: #121212;
-    border: 1px solid #2a2a2a;
+    background-color: var(--c-surface-deep-121212);
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     display: flex;
     gap: 1rem;
@@ -275,7 +275,7 @@
 }
 
 .config-credential-info strong {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .config-credential-keys {
@@ -285,14 +285,14 @@
 }
 
 .config-credential-setting {
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     font-size: .85rem;
     overflow-wrap: anywhere;
 }
 
 .config-credential-new summary {
     align-items: center;
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     cursor: pointer;
     display: inline-flex;
     font-weight: 700;
@@ -309,7 +309,7 @@
 }
 
 .config-kv {
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     display: grid;
     gap: .6rem;
@@ -317,7 +317,7 @@
 }
 
 .config-kv legend {
-    color: #dddddd;
+    color: var(--c-text-dddddd);
     float: none;
     font-size: 1rem;
     font-weight: 700;
@@ -394,7 +394,7 @@
 }
 
 .config-danger-zone {
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--c-border-2a2a2a);
     margin-top: 1.25rem;
     padding-top: 1rem;
 }
@@ -413,11 +413,11 @@
 }
 
 .config-rank-row strong {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .config-rank-head {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .75rem;
     text-transform: uppercase;
 }
@@ -454,18 +454,18 @@
 }
 
 .config-rule-schedule span {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .85rem;
 }
 
 .config-rule-schedule strong {
-    color: #ffc145;
+    color: var(--c-gold-ffc145);
     font-size: .85rem;
 }
 
 .config-rule-runs-header {
     align-items: center;
-    border-top: 1px solid #2a2a2a;
+    border-top: 1px solid var(--c-border-2a2a2a);
     display: flex;
     gap: .75rem;
     justify-content: space-between;
@@ -473,22 +473,22 @@
 }
 
 .config-rule-runs-header h3 {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: .95rem;
     font-weight: 700;
     margin: 0;
 }
 
 .config-rule-run-btn {
-    border: 1px solid #2a2a2a;
-    color: #e5e5e5;
+    border: 1px solid var(--c-border-2a2a2a);
+    color: var(--c-text-e5e5e5);
     font-weight: 700;
 }
 
 .config-rule-run-btn:hover,
 .config-rule-run-btn:focus-visible {
-    border-color: #ff4d5a;
-    color: #ffffff;
+    border-color: var(--c-red-text-ff4d5a);
+    color: var(--c-text-strong-ffffff);
 }
 
 .config-rule-runs {
@@ -501,8 +501,8 @@
 
 .config-rule-runs li {
     align-items: center;
-    background: #151515;
-    border: 1px solid #222222;
+    background: var(--c-surface-deep-151515);
+    border: 1px solid var(--c-surface-raised-222222);
     border-radius: 6px;
     display: flex;
     flex-wrap: wrap;
@@ -519,32 +519,32 @@
 
 .config-run-status.is-completed {
     background: rgba(76, 214, 143, .14);
-    color: #4cd68f;
+    color: var(--c-green-4cd68f);
 }
 
 .config-run-status.is-failed {
     background: rgba(255, 77, 90, .14);
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .config-run-status.is-running,
 .config-run-status.is-pending {
     background: rgba(111, 182, 255, .14);
-    color: #6fb6ff;
+    color: var(--c-blue-6fb6ff);
 }
 
 .config-run-status.is-skipped {
     background: rgba(143, 143, 143, .14);
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
 }
 
 .config-run-date {
-    color: #bdbdbd;
+    color: var(--c-text-muted-bdbdbd);
     font-size: .82rem;
 }
 
 .config-run-detail {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     flex-basis: 100%;
     font-size: .8rem;
 }

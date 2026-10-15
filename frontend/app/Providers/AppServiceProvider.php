@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\ThemePreference;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // el layout (y el menu que incluye) recibe el tema ya resuelto
+        View::composer('layouts.layout', fn($view) => $view->with('themeView', ThemePreference::buildView()));
     }
 }

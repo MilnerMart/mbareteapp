@@ -16,7 +16,7 @@
     display: inline-flex;
     align-items: center;
     gap: .5rem;
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     font-weight: 700;
     text-transform: uppercase;
     font-size: .82rem;
@@ -25,7 +25,7 @@
 }
 
 .login-copy h1 {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: clamp(2.25rem, 5vw, 4.4rem);
     line-height: 1;
     font-weight: 800;
@@ -33,7 +33,7 @@
 }
 
 .login-copy p {
-    color: #b8b8b8;
+    color: var(--c-text-muted-b8b8b8);
     font-size: 1.05rem;
     line-height: 1.7;
     margin-bottom: 1.5rem;
@@ -52,13 +52,13 @@
 
 .login-stats strong {
     display: block;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: 1.6rem;
     line-height: 1;
 }
 
 .login-stats span {
-    color: #9f9f9f;
+    color: var(--c-text-subtle-9f9f9f);
     font-size: .9rem;
 }
 
@@ -68,8 +68,8 @@
 }
 
 .login-panel {
-    background: linear-gradient(145deg, #181818, #101010);
-    border: 1px solid #2a2a2a;
+    background: linear-gradient(145deg, var(--c-surface-181818), var(--c-surface-deep-101010));
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
     width: min(100%, 620px);
@@ -93,30 +93,30 @@
 
 .login-brand span {
     display: block;
-    color: #aaa;
+    color: var(--c-text-muted-aaa);
     font-size: .9rem;
 }
 
 .login-brand strong {
     display: block;
-    color: #fff;
+    color: var(--c-text-strong-fff);
     font-size: 1.5rem;
 }
 
 .login-form .form-label,
 .login-options {
-    color: #dddddd;
+    color: var(--c-text-dddddd);
 }
 
 .login-form .form-control,
 .login-form .input-group-text {
-    background-color: #0b0b0b;
-    border-color: #303030;
-    color: #f5f5f5;
+    background-color: var(--c-bg-0b0b0b);
+    border-color: var(--c-border-303030);
+    color: var(--c-text-strong-f5f5f5);
 }
 
 .login-form .form-control::placeholder {
-    color: #777;
+    color: var(--c-text-subtle-777);
 }
 
 .login-form .form-control:focus {
@@ -125,18 +125,18 @@
 }
 
 .login-form .btn-password-toggle {
-    background-color: #0b0b0b;
-    border-color: #303030;
-    color: #d8d8d8;
+    background-color: var(--c-bg-0b0b0b);
+    border-color: var(--c-border-303030);
+    color: var(--c-text-d8d8d8);
     min-height: auto;
     width: 48px;
 }
 
 .login-form .btn-password-toggle:hover,
 .login-form .btn-password-toggle:focus {
-    background-color: #161616;
+    background-color: var(--c-bg-soft-161616);
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     box-shadow: none;
 }
 
@@ -150,12 +150,12 @@
 }
 
 .login-options a {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     text-decoration: none;
 }
 
 .login-options a:hover {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .login-form .btn {
@@ -200,7 +200,7 @@
 }
 
 .login-help {
-    color: #b8b8b8;
+    color: var(--c-text-muted-b8b8b8);
     font-size: .95rem;
     margin-bottom: 1.25rem;
 }

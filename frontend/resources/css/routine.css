@@ -14,7 +14,7 @@
 .routine-header h1,
 .routine-detail h1,
 .routine-form-panel h1 {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-weight: 800;
     margin: 0;
 }
@@ -34,14 +34,14 @@
 
 .routine-section h2,
 .routine-subtitle {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-size: 1.3rem;
     font-weight: 700;
     margin-bottom: 1rem;
 }
 
 .routine-empty {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
 }
 
 .routine-grid {
@@ -51,10 +51,10 @@
 }
 
 .routine-card {
-    background: linear-gradient(145deg, #181818, #101010);
-    border: 1px solid #2a2a2a;
+    background: linear-gradient(145deg, var(--c-surface-181818), var(--c-surface-deep-101010));
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
-    color: #f5f5f5;
+    color: var(--c-text-strong-f5f5f5);
     display: flex;
     flex-direction: column;
     gap: .4rem;
@@ -66,7 +66,7 @@
 .routine-card:hover,
 .routine-card:focus {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .routine-card strong {
@@ -74,13 +74,13 @@
 }
 
 .routine-card-desc {
-    color: #b8b8b8;
+    color: var(--c-text-muted-b8b8b8);
     font-size: .9rem;
     margin: .25rem 0 .5rem;
 }
 
 .routine-meta {
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     display: flex;
     flex-wrap: wrap;
     font-size: .85rem;
@@ -88,13 +88,13 @@
 }
 
 .routine-meta i {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     margin-right: .2rem;
 }
 
 .routine-back-link {
     align-items: center;
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     display: inline-flex;
     font-size: .9rem;
     gap: .4rem;
@@ -103,13 +103,13 @@
 }
 
 .routine-back-link:hover {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .routine-detail {
     align-items: flex-start;
-    background: linear-gradient(145deg, #181818, #101010);
-    border: 1px solid #2a2a2a;
+    background: linear-gradient(145deg, var(--c-surface-181818), var(--c-surface-deep-101010));
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     display: flex;
     flex-wrap: wrap;
@@ -136,9 +136,9 @@
 
 .routine-btn,
 .routine-icon-btn {
-    background-color: #0b0b0b;
-    border: 1px solid #303030;
-    color: #d8d8d8;
+    background-color: var(--c-bg-0b0b0b);
+    border: 1px solid var(--c-border-303030);
+    color: var(--c-text-d8d8d8);
 }
 
 .routine-btn:hover,
@@ -146,13 +146,13 @@
 .routine-icon-btn:hover,
 .routine-icon-btn:focus {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .routine-remove-btn {
     background-color: transparent;
-    border: 1px solid #5a1a1f;
-    color: #ff4d5a;
+    border: 1px solid var(--c-red-border-5a1a1f);
+    color: var(--c-red-text-ff4d5a);
 }
 
 .routine-remove-btn:hover,
@@ -173,8 +173,8 @@
 
 .routine-exercise {
     align-items: center;
-    background-color: #121212;
-    border: 1px solid #2a2a2a;
+    background-color: var(--c-surface-deep-121212);
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     counter-increment: routine-exercise;
     display: flex;
@@ -184,7 +184,7 @@
 }
 
 .routine-exercise::before {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     content: counter(routine-exercise);
     font-weight: 800;
     min-width: 1.2rem;
@@ -195,17 +195,17 @@
 }
 
 .routine-exercise-name {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
     font-weight: 600;
     text-decoration: none;
 }
 
 .routine-exercise-name:hover {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .routine-exercise-volume {
-    color: #b8b8b8;
+    color: var(--c-text-muted-b8b8b8);
     font-size: .9rem;
 }
 
@@ -216,9 +216,9 @@
 }
 
 .routine-empty-box {
-    border: 1px dashed #303030;
+    border: 1px dashed var(--c-border-303030);
     border-radius: 8px;
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     padding: 2.5rem 1rem;
     text-align: center;
 }
@@ -231,17 +231,17 @@
 
 .routine-empty-box a,
 .routine-hint a {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .routine-hint {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .9rem;
 }
 
 .routine-form-panel {
-    background: linear-gradient(145deg, #181818, #101010);
-    border: 1px solid #2a2a2a;
+    background: linear-gradient(145deg, var(--c-surface-181818), var(--c-surface-deep-101010));
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     margin: 0 auto;
     max-width: 560px;
@@ -260,18 +260,18 @@
 }
 
 .routine-form .form-label {
-    color: #dddddd;
+    color: var(--c-text-dddddd);
 }
 
 .routine-form .form-control,
 .routine-form .form-select {
-    background-color: #0b0b0b;
-    border-color: #303030;
-    color: #f5f5f5;
+    background-color: var(--c-bg-0b0b0b);
+    border-color: var(--c-border-303030);
+    color: var(--c-text-strong-f5f5f5);
 }
 
 .routine-form .form-control::placeholder {
-    color: #777;
+    color: var(--c-text-subtle-777);
 }
 
 .routine-form .form-control:focus,
@@ -302,12 +302,12 @@
 
 .routine-exercise.is-highlighted .routine-exercise-name,
 .routine-exercise:has([data-done-check]:checked) .routine-exercise-name {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .routine-exercise-edit-toggle[aria-expanded="true"] {
     border-color: #c1121f;
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .routine-exercise-form {
@@ -341,8 +341,8 @@
 
 .routine-user {
     align-items: center;
-    background-color: #121212;
-    border: 1px solid #2a2a2a;
+    background-color: var(--c-surface-deep-121212);
+    border: 1px solid var(--c-border-2a2a2a);
     border-radius: 8px;
     display: flex;
     flex-wrap: wrap;
@@ -370,16 +370,16 @@
 }
 
 .routine-user-info strong {
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .routine-user-info span {
-    color: #8f8f8f;
+    color: var(--c-text-subtle-8f8f8f);
     font-size: .85rem;
 }
 
 .routine-user-gyms i {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
     margin-right: .2rem;
 }
 
@@ -389,13 +389,13 @@
     border: 0;
     padding: 0;
     text-align: left;
-    text-decoration: underline dotted #5a1a1f;
+    text-decoration: underline dotted var(--c-red-border-5a1a1f);
     text-underline-offset: .25rem;
 }
 
 .routine-exercise-open:hover,
 .routine-exercise-open:focus {
-    color: #ff4d5a;
+    color: var(--c-red-text-ff4d5a);
 }
 
 .routine-exercise-toggle[aria-pressed="true"],
@@ -434,7 +434,7 @@
 }
 
 .routine-exercise-notes {
-    color: #9a9a9a;
+    color: var(--c-text-subtle-9a9a9a);
     font-size: .85rem;
     font-style: italic;
     margin: 0;
@@ -504,9 +504,9 @@
 
 .routine-order-btn {
     align-items: center;
-    background-color: #0b0b0b;
-    border: 1px solid #303030;
-    color: #d8d8d8;
+    background-color: var(--c-bg-0b0b0b);
+    border: 1px solid var(--c-border-303030);
+    color: var(--c-text-d8d8d8);
     display: flex;
     font-size: .65rem;
     height: 18px;
@@ -518,12 +518,12 @@
 .routine-order-btn:hover,
 .routine-order-btn:focus {
     border-color: #c1121f;
-    color: #ffffff;
+    color: var(--c-text-strong-ffffff);
 }
 
 .routine-order-btn:disabled {
-    border-color: #1f1f1f;
-    color: #444444;
+    border-color: var(--c-surface-raised-1f1f1f);
+    color: var(--c-text-faint-444444);
 }
 
 @media (max-width: 576px) {
@@ -614,7 +614,7 @@
 }
 
 .routine-exercise-toggle:has(input:focus-visible) {
-    outline: 2px solid #ff4d5a;
+    outline: 2px solid var(--c-red-text-ff4d5a);
     outline-offset: 2px;
 }
 
@@ -634,7 +634,7 @@
 /* kg usados hoy: opcionales, suman puntos de nivel */
 .routine-weight {
     align-items: center;
-    color: #a8a8a8;
+    color: var(--c-text-muted-a8a8a8);
     display: inline-flex;
     font-size: .85rem;
     gap: .35rem;
@@ -642,9 +642,9 @@
 }
 
 .routine-weight .form-control {
-    background-color: #0b0b0b;
-    border-color: #303030;
-    color: #f5f5f5;
+    background-color: var(--c-bg-0b0b0b);
+    border-color: var(--c-border-303030);
+    color: var(--c-text-strong-f5f5f5);
     font-size: .85rem;
     padding: .15rem .45rem;
     width: 5.5rem;

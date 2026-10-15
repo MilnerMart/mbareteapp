@@ -1,9 +1,21 @@
 <header>
-   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+   <nav class="navbar navbar-expand-lg {{ $themeView['navbarClass'] }} navbar-custom">
         <div class="container">
 
-            <div class="logo-container">
-                <img src="{{ asset('images/ChavukuLogo.png') }}" alt="logo">
+            <div class="navbar-brand-group">
+                <div class="logo-container">
+                    <img src="{{ asset('images/ChavukuLogo.png') }}" alt="logo">
+                </div>
+                <form method="POST" action="{{ route('theme.update') }}" class="theme-switch-form" data-theme-switch>
+                    @csrf
+                    <input type="hidden" name="theme" value="{{ $themeView['nextTheme'] }}">
+                    <button type="submit" @class(['theme-switch', 'is-light' => $themeView['isLight']]) role="switch"
+                        aria-checked="{{ $themeView['switchChecked'] }}" aria-label="Modo claro" title="{{ $themeView['switchTitle'] }}">
+                        <span class="theme-switch-knob" aria-hidden="true"></span>
+                        <i class="fa-solid fa-moon theme-switch-icon is-moon" aria-hidden="true"></i>
+                        <i class="fa-solid fa-sun theme-switch-icon is-sun" aria-hidden="true"></i>
+                    </button>
+                </form>
             </div>
             <button 
                 class="navbar-toggler" 

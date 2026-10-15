@@ -42,6 +42,8 @@ class GymController extends Controller
             'memberRoute' => 'gym.index',
             'canCreateGym' => $this->canCreateGym($managedGyms),
         ];
+        // en el gimnasio base el entrenador es un alumno mas: ve el ranking y compite si se muestra
+        $data['ranking'] = $this->buildMemberRanking($request, $memberData['memberGym'], 'gym.index');
         return $this->renderView('gyms.index', compact('data'));
     }
 
@@ -62,10 +64,7 @@ class GymController extends Controller
             fn(array $ticket) => ($ticket['type'] ?? null) === 'gym-join' && ($ticket['state'] ?? null) === 'pending')));
         // solo quien esta unicamente en el gimnasio base y no espera respuesta de otro puede pedir unirse
         $data['canJoinGym'] = !$memberData['memberGym'] && !$memberData['hasOwnGym'] && !$data['pendingJoinList'];
-        $memberGymId = $memberData['memberGym']['id'] ?? null;
-        $data['ranking'] = $memberGymId && ($memberData['memberGym']['isRankingPublic'] ?? false)
-            ? $this->buildRanking($request, $memberGymId, fn(int $season) => route('gym.member', ['member' => $memberGymId, 'temporada' => $season]))
-            : null;
+        $data['ranking'] = $this->buildMemberRanking($request, $memberData['memberGym'], 'gym.member');
         $data['isJoinFormOpen'] = (bool)session('errors')?->has('gym_code');
         return $this->renderView('gyms.member', compact('data'));
     }
@@ -169,6 +168,14 @@ class GymController extends Controller
         $userId = (int) session('auth_user.id');
         return AuthPermits::isAdmin()
             || collect($managedGyms)->filter(fn(array $gym) => (int)($gym['ownerId'] ?? 0) === $userId)->count() < self::maxGymsPerTrainer;
+    }
+
+    private function buildMemberRanking(Request $request, ?array $memberGym, string $route): ?array{
+        if(!$memberGym || !($memberGym['isRankingPublic'] ?? false)){
+            return null;
+        }
+        return $this->buildRanking($request, $memberGym['id'],
+            fn(int $season) => route($route, ['member' => $memberGym['id'], 'temporada' => $season]));
     }
 
     private function buildRanking(Request $request, int $gymId, callable $seasonUrl): ?array{

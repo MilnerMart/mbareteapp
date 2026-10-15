@@ -222,6 +222,25 @@ document.addEventListener('change', (event) => {
     }
 });
 
+// Interruptor de tema (data-theme-switch): la perilla se desliza y el tema cambia al momento; despues se guarda la
+// eleccion (en la cuenta o en este navegador) enviando el formulario.
+document.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[data-theme-switch]');
+
+    if (!form || form.dataset.submitting === 'true') {
+        return;
+    }
+
+    event.preventDefault();
+    form.dataset.submitting = 'true';
+    const nextTheme = form.querySelector('input[name="theme"]').value;
+    const button = form.querySelector('.theme-switch');
+    button.classList.toggle('is-light', nextTheme === 'light');
+    button.setAttribute('aria-checked', String(nextTheme === 'light'));
+    document.documentElement.dataset.theme = nextTheme;
+    setTimeout(() => form.submit(), 250);
+});
+
 // Formularios con data-confirm-submit: piden confirmar antes de guardar.
 document.addEventListener('submit', async (event) => {
     const form = event.target.closest('form[data-confirm-submit]');
