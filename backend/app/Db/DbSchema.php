@@ -27,5 +27,7 @@ class DbSchema{
     tableAppSettings = 'app_settings',
     tableProgressEntries = 'progress_entries',
     tableGymSeasons = 'gym_seasons',
+    tableSystemRules = 'system_rules',
+    tableSystemRuleRuns = 'system_rule_runs',
     tableUsers = 'users';
 }

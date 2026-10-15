@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\NotificationReadRequest;
-use App\Models\CalendarNote;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Http\JsonResponse;
@@ -23,8 +22,6 @@ class NotificationController extends Controller {
 
     private function buildInboxModel(User $user): array {
         $dbConnector = $this->getDbConnector();
-        // no hay tareas programadas: los recordatorios vencidos se vuelven avisos al consultar la campanita
-        CalendarNote::notifyDueReminders($dbConnector, $user->id);
         return [
             'unreadCount' => UserNotification::countUnreadByUserId($dbConnector, $user->id),
             'pendingProfileFields' => $user->getPendingProfileFieldList(),

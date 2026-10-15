@@ -88,16 +88,21 @@ class CalendarTest extends TestCase
         $noteId = $this->actingWithToken($token)->postJson('/api/v1/me/calendar/notes', [
             'note_on' => $this->dayFromToday(5), 'title' => 'Turno con el nutricionista', 'remind_days' => [2, 1, 0],
         ])->assertCreated()->json('data.id');
+        // la campanita ya no los genera: los manda la regla programada de recordatorios
+        $this->artisan('rules:run', ['rule' => 'reminders'])->assertSuccessful();
         $this->actingWithToken($token)->getJson('/api/v1/me/notifications')->assertJsonPath('data.unreadCount', 0);
 
         foreach ([2, 1, 0] as $index => $daysLeft) {
             DB::table('calendar_notes')->where('id', $noteId)->update(['note_on' => $this->dayFromToday($daysLeft)]);
+            $this->actingWithToken($token)->getJson('/api/v1/me/notifications')->assertJsonPath('data.unreadCount', $index);
+            $this->artisan('rules:run', ['rule' => 'reminders'])->assertSuccessful();
             $this->actingWithToken($token)->getJson('/api/v1/me/notifications')->assertOk()
                 ->assertJsonPath('data.unreadCount', $index + 1)
                 ->assertJsonPath('data.items.0.type', 'reminder')
                 ->assertJsonPath('data.items.0.refId', $noteId)
                 ->assertJsonPath('data.items.0.data.title', 'Turno con el nutricionista')
                 ->assertJsonPath('data.items.0.data.daysLeft', $daysLeft);
+            $this->artisan('rules:run', ['rule' => 'reminders'])->assertSuccessful();
             $this->actingWithToken($token)->getJson('/api/v1/me/notifications')->assertJsonCount($index + 1, 'data.items');
         }
     }
@@ -110,6 +115,7 @@ class CalendarTest extends TestCase
         ])->assertCreated()->json('data.id');
 
         DB::table('calendar_notes')->where('id', $noteId)->update(['note_on' => $this->dayFromToday(0)]);
+        $this->artisan('rules:run', ['rule' => 'reminders'])->expectsOutputToContain('"notes":1')->assertSuccessful();
         $this->actingWithToken($token)->getJson('/api/v1/me/notifications')->assertOk()
             ->assertJsonCount(1, 'data.items')
             ->assertJsonPath('data.items.0.data.daysLeft', 0);

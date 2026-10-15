@@ -47,7 +47,6 @@ class GymSeason {
     }
 
     static function startOrFail(DbConnector $dbConnect, Gym $gym, string $startsOn, string $endsOn): array{
-        self::closeEnded($dbConnect, $gym);
         $latest = self::queryLatest($dbConnect, $gym->getEntityId());
         if($latest && self::status($latest) !== self::statusEnded){
             throw PublicException::validationError('Ya hay una temporada en curso o programada');
@@ -202,27 +201,57 @@ class GymSeason {
         return $standing['position'] <= self::podiumSize && $standing['points'] > 0;
     }
 
-    static function closeEnded(DbConnector $dbConnect, Gym $gym): void{
+    static function queryGymIdListToAttend(DbConnector $dbConnect): array{
+        $today = RoutineExerciseLog::today();
+        return self::allocDbTable($dbConnect)
+            ->where(fn(Builder $where) => $where->where(fn(Builder $ended) => $ended->whereNull('results')->where('ends_on', '<', $today))
+                ->orWhere(fn(Builder $started) => $started->whereNull('started_notified_at')->where('starts_on', '<=', $today)->where('ends_on', '>=', $today)))
+            ->distinct()->orderBy('gym_id')->pluck('gym_id')->map(fn($gymId) => (int)$gymId)->all();
+    }
+
+    static function notifyStartIfDue(DbConnector $dbConnect, Gym $gym): int{
+        $today = RoutineExerciseLog::today();
+        $row = self::allocDbTable($dbConnect)->where('gym_id', $gym->getEntityId())->whereNull('started_notified_at')
+            ->where('starts_on', '<=', $today)->where('ends_on', '>=', $today)->orderByDesc('number')->first();
+        if(!$row){
+            return 0;
+        }
+        return $dbConnect->getEnvConecction()->transaction(function() use ($dbConnect, $gym, $row){
+            $isMarked = self::allocDbTable($dbConnect)->where('id', $row->id)->whereNull('started_notified_at')
+                ->update(['started_notified_at' => $dbConnect->toDbDate(BaseHelper::utcNow())]) > 0;
+            if(!$isMarked || !$gym->isRankingPublic()){
+                return 0;
+            }
+            $participantIdList = self::queryParticipantIdList($dbConnect, $gym);
+            UserNotification::addSeasonStartedList($dbConnect, $gym, self::row2Season($row), $participantIdList);
+            return count($participantIdList);
+        });
+    }
+
+    static function closeEnded(DbConnector $dbConnect, Gym $gym): int{
         $rowList = self::allocDbTable($dbConnect)->where('gym_id', $gym->getEntityId())->whereNull('results')
             ->where('ends_on', '<', RoutineExerciseLog::today())->orderBy('number')->get();
+        $closedCount = 0;
         foreach ($rowList as $row) {
             $season = self::row2Season($row);
             $standingList = self::buildStandingList($dbConnect, $gym, $season['startsOn'], $season['endsOn']);
             $awardList = self::buildAwardList($standingList);
-            $dbConnect->getEnvConecction()->transaction(function() use ($dbConnect, $gym, $row, $season, $standingList, $awardList){
+            $closedCount += $dbConnect->getEnvConecction()->transaction(function() use ($dbConnect, $gym, $row, $season, $standingList, $awardList){
                 $isClosed = self::allocDbTable($dbConnect)->where('id', $row->id)->whereNull('results')->update([
                     'results' => BaseHelper::jsonEncode(['standings' => $standingList, 'awards' => $awardList]),
                     'updated_at' => $dbConnect->toDbDate(BaseHelper::utcNow()),
                 ]) > 0;
                 if(!$isClosed){
-                    return;
+                    return 0;
                 }
                 self::addResultLogList($dbConnect, $gym, $season['number'], $standingList, $awardList);
                 if($gym->isRankingPublic()){
                     UserNotification::addSeasonClosedList($dbConnect, $gym, $season['number'], $standingList);
                 }
+                return 1;
             });
         }
+        return $closedCount;
     }
 
     private static function addResultLogList(DbConnector $dbConnect, Gym $gym, int $number, array $standingList, array $awardList): void{

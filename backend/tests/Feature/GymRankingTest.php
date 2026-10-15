@@ -50,6 +50,9 @@ class GymRankingTest extends TestCase
         $this->actingWithToken($outsiderToken)->getJson($this->rankingUrl())->assertForbidden();
         $this->actingWithToken($anaToken)->putJson($this->rankingUrl(), ['is_public' => true])->assertForbidden();
         $this->actingWithToken($coachToken)->putJson($this->rankingUrl(), ['is_public' => true])->assertOk()->assertJsonPath('data.isRankingPublic', true);
+        // mirar el ranking no cierra la temporada vencida: la cierra la regla programada
+        $this->actingWithToken($anaToken)->getJson($this->rankingUrl())->assertOk()->assertJsonPath('data.recap', null);
+        $this->artisan('rules:run', ['rule' => 'ranking'])->assertSuccessful();
 
         $ranking = $this->actingWithToken($anaToken)->getJson($this->rankingUrl())->assertOk();
         $ranking->assertJsonPath('data.current', null)
@@ -173,6 +176,8 @@ class GymRankingTest extends TestCase
         $this->assertNull(DB::table('gym_seasons')->where('number', 1)->value('results'));
         $this->actingWithToken($coachToken)->postJson($this->seasonUrl(), ['starts_on' => $this->dayAgo(0), 'ends_on' => $this->dayAgo(-6)])
             ->assertCreated()->assertJsonPath('data.number', 2);
+        $this->assertNull(DB::table('gym_seasons')->where('number', 1)->value('results'));
+        $this->artisan('rules:run', ['rule' => 'ranking'])->assertSuccessful();
         $this->assertNotNull(DB::table('gym_seasons')->where('number', 1)->value('results'));
         $this->assertSame(1, DB::table('user_notifications')->where('type', 70)->where('ref_id', $this->gymId)->where('data', 'like', '%"isOwner":true%')->count());
     }

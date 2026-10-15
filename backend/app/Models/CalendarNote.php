@@ -100,15 +100,20 @@ class CalendarNote extends BaseEntity {
         ];
     }
 
-    static function notifyDueReminders(DbConnector $dbConnect, int $userId): void{
+    static function queryDueReminderList(DbConnector $dbConnect): array{
         $lastDay = (new DateTimeImmutable(self::today()))->modify('+'.max(self::remindDayList).' days')->format('Y-m-d');
-        $query = self::allocSelectQuery($dbConnect, $userId)
+        $query = self::allocDbTable($dbConnect)
+        ->where('status', '!=', EntityStatus::statusIdDeleted)
         ->whereNotNull('remind_days')
-        ->whereBetween('note_on', [self::today(), $lastDay]);
-        $dueList = array_filter($dbConnect->fetchAll($query, [self::class, 'row2CalendarNote']),
-            fn(CalendarNote $note) => (bool)$note->queryDueDays());
+        ->whereBetween('note_on', [self::today(), $lastDay])
+        ->select();
+        return array_values(array_filter($dbConnect->fetchAll($query, [self::class, 'row2CalendarNote']),
+            fn(CalendarNote $note) => (bool)$note->queryDueDays()));
+    }
+
+    static function notifyReminderList(DbConnector $dbConnect, array $dueList): int{
         if(!$dueList){
-            return;
+            return 0;
         }
         $dbConnect->getEnvConecction()->transaction(function() use ($dbConnect, $dueList){
             foreach ($dueList as $note) {
@@ -118,6 +123,7 @@ class CalendarNote extends BaseEntity {
                 $note->writeToDb($dbConnect);
             }
         });
+        return count($dueList);
     }
 
     private function calendarNote2Row(DbAdapter $dbAdapter): stdClass{

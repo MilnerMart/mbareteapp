@@ -14,6 +14,7 @@ use App\Http\Controllers\PublicResourceController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RoutineController;
+use App\Http\Controllers\SystemRuleController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -133,6 +134,9 @@ Route::prefix('/v1')->group(function(){
             Route::put('/progress', [ConfigController::class, 'progressUpdate']);
             Route::get('/core', [ConfigController::class, 'coreIndex']);
             Route::put('/core', [ConfigController::class, 'coreUpdate']);
+            Route::get('/rules', [SystemRuleController::class, 'index']);
+            Route::put('/rules', [SystemRuleController::class, 'sync']);
+            Route::post('/rules/{ruleModelId}/run', [SystemRuleController::class, 'run']);
         });
 
         Route::prefix('permits')->group(function(){

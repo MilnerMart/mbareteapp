@@ -34,7 +34,6 @@ class GymRankingController extends Controller {
             }
         }
 
-        GymSeason::closeEnded($dbConnector, $gym);
         $latest = GymSeason::queryLatest($dbConnector, $gym->getEntityId());
         $current = $latest && !$latest['isClosed'] ? ['status' => GymSeason::status($latest)] + $latest : null;
         if($current && $current['status'] === GymSeason::statusActive){
@@ -70,6 +69,7 @@ class GymRankingController extends Controller {
         $gym = $this->queryManageableGymOrFail($request, $id);
         $validated = $request->validated();
         $season = GymSeason::startOrFail($dbConnector, $gym, $validated['starts_on'], $validated['ends_on']);
+        GymSeason::notifyStartIfDue($dbConnector, $gym);
         EntityLog::addNew($dbConnector, $request->user()->id, $gym, EntityLog::actionIdSeasonStarted, $gym->getName(), [
             'season' => $season['number'], 'startsOn' => $season['startsOn'], 'endsOn' => $season['endsOn'],
         ]);
@@ -81,6 +81,7 @@ class GymRankingController extends Controller {
         $gym = $this->queryManageableGymOrFail($request, $id);
         $validated = $request->validated();
         $season = GymSeason::updateDatesOrFail($dbConnector, $gym, $validated['starts_on'] ?? null, $validated['ends_on']);
+        GymSeason::notifyStartIfDue($dbConnector, $gym);
         EntityLog::addNew($dbConnector, $request->user()->id, $gym, EntityLog::actionIdSeasonUpdated, $gym->getName(), [
             'season' => $season['number'], 'startsOn' => $season['startsOn'], 'endsOn' => $season['endsOn'],
         ]);

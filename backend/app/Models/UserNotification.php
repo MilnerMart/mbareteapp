@@ -19,7 +19,7 @@ class UserNotification extends BaseEntity {
 
     private const myTable = DbSchema::tableUserNotifications;
 
-    const typeIdTicketReceived = 10, typeIdTicketResubmitted = 20, typeIdTicketResolved = 30, typeIdRoutineAssigned = 40, typeIdReminder = 50, typeIdAchievement = 60, typeIdSeasonClosed = 70;
+    const typeIdTicketReceived = 10, typeIdTicketResubmitted = 20, typeIdTicketResolved = 30, typeIdRoutineAssigned = 40, typeIdReminder = 50, typeIdAchievement = 60, typeIdSeasonClosed = 70, typeIdSeasonStarted = 80;
 
     const listLimit = 20;
 
@@ -31,6 +31,7 @@ class UserNotification extends BaseEntity {
         self::typeIdReminder => 'reminder',
         self::typeIdAchievement => 'achievement',
         self::typeIdSeasonClosed => 'season-closed',
+        self::typeIdSeasonStarted => 'season-started',
     ];
 
     private int $userId, $type;
@@ -126,6 +127,12 @@ class UserNotification extends BaseEntity {
                 $data + ['position' => $standing['points'] > 0 ? $standing['position'] : null]);
         }
         self::addNewList($dbConnect, [$gym->getOwnerId()], self::typeIdSeasonClosed, $gym->getEntityId(), $data + ['isOwner' => true]);
+    }
+
+    static function addSeasonStartedList(DbConnector $dbConnect, Gym $gym, array $season, array $userIdList): void{
+        self::addNewList($dbConnect, $userIdList, self::typeIdSeasonStarted, $gym->getEntityId(), [
+            'gymName' => $gym->getName(), 'season' => $season['number'], 'endsOn' => $season['endsOn'],
+        ]);
     }
 
     static function markSeasonClosedRead(DbConnector $dbConnect, int $userId, int $gymId): int{
