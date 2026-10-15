@@ -44,6 +44,7 @@ class GymRankingController extends Controller {
         $requestedNumber = $request->integer('season') ?: null;
         $recapNumber = in_array($requestedNumber, $closedNumberList, true) ? $requestedNumber : ($closedNumberList[0] ?? null);
         $recap = $recapNumber ? GymSeason::queryClosed($dbConnector, $gym->getEntityId(), $recapNumber) : null;
+        $previous = $recap ? GymSeason::queryClosed($dbConnector, $gym->getEntityId(), $recap['number'] - 1) : null;
         $isRecapUnseen = UserNotification::markSeasonClosedRead($dbConnector, $viewer->id, $gym->getEntityId()) > 0;
 
         $viewerContext = [
@@ -58,7 +59,7 @@ class GymRankingController extends Controller {
             'gym' => ['id' => $gym->getEntityId(), 'name' => $gym->getName(), 'isRankingPublic' => $gym->isRankingPublic()],
             'canManage' => $canManage,
             'current' => $current ? $this->buildSeasonModel($current, $current['status'], $userMap, $viewerContext) : null,
-            'recap' => $recap ? $this->buildSeasonModel($recap, GymSeason::statusEnded, $userMap, $viewerContext) : null,
+            'recap' => $recap ? $this->buildSeasonModel($recap, GymSeason::statusEnded, $userMap, $viewerContext, $previous) : null,
             'openRecap' => $recap !== null && ($requestedNumber === $recapNumber || $isRecapUnseen),
             'closedSeasonNumbers' => $closedNumberList,
         ]);
@@ -132,7 +133,7 @@ class GymRankingController extends Controller {
             ->mapWithKeys(fn(User $user) => [$user->id => $user->buildPublicApiModel() + ['gender' => $user->gender]])->all();
     }
 
-    private function buildSeasonModel(array $season, string $status, array $userMap, array $viewerContext): array {
+    private function buildSeasonModel(array $season, string $status, array $userMap, array $viewerContext, ?array $previous = null): array {
         $today = CarbonImmutable::parse(RoutineExerciseLog::today());
         $standingList = array_values(array_filter(array_map(
             fn(array $standing) => isset($userMap[$standing['userId']]) ? $standing + [
@@ -146,6 +147,7 @@ class GymRankingController extends Controller {
             $season['awards']
         )));
         $viewerStanding = collect($standingList)->firstWhere('userId', $viewerContext['id']);
+        $previousStanding = $previous ? collect($previous['standings'])->firstWhere('userId', $viewerContext['id']) : null;
 
         return [
             'number' => $season['number'],
@@ -157,8 +159,11 @@ class GymRankingController extends Controller {
             'daysToStart' => $status === GymSeason::statusScheduled ? (int)$today->diffInDays(CarbonImmutable::parse($season['startsOn'])) : 0,
             'standings' => $standingList,
             'awards' => $awardList,
+            'race' => array_values(array_filter($season['race'], fn(array $line) => isset($userMap[$line['userId']]))),
             'viewer' => [
                 'standing' => $viewerStanding,
+                'previous' => $viewerStanding && $previousStanding && $previousStanding['points'] > 0
+                    ? ['number' => $previous['number'], 'position' => $previousStanding['position']] : null,
                 'awardSlugs' => array_column(array_filter($awardList, fn(array $award) => $award['userId'] === $viewerContext['id']), 'slug'),
                 'reason' => match (true) {
                     $viewerStanding !== null => null,

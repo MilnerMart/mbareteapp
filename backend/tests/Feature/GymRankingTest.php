@@ -182,6 +182,51 @@ class GymRankingTest extends TestCase
         $this->assertSame(1, DB::table('user_notifications')->where('type', 70)->where('ref_id', $this->gymId)->where('data', 'like', '%"isOwner":true%')->count());
     }
 
+    public function test_closed_season_keeps_the_podium_race_and_the_viewer_previous_position(): void
+    {
+        [$coachToken, $coachId] = $this->approvedTrainer('coach@example.com');
+        $this->gymId = $this->createGym('Gym Carrera', $coachId);
+        DB::table('gym_entities')->where('id', $this->gymId)->update(['is_ranking_public' => true]);
+        $this->insertSeason(1, $this->dayAgo(40), $this->dayAgo(31));
+        $this->insertSeason(2, $this->dayAgo(20), $this->dayAgo(11));
+        $this->exerciseIdList = DB::table('exercises')->orderBy('id')->limit(2)->pluck('id')->all();
+        [$anaToken, $anaId] = $this->member('ana@example.com', true);
+        [$benToken, $benId] = $this->member('ben@example.com', true);
+        $coachRoutine = $this->createRoutine($coachToken, 'Rutina del coach');
+        foreach ([$anaId, $benId] as $studentId) {
+            $this->actingWithToken($coachToken)->postJson('/api/v1/routines/'.$coachRoutine.'/assign', ['user_id' => $studentId])->assertCreated();
+        }
+
+        // temporada 1: gana Ana; temporada 2: Ana arranca primera y Ben la pasa con su racha
+        foreach ([40, 39] as $daysAgo) {
+            $this->insertLog($anaId, $coachRoutine, $this->exerciseIdList[0], $daysAgo, 50);
+        }
+        $this->insertLog($benId, $coachRoutine, $this->exerciseIdList[0], 38, 50);
+        $this->insertLog($anaId, $coachRoutine, $this->exerciseIdList[0], 20, 50);
+        foreach ([19, 18, 17] as $daysAgo) {
+            $this->insertLog($benId, $coachRoutine, $this->exerciseIdList[0], $daysAgo, 50);
+        }
+        $this->artisan('rules:run', ['rule' => 'ranking'])->assertSuccessful();
+
+        $recap = $this->actingWithToken($benToken)->getJson($this->rankingUrl())->assertOk()
+            ->assertJsonPath('data.recap.number', 2)
+            ->assertJsonPath('data.recap.viewer.previous', ['number' => 1, 'position' => 2])
+            ->json('data.recap');
+        $this->assertSame([$benId, $anaId], array_column($recap['race'], 'userId'));
+        $this->assertSame([10, 10], array_map('count', array_column($recap['race'], 'points')));
+        $this->assertSame(array_column($recap['standings'], 'points'), array_map(fn(array $line) => end($line['points']), $recap['race']));
+        $this->assertSame(0, $recap['race'][0]['points'][0]);
+        $this->assertGreaterThan(0, $recap['race'][1]['points'][0]);
+        $this->assertGreaterThan($recap['race'][1]['points'][1], $recap['race'][0]['points'][2]);
+
+        $this->actingWithToken($anaToken)->getJson($this->rankingUrl())->assertOk()
+            ->assertJsonPath('data.recap.viewer.previous', ['number' => 1, 'position' => 1]);
+        $this->actingWithToken($anaToken)->getJson($this->rankingUrl().'?season=1')->assertOk()
+            ->assertJsonPath('data.recap.viewer.previous', null);
+        $this->actingWithToken($coachToken)->getJson($this->rankingUrl())->assertOk()
+            ->assertJsonPath('data.recap.viewer.previous', null);
+    }
+
     private function rankingUrl(): string
     {
         return '/api/v1/entities/gym/'.$this->gymId.'/ranking';

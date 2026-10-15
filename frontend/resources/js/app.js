@@ -266,3 +266,82 @@ document.addEventListener('submit', async (event) => {
         form.submit();
     }
 });
+
+// Desglose de fin de temporada por pasos: cada boton con data-season-step muestra ese panel del modal.
+const showSeasonStep = (recap, step) => {
+    recap.querySelectorAll('[data-season-panel]').forEach((panel) => {
+        panel.hidden = panel.dataset.seasonPanel !== step;
+    });
+    recap.querySelector('.modal-body').scrollTop = 0;
+};
+
+document.addEventListener('click', (event) => {
+    const stepButton = event.target.closest('[data-season-step]');
+    if (stepButton) {
+        const recap = stepButton.closest('.season-recap');
+        showSeasonStep(recap, stepButton.dataset.seasonStep);
+        recap.querySelector(`[data-season-panel="${stepButton.dataset.seasonStep}"] h2`)?.focus();
+        return;
+    }
+
+    const moreButton = event.target.closest('[data-season-more]');
+    if (moreButton) {
+        moreButton.closest('[data-season-panel]').querySelectorAll('.ranking-row[hidden]').forEach((row) => {
+            row.hidden = false;
+        });
+        moreButton.remove();
+    }
+});
+
+// al volver a abrir el desglose arranca desde el primer paso
+document.addEventListener('show.bs.modal', (event) => {
+    const recap = event.target.querySelector('.season-recap');
+    if (recap) {
+        showSeasonStep(recap, recap.querySelector('[data-season-panel]').dataset.seasonPanel);
+    }
+});
+
+// Carrera por la punta: al pasar (o tocar) un dia muestra cuanta fuerza llevaba cada uno.
+const showRacePoint = (hit) => {
+    const race = hit.closest('[data-race]');
+    const point = JSON.parse(race.dataset.race)[hit.dataset.racePoint];
+    const cross = race.querySelector('.season-race-cross');
+    cross.setAttribute('x1', point.x);
+    cross.setAttribute('x2', point.x);
+    cross.classList.add('is-visible');
+
+    const title = document.createElement('strong');
+    title.textContent = point.dayLabel;
+    const tip = race.querySelector('.season-race-tip');
+    tip.replaceChildren(title, ...point.rowList.map((row) => {
+        const line = document.createElement('span');
+        const swatch = document.createElement('i');
+        swatch.className = `season-race-swatch ${row.medalClass}`;
+        const value = document.createElement('b');
+        value.textContent = row.value;
+        line.append(swatch, row.name, value);
+        return line;
+    }));
+    tip.classList.toggle('is-left', point.xPercent > 50);
+    tip.style.left = `${point.xPercent}%`;
+    tip.hidden = false;
+};
+
+const hideRacePoint = (plot) => {
+    plot.querySelector('.season-race-cross').classList.remove('is-visible');
+    plot.querySelector('.season-race-tip').hidden = true;
+};
+
+document.addEventListener('pointerover', (event) => {
+    const hit = event.target.closest?.('[data-race-point]');
+    if (hit) {
+        showRacePoint(hit);
+    }
+});
+
+document.addEventListener('pointerout', (event) => {
+    const plot = event.target.closest?.('.season-race-plot');
+    if (plot && !plot.contains(event.relatedTarget)) {
+        hideRacePoint(plot);
+    }
+});

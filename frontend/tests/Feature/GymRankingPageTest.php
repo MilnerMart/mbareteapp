@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Support\ActivityLabels;
 use App\Support\NotificationLabels;
+use App\Support\RankingLabels;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -57,6 +58,52 @@ class GymRankingPageTest extends TestCase
             ->assertDontSee('Guardar fechas');
 
         $this->assertContains(['GET', '/api/v1/entities/gym/2/ranking', ['season' => 1]], $this->requestList);
+    }
+
+    public function test_the_recap_goes_step_by_step_from_the_celebration_to_the_next_season(): void
+    {
+        $page = $this->withSession(self::studentSession)->get('/my-gym?member=2&temporada=1')->assertOk();
+        // el festejo se ve primero y los demas pasos esperan ocultos
+        $this->assertMatchesRegularExpression('/data-season-panel="festejo">/', $page->getContent());
+        $this->assertSame(4, preg_match_all('/data-season-panel="(inicio|podio|premios|resumen)"\s+hidden/', $page->getContent()));
+        $page
+            ->assertSeeInOrder(['data-season-panel="festejo"', '¡Eres la Campeona!', 'Terminaste primera entre 3 alumnos con 340 de fuerza.',
+                'dias entrenados', '12', 'mejor racha', '5 dias', 'kg levantados', '12.000', 'Ademas ganaste', 'Fuerza sobrehumana', 'Ver como fue la temporada'], false)
+            ->assertSeeInOrder(['data-season-panel="inicio"', '¡Termino la temporada 1!', 'Del 10/09 al 09/10/2026 · 30 dias',
+                'Asi se peleo la cima', 'La cima cambio de manos 1 vez', 'Ana', 'Ben', 'Dia 14: pasa al frente',
+                'alumnos compitieron', '3', 'entrenamientos', '16', 'Ver el podio', 'Ir directo a mi resumen'], false)
+            ->assertSeeInOrder(['data-season-panel="podio"', 'Tabla final', '3 alumnos', 'Caro Gomez', 'Ver los premios'], false)
+            ->assertSeeInOrder(['data-season-panel="premios"', '¡Es tuyo!', 'Fuerza sobrehumana', 'Gran remontada', 'Ver como me fue'], false)
+            ->assertSeeInOrder(['data-season-panel="resumen"', 'Tu temporada 1', 'Ganaste un premio', 'Fuerza sobrehumana', 'Tus numeros',
+                'Temporada 2 · En curso', 'Ya estas sumando fuerza: cada entrenamiento cuenta.', 'Volver al ranking'], false)
+            ->assertSee('Dia 14 · 23/09', false)
+            ->assertSee('clip-path="url(#seasonRaceAvatar0)"', false)
+            ->assertDontSee('Te faltaron');
+    }
+
+    public function test_a_student_off_the_podium_sees_how_far_it_was_and_how_they_did_against_the_last_season(): void
+    {
+        $user = fn(int $id) => ['id' => $id, 'name' => 'Alumno'.$id, 'last_name' => 'Test', 'profile_image_url' => null, 'gender' => null];
+        $standingList = array_map(fn(int $position) => ['userId' => $position, 'position' => $position, 'points' => 1200 - 50 * $position, 'trainingDays' => 10,
+            'bestStreak' => 3, 'kilos' => 1000, 'minutes' => 300, 'sessions' => 10, 'completedSessions' => 8, 'completionPercent' => 80, 'improvement' => 0,
+            'isPodium' => $position <= 3, 'user' => $user($position)], range(1, 11));
+        $season = ['number' => 3, 'startsOn' => '2026-09-15', 'endsOn' => '2026-10-14', 'status' => 'ended', 'days' => 30, 'daysLeft' => 0, 'daysToStart' => 0,
+            'standings' => $standingList, 'awards' => [], 'race' => [],
+            'viewer' => ['standing' => $standingList[9], 'awardSlugs' => [], 'reason' => null, 'previous' => ['number' => 2, 'position' => 12]]];
+        $ranking = ['gym' => ['id' => 2, 'name' => 'Coach Gym', 'isRankingPublic' => true], 'canManage' => false, 'current' => null, 'recap' => $season,
+            'openRecap' => true, 'closedSeasonNumbers' => [3, 2]];
+
+        $recap = RankingLabels::buildPanel($ranking, fn(int $number) => '/temporada/'.$number)['recap'];
+
+        $this->assertNull($recap['celebration']);
+        $this->assertNull($recap['race']);
+        $this->assertSame(['Te faltaron 350 de fuerza para subir al podio.', 'Podio: 1.050', 60.9, 91.3],
+            [$recap['viewer']['gap']['text'], $recap['viewer']['gap']['markerLabel'], $recap['viewer']['gap']['fillPercent'], $recap['viewer']['gap']['markerPercent']]);
+        $this->assertSame(['Subiste 2 puestos: en la temporada 2 fuiste #12', 'is-up'], [$recap['viewer']['previous']['text'], $recap['viewer']['previous']['toneClass']]);
+        $this->assertSame([4, 5, 6, 7, 8, 9, 10, 11], array_column($recap['tableList'], 'position'));
+        $this->assertSame([false, false, false, false, false, false, false, true], array_column($recap['tableList'], 'isCollapsed'));
+        $this->assertSame('Ver los 11 alumnos', $recap['moreRowsLabel']);
+        $this->assertSame(['El entrenador todavia no inicio una nueva temporada.', 'Ver como me fue'], [$recap['nextSeason']['text'], $recap['summaryButtonLabel']]);
     }
 
     public function test_hidden_ranking_is_not_requested_for_the_student(): void
@@ -196,7 +243,11 @@ class GymRankingPageTest extends TestCase
                 default => null,
             },
             'recap' => ['number' => 1, 'startsOn' => '2026-09-10', 'endsOn' => '2026-10-09', 'status' => 'ended', 'days' => 30, 'daysLeft' => 0, 'daysToStart' => 0,
-                'standings' => $standingList, 'viewer' => $viewer, 'awards' => [
+                'standings' => $standingList, 'viewer' => $viewer + ['previous' => null], 'race' => [
+                    // Ben arranca adelante y Ana lo pasa el dia 14
+                    ['userId' => 1, 'points' => array_map(fn(int $day) => $day < 5 ? 0 : min(340, 14 * ($day - 4)), range(0, 29))],
+                    ['userId' => 2, 'points' => array_map(fn(int $day) => min(120, 12 * ($day + 1)), range(0, 29))],
+                ], 'awards' => [
                     ['slug' => 'strength', 'userId' => 1, 'value' => 12000, 'user' => $ana],
                     ['slug' => 'comeback', 'userId' => 2, 'value' => 40, 'user' => $ben],
                 ]],

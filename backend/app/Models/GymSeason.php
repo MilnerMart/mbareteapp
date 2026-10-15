@@ -110,9 +110,13 @@ class GymSeason {
     }
 
     static function buildStandingList(DbConnector $dbConnect, Gym $gym, string $startsOn, string $endsOn): array{
+        return self::buildStandingData($dbConnect, $gym, $startsOn, $endsOn)[0];
+    }
+
+    private static function buildStandingData(DbConnector $dbConnect, Gym $gym, string $startsOn, string $endsOn): array{
         $participantIdList = self::queryParticipantIdList($dbConnect, $gym);
         if(!$participantIdList){
-            return [];
+            return [[], []];
         }
         $ownerId = $gym->getOwnerId();
         $rowList = RoutineExerciseLog::allocDbTable($dbConnect, 'l')
@@ -145,10 +149,12 @@ class GymSeason {
         $seasonDays = (int)CarbonImmutable::parse($startsOn)->diffInDays(CarbonImmutable::parse($endsOn)) + 1;
         $secondHalfOn = CarbonImmutable::parse($startsOn)->addDays(intdiv($seasonDays, 2))->toDateString();
         $standingList = [];
+        $pointsMapByUser = [];
         foreach ($participantIdList as $userId) {
             $dayMap = $dayMapByUser[$userId] ?? [];
             ksort($dayMap);
             $pointsMap = UserProgress::buildDayPointsMap($settings, $dayMap);
+            $pointsMapByUser[$userId] = $pointsMap;
             $firstHalfPoints = array_sum(array_filter($pointsMap, fn(string $day) => $day < $secondHalfOn, ARRAY_FILTER_USE_KEY));
             $sessionMap = $sessionMapByUser[$userId] ?? [];
             $completedSessions = count(array_filter($sessionMap, function(array $exerciseSet, string $sessionKey) use ($exerciseCountMap){
@@ -175,7 +181,26 @@ class GymSeason {
 
         usort($standingList, fn(array $a, array $b) => [$b['points'], $b['trainingDays'], $b['kilos'], $a['userId']]
             <=> [$a['points'], $a['trainingDays'], $a['kilos'], $b['userId']]);
-        return array_map(fn(array $standing, int $index) => $standing + ['position' => $index + 1], $standingList, array_keys($standingList));
+        return [array_map(fn(array $standing, int $index) => $standing + ['position' => $index + 1], $standingList, array_keys($standingList)), $pointsMapByUser];
+    }
+
+    static function buildRace(array $standingList, array $pointsMapByUser, string $startsOn, string $endsOn): array{
+        $dayList = [];
+        for ($day = CarbonImmutable::parse($startsOn); $day->toDateString() <= $endsOn; $day = $day->addDay()) {
+            $dayList[] = $day->toDateString();
+        }
+        $race = [];
+        foreach (array_filter($standingList, fn(array $standing) => self::isOnPodium($standing)) as $standing) {
+            $pointsMap = $pointsMapByUser[$standing['userId']] ?? [];
+            $total = 0;
+            $pointList = [];
+            foreach ($dayList as $day) {
+                $total += $pointsMap[$day] ?? 0;
+                $pointList[] = $total;
+            }
+            $race[] = ['userId' => $standing['userId'], 'points' => $pointList];
+        }
+        return $race;
     }
 
     static function buildAwardList(array $standingList): array{
@@ -234,11 +259,12 @@ class GymSeason {
         $closedCount = 0;
         foreach ($rowList as $row) {
             $season = self::row2Season($row);
-            $standingList = self::buildStandingList($dbConnect, $gym, $season['startsOn'], $season['endsOn']);
+            [$standingList, $pointsMapByUser] = self::buildStandingData($dbConnect, $gym, $season['startsOn'], $season['endsOn']);
             $awardList = self::buildAwardList($standingList);
-            $closedCount += $dbConnect->getEnvConecction()->transaction(function() use ($dbConnect, $gym, $row, $season, $standingList, $awardList){
+            $race = self::buildRace($standingList, $pointsMapByUser, $season['startsOn'], $season['endsOn']);
+            $closedCount += $dbConnect->getEnvConecction()->transaction(function() use ($dbConnect, $gym, $row, $season, $standingList, $awardList, $race){
                 $isClosed = self::allocDbTable($dbConnect)->where('id', $row->id)->whereNull('results')->update([
-                    'results' => BaseHelper::jsonEncode(['standings' => $standingList, 'awards' => $awardList]),
+                    'results' => BaseHelper::jsonEncode(['standings' => $standingList, 'awards' => $awardList, 'race' => $race]),
                     'updated_at' => $dbConnect->toDbDate(BaseHelper::utcNow()),
                 ]) > 0;
                 if(!$isClosed){
@@ -296,6 +322,7 @@ class GymSeason {
             'isClosed' => $results !== null,
             'standings' => $results['standings'] ?? [],
             'awards' => $results['awards'] ?? [],
+            'race' => $results['race'] ?? [],
         ];
     }
 
