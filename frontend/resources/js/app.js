@@ -24,10 +24,11 @@ const buildConfirmContent = (text, ...extraNodes) => {
 
 // Formularios con data-confirm-delete: piden escribir "eliminar" antes de enviarse (lo que no tiene vuelta atras
 // o afecta a otra persona). data-confirm-button cambia el texto del boton (ej. "Quitar").
+// Con data-confirm-word="confirmar" piden escribir esa palabra para cambios que afectan a otros sin borrar nada.
 const CONFIRM_DELETE_WORD = 'eliminar';
 
 document.addEventListener('submit', async (event) => {
-    const form = event.target.closest('form[data-confirm-delete]');
+    const form = event.target.closest('form[data-confirm-delete], form[data-confirm-word]');
 
     if (!form || form.dataset.confirmed === 'true') {
         return;
@@ -35,21 +36,23 @@ document.addEventListener('submit', async (event) => {
 
     event.preventDefault();
 
+    const isDelete = 'confirmDelete' in form.dataset;
+    const confirmWord = form.dataset.confirmWord || CONFIRM_DELETE_WORD;
     const result = await Swal.fire({
         icon: 'warning',
-        title: form.dataset.confirmTitle || 'Confirmar eliminacion',
+        title: form.dataset.confirmTitle || (isDelete ? 'Confirmar eliminacion' : 'Confirmar'),
         html: buildConfirmContent(form.dataset.confirmText, document.createElement('br'), 'Escribi ',
-            Object.assign(document.createElement('b'), { textContent: CONFIRM_DELETE_WORD }), ' para confirmar.'),
+            Object.assign(document.createElement('b'), { textContent: confirmWord }), ' para confirmar.'),
         input: 'text',
-        inputPlaceholder: CONFIRM_DELETE_WORD,
+        inputPlaceholder: confirmWord,
         showCancelButton: true,
-        confirmButtonText: form.dataset.confirmButton || 'Eliminar',
+        confirmButtonText: form.dataset.confirmButton || (isDelete ? 'Eliminar' : 'Confirmar'),
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#780000',
+        confirmButtonColor: isDelete ? '#780000' : '#c1121f',
         focusCancel: true,
         inputValidator: (value) => {
-            if (value.trim().toLowerCase() !== CONFIRM_DELETE_WORD) {
-                return `Escribi "${CONFIRM_DELETE_WORD}" para confirmar.`;
+            if (value.trim().toLowerCase() !== confirmWord) {
+                return `Escribi "${confirmWord}" para confirmar.`;
             }
         },
     });
@@ -156,6 +159,66 @@ document.querySelectorAll('[data-toggle-fields]').forEach(syncToggleFields);
 document.addEventListener('change', (event) => {
     if (event.target.matches('[data-toggle-fields]')) {
         syncToggleFields(event.target);
+    }
+});
+
+// Botones con data-date-preset: ponen la fecha de fin (data-preset-end) contando desde la de inicio (data-preset-start)
+// del mismo formulario, con data-preset-days o data-preset-months. Se apagan si el fin quedaria antes del minimo permitido.
+const parseLocalDate = (value) => {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
+
+const formatLocalDate = (date) => [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+].join('-');
+
+const buildPresetEndDate = (button, startValue) => {
+    const endDate = parseLocalDate(startValue);
+    endDate.setMonth(endDate.getMonth() + Number(button.dataset.presetMonths || 0));
+    endDate.setDate(endDate.getDate() + Number(button.dataset.presetDays || 0) - 1);
+    return formatLocalDate(endDate);
+};
+
+const syncDatePresets = (form) => {
+    const startInput = form.querySelector('[data-preset-start]');
+    const endInput = form.querySelector('[data-preset-end]');
+
+    if (!startInput || !endInput) {
+        return;
+    }
+
+    form.querySelectorAll('[data-date-preset]').forEach((button) => {
+        const endValue = startInput.value ? buildPresetEndDate(button, startInput.value) : null;
+        button.disabled = !endValue || (endInput.min !== '' && endValue < endInput.min);
+        button.classList.toggle('is-active', endValue === endInput.value);
+    });
+};
+
+document.querySelectorAll('form').forEach((form) => {
+    if (form.querySelector('[data-date-preset]')) {
+        syncDatePresets(form);
+    }
+});
+
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-date-preset]');
+    const form = button?.closest('form');
+    const startInput = form?.querySelector('[data-preset-start]');
+
+    if (!startInput?.value) {
+        return;
+    }
+
+    form.querySelector('[data-preset-end]').value = buildPresetEndDate(button, startInput.value);
+    syncDatePresets(form);
+});
+
+document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-preset-start], [data-preset-end]')) {
+        syncDatePresets(event.target.closest('form'));
     }
 });
 

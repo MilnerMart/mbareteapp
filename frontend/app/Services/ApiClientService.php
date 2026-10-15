@@ -279,6 +279,22 @@ class ApiClientService
         return $this->put('/me/gyms/'.$id.'/visibility', ['is_public' => $isPublic]);
     }
 
+    public function getGymRanking(int $id, ?int $season = null){
+        return $this->get('/entities/gym/'.$id.'/ranking', $season ? ['season' => $season] : []);
+    }
+
+    public function updateGymRankingVisibility(int $id, bool $isPublic){
+        return $this->put('/entities/gym/'.$id.'/ranking', ['is_public' => $isPublic]);
+    }
+
+    public function startGymSeason(int $id, array $params){
+        return $this->post('/entities/gym/'.$id.'/seasons', $params);
+    }
+
+    public function updateGymSeason(int $id, array $params){
+        return $this->put('/entities/gym/'.$id.'/seasons/current', $params);
+    }
+
     public function getRoutines(){
         return $this->get('/routines');
     }

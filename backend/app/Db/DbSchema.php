@@ -26,5 +26,6 @@ class DbSchema{
     tableUserAchievements = 'user_achievements',
     tableAppSettings = 'app_settings',
     tableProgressEntries = 'progress_entries',
+    tableGymSeasons = 'gym_seasons',
     tableUsers = 'users';
 }

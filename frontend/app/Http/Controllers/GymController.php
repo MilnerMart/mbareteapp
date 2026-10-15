@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
 use App\Support\AuthPermits;
+use App\Support\NotificationInbox;
+use App\Support\RankingLabels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -11,6 +13,12 @@ use Illuminate\View\View;
 class GymController extends Controller
 {
     private const gymLimitMessage = 'Por ahora cada entrenador puede tener un solo gimnasio.';
+
+    private const seasonDateMessages = [
+        'starts_on.required' => 'Elige cuando empieza la temporada.',
+        'ends_on.required' => 'Elige cuando termina la temporada.',
+        'ends_on.after_or_equal' => 'La fecha de fin no puede ser anterior a la de inicio.',
+    ];
 
     private ApiClientService $apiClient;
 
@@ -51,6 +59,10 @@ class GymController extends Controller
             fn(array $ticket) => ($ticket['type'] ?? null) === 'gym-join' && ($ticket['state'] ?? null) === 'pending')));
         // solo quien esta unicamente en el gimnasio base y no espera respuesta de otro puede pedir unirse
         $data['canJoinGym'] = !$memberData['memberGym'] && !$memberData['hasOwnGym'] && !$data['pendingJoinList'];
+        $memberGymId = $memberData['memberGym']['id'] ?? null;
+        $data['ranking'] = $memberGymId && ($memberData['memberGym']['isRankingPublic'] ?? false)
+            ? $this->buildRanking($request, $memberGymId, fn(int $season) => route('gym.member', ['member' => $memberGymId, 'temporada' => $season]))
+            : null;
         $data['isJoinFormOpen'] = (bool)session('errors')?->has('gym_code');
         return $this->renderView('gyms.member', compact('data'));
     }
@@ -155,7 +167,66 @@ class GymController extends Controller
         return AuthPermits::isAdmin() || !collect($managedGyms)->contains(fn(array $gym) => (int)($gym['ownerId'] ?? 0) === $userId);
     }
 
-    public function show(int $id): RedirectResponse|View{
+    private function buildRanking(Request $request, int $gymId, callable $seasonUrl): ?array{
+        $ranking = $this->apiClient->getGymRanking($gymId, $request->integer('temporada') ?: null);
+        if(!$ranking){
+            return null;
+        }
+        // al mostrar el desglose el backend marca leido el aviso de fin de temporada
+        if($ranking['openRecap'] ?? false){
+            NotificationInbox::forget();
+        }
+        return RankingLabels::buildPanel($ranking, $seasonUrl);
+    }
+
+    public function updateRankingVisibility(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'is_public' => ['required', 'boolean'],
+        ]);
+
+        $response = $this->apiClient->updateGymRankingVisibility($id, (bool) $validated['is_public']);
+
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['is_public' => $this->apiErrorMessage($response, 'No pudimos guardar el ranking.')]);
+        }
+
+        return back()->with('gym_saved', $validated['is_public']
+            ? 'Tus alumnos ya pueden ver el ranking.'
+            : 'El ranking quedo oculto para tus alumnos.');
+    }
+
+    public function startSeason(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'starts_on' => ['required', 'date_format:Y-m-d'],
+            'ends_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:starts_on'],
+        ], self::seasonDateMessages);
+
+        $response = $this->apiClient->startGymSeason($id, $validated);
+
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['season' => $this->apiErrorMessage($response, 'No pudimos iniciar la temporada.')])->withInput();
+        }
+
+        return back()->with('gym_saved', 'Temporada '.$response['data']['number'].' iniciada.');
+    }
+
+    // si la temporada ya empezo el inicio llega deshabilitado y solo se cambia el fin
+    public function updateSeason(Request $request, int $id): RedirectResponse{
+        $validated = $request->validate([
+            'starts_on' => ['nullable', 'date_format:Y-m-d'],
+            'ends_on' => array_merge(['required', 'date_format:Y-m-d'], $request->filled('starts_on') ? ['after_or_equal:starts_on'] : []),
+        ], self::seasonDateMessages);
+
+        $response = $this->apiClient->updateGymSeason($id, array_filter($validated));
+
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['season' => $this->apiErrorMessage($response, 'No pudimos cambiar las fechas.')])->withInput();
+        }
+
+        return back()->with('gym_saved', 'Fechas de la temporada '.$response['data']['number'].' actualizadas.');
+    }
+
+    public function show(Request $request, int $id): RedirectResponse|View{
         $gym = $this->apiClient->getGym($id);
         if(!$gym){
             return redirect()->route('gym.index');
@@ -163,6 +234,7 @@ class GymController extends Controller
 
         $data['gym'] = $gym;
         $data['students'] = $this->apiClient->getGymUsers($id) ?? [];
+        $data['ranking'] = $this->buildRanking($request, $id, fn(int $season) => route('gym.show', [$id, 'temporada' => $season]));
         $data['isAdmin'] = AuthPermits::isAdmin();
         $data['canAssignRoutines'] = AuthPermits::canAssignRoutines();
         // el entrenador asigna sus propias rutinas, el admin cualquiera

@@ -286,9 +286,9 @@
 }
 
 .calendar-note-form {
-    border-top: 1px solid #2a2a2a;
-    margin-top: 1.25rem;
-    padding-top: .25rem;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 1.25rem;
+    padding-bottom: .5rem;
 }
 
 .calendar-note-form .form-label {

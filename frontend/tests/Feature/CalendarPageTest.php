@@ -50,7 +50,7 @@ class CalendarPageTest extends TestCase
             ->assertSee('Octubre 2026')
             ->assertSee('Martes 13 de octubre')
             ->assertSee('is-completed', false)
-            ->assertSeeInOrder(['Anotaciones', 'Medir cintura', 'En ayunas', 'Te avisamos 2 dias antes y el mismo dia',
+            ->assertSeeInOrder(['Martes 13 de octubre', 'Nueva anotacion · Martes 13 de octubre', 'Agregar', 'Anotaciones', 'Medir cintura', 'En ayunas', 'Te avisamos 2 dias antes y el mismo dia',
                 'Entrenamiento', 'Completaste la rutina «Fuerza»',
                 'Actividad', 'Creaste la rutina «Fuerza»', '08:10', 'Subiste al rango Principiante'])
             ->assertSee(route('calendar.index', ['month' => '2026-09', 'day' => '2026-09-01']))

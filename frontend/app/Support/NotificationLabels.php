@@ -67,6 +67,15 @@ class NotificationLabels
                 '¡Nuevo logro! '.AchievementLabels::title($data['achievement'] ?? null, $data['gender'] ?? null),
                 [AchievementLabels::message($data['achievement'] ?? null, $data['gender'] ?? null)],
             ],
+            'season-closed' => [
+                'fa-solid fa-ranking-star',
+                'Termino la temporada '.($data['season'] ?? '').' de '.($data['gymName'] ?? 'tu gimnasio'),
+                [match (true) {
+                    isset($data['position']) => 'Quedaste en el puesto '.$data['position'].'. Mira tus premios',
+                    $data['isOwner'] ?? false => 'Mira el podio y los premios de tus alumnos',
+                    default => 'Mira el podio y los premios',
+                }],
+            ],
             default => ['fa-solid fa-bell', 'Tienes un aviso nuevo', []],
         };
 
@@ -108,6 +117,9 @@ class NotificationLabels
                 ? CalendarMonth::dayUrl(CarbonImmutable::parse($notification['data']['noteOn'], CalendarMonth::timezone))
                 : route('calendar.index'),
             'achievement' => route('user.profile', ['id' => session('auth_user.id'), 'logros' => 1]),
+            'season-closed' => !$refId ? null : (($notification['data']['isOwner'] ?? false)
+                ? route('gym.show', [$refId, 'temporada' => $notification['data']['season'] ?? null])
+                : route('gym.member', ['member' => $refId, 'temporada' => $notification['data']['season'] ?? null])),
             default => null,
         };
     }

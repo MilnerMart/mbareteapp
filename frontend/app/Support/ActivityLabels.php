@@ -55,6 +55,9 @@ class ActivityLabels
         'profile-updated' => ['Actualizo su perfil', 'Actualizaste tu perfil'],
         'photo-changed' => ['Cambio su foto de perfil', 'Cambiaste tu foto de perfil'],
         'unlocked' => ['Desbloqueo el logro', 'Desbloqueaste el logro'],
+        'season-started' => ['Inicio', 'Iniciaste'],
+        'season-dates' => ['Cambio las fechas de', 'Cambiaste las fechas de'],
+        'season-finished' => ['Termino', 'Terminaste'],
         'pending' => ['Quedo pendiente de aprobacion', 'Quedo pendiente de aprobacion'],
     ];
 
@@ -107,11 +110,18 @@ class ActivityLabels
             $action === 'visibility-changed' => ($data['isPublic'] ?? false)
                 ? self::verb('shown', $isOwn).' en la lista de alumnos de '.$subject
                 : self::verb('hidden', $isOwn).' de la lista de alumnos de '.$subject,
+            $action === 'season-started' => self::verb('season-started', $isOwn).' '.self::seasonText($data).self::seasonRangeText($data),
+            $action === 'season-updated' => self::verb('season-dates', $isOwn).' '.self::seasonText($data).self::seasonRangeText($data),
+            $action === 'season-result' => ($data['isOwner'] ?? false)
+                ? 'Termino '.self::seasonText($data).' con '.($data['participantCount'] ?? 0).' participantes'
+                : self::verb('season-finished', $isOwn).' en el puesto '.($data['position'] ?? '-').' '.self::seasonText($data),
             default => self::verb(isset(self::verbMap[$action]) ? $action : 'updated', $isOwn).' '.$subject,
         };
 
         $note = match (true) {
             ($data['pendingReview'] ?? false) => self::verb('pending', $isOwn),
+            $action === 'season-result' && isset($data['points']) => RankingLabels::formatScore((int)$data['points'])
+                .(empty($data['awards']) ? '' : ' · Premios: '.implode(', ', array_map(fn(string $slug) => RankingLabels::awardTitle($slug), $data['awards']))),
             isset($data['note']) => '“'.$data['note'].'”',
             default => null,
         };
@@ -120,13 +130,28 @@ class ActivityLabels
             'icon' => match ($action) {
                 'rank-up' => 'fa-solid fa-medal',
                 'achievement' => AchievementLabels::icon($data['achievement'] ?? null, $data['gender'] ?? null),
+                'season-started' => 'fa-solid fa-flag-checkered',
+                'season-updated' => 'fa-solid fa-calendar-days',
+                'season-result' => ($data['position'] ?? 99) <= 3 ? 'fa-solid fa-medal' : 'fa-solid fa-ranking-star',
                 default => self::modelIconMap[$model] ?? 'fa-solid fa-clock-rotate-left',
             },
             'text' => $text,
             'note' => $note,
             'isDelete' => in_array($action, ['deleted', 'rejected'], true),
-            'isHighlight' => in_array($action, ['rank-up', 'achievement'], true),
+            'isHighlight' => in_array($action, ['rank-up', 'achievement', 'season-result'], true),
         ];
+    }
+
+    private static function seasonText(array $data): string
+    {
+        return 'la temporada '.($data['season'] ?? '').' del gimnasio «'.($data['name'] ?? '').'»';
+    }
+
+    private static function seasonRangeText(array $data): string
+    {
+        return isset($data['startsOn'], $data['endsOn'])
+            ? ' (del '.Carbon::parse($data['startsOn'])->format('d/m').' al '.Carbon::parse($data['endsOn'])->format('d/m/Y').')'
+            : '';
     }
 
     private static function userText(?string $action, array $data, bool $isOwn): string

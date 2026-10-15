@@ -1,0 +1,633 @@
+.ranking {
+    background: linear-gradient(145deg, #181818, #101010);
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    padding: 1.25rem;
+}
+
+.ranking-header {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.ranking-title {
+    color: #ffffff;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.ranking-dates {
+    color: #8f8f8f;
+    font-size: .88rem;
+}
+
+.ranking-dates strong {
+    color: #ffc145;
+}
+
+.ranking-recap-btn {
+    align-items: center;
+    background: rgba(255, 193, 69, .12);
+    border: 1px solid rgba(255, 193, 69, .5);
+    color: #ffc145;
+    display: inline-flex;
+    font-weight: 700;
+    gap: .5rem;
+}
+
+.ranking-recap-btn:hover,
+.ranking-recap-btn:focus-visible {
+    background: rgba(255, 193, 69, .22);
+    border-color: #ffc145;
+    color: #ffffff;
+}
+
+.ranking-visibility-form {
+    background: #141414;
+    border: 1px solid #242424;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+}
+
+.ranking-visibility-form label {
+    color: #e5e5e5;
+    font-weight: 600;
+}
+
+.ranking-visibility-form small {
+    color: #8f8f8f;
+    display: block;
+    margin-top: .25rem;
+}
+
+.ranking-empty,
+.ranking-viewer-note {
+    color: #8f8f8f;
+    margin: .5rem 0 1rem;
+}
+
+.ranking-viewer-note i {
+    color: #ff4d5a;
+}
+
+/* podio: el primero al medio y mas alto */
+.ranking-podium {
+    align-items: flex-end;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+    margin: .5rem auto 1.25rem;
+    max-width: 560px;
+    padding: 0;
+}
+
+.ranking-podium-place {
+    --medal: #cd7f32;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+    text-align: center;
+}
+
+.ranking-podium-place.is-gold {
+    --medal: #ffc145;
+}
+
+.ranking-podium-place.is-silver {
+    --medal: #c9d1d9;
+}
+
+.ranking-podium-avatar {
+    position: relative;
+}
+
+.ranking-podium-avatar img {
+    border: 3px solid var(--medal);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, .04);
+    height: 4.2rem;
+    object-fit: cover;
+    width: 4.2rem;
+}
+
+.ranking-podium-place.is-gold .ranking-podium-avatar img {
+    box-shadow: 0 0 18px rgba(255, 193, 69, .35);
+    height: 5.2rem;
+    width: 5.2rem;
+}
+
+.ranking-podium-medal {
+    align-items: center;
+    background: var(--medal);
+    border: 2px solid #101010;
+    border-radius: 50%;
+    bottom: -.3rem;
+    color: #101010;
+    display: inline-flex;
+    font-size: .8rem;
+    font-weight: 800;
+    height: 1.6rem;
+    justify-content: center;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+    width: 1.6rem;
+}
+
+.ranking-podium-name {
+    color: #ffffff;
+    margin-top: .45rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ranking-podium-label {
+    color: var(--medal);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.ranking-podium-points {
+    color: #a8a8a8;
+    font-size: .82rem;
+}
+
+.ranking-podium-step {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--medal) 35%, transparent), transparent);
+    border-radius: 6px 6px 0 0;
+    border-top: 2px solid var(--medal);
+    display: block;
+    height: 2.2rem;
+    margin-top: .4rem;
+    width: 100%;
+}
+
+.ranking-podium-place.is-silver .ranking-podium-step {
+    height: 3.4rem;
+}
+
+.ranking-podium-place.is-gold .ranking-podium-step {
+    height: 4.6rem;
+}
+
+.ranking-podium-place.is-viewer .ranking-podium-name {
+    color: #ffc145;
+}
+
+/* tu temporada */
+.ranking-viewer {
+    background: #141414;
+    border: 1px solid rgba(193, 18, 31, .45);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+}
+
+.ranking-viewer-header {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: .75rem;
+}
+
+.ranking-viewer-header h3 {
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.ranking-viewer-score {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+}
+
+.ranking-viewer-score strong {
+    color: #ff4d5a;
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.ranking-viewer-score span {
+    color: #a8a8a8;
+    font-size: .8rem;
+}
+
+.ranking-viewer-stats {
+    display: grid;
+    gap: .5rem;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    margin: 0;
+}
+
+.ranking-viewer-stats div {
+    background: #1b1b1b;
+    border-radius: 6px;
+    padding: .5rem .65rem;
+}
+
+.ranking-viewer-stats dt {
+    color: #8f8f8f;
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+.ranking-viewer-stats dd {
+    color: #ffffff;
+    font-weight: 700;
+    margin: 0;
+}
+
+.ranking-viewer-awards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    list-style: none;
+    margin: .75rem 0 0;
+    padding: 0;
+}
+
+.ranking-viewer-awards li {
+    background: rgba(255, 193, 69, .12);
+    border: 1px solid rgba(255, 193, 69, .45);
+    border-radius: 999px;
+    color: #ffc145;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: .15rem .65rem;
+}
+
+/* tabla de posiciones */
+.ranking-list {
+    display: grid;
+    gap: .4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ranking-row {
+    align-items: center;
+    background: #151515;
+    border: 1px solid #222222;
+    border-radius: 8px;
+    display: flex;
+    gap: .75rem;
+    padding: .5rem .75rem;
+}
+
+.ranking-row.is-viewer {
+    border-color: rgba(193, 18, 31, .6);
+}
+
+.ranking-row-position {
+    color: #8f8f8f;
+    font-weight: 800;
+    text-align: center;
+    width: 1.6rem;
+}
+
+.ranking-row.is-gold .ranking-row-position {
+    color: #ffc145;
+}
+
+.ranking-row.is-silver .ranking-row-position {
+    color: #c9d1d9;
+}
+
+.ranking-row.is-bronze .ranking-row-position {
+    color: #cd7f32;
+}
+
+.ranking-row-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ranking-row-info strong {
+    color: #ffffff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ranking-row-info strong small {
+    color: #ff4d5a;
+    font-weight: 600;
+}
+
+.ranking-row-info span {
+    color: #8f8f8f;
+    font-size: .8rem;
+}
+
+.ranking-row-score {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+}
+
+.ranking-row-score strong {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.ranking-row-score strong i,
+.ranking-podium-points i,
+.ranking-viewer-score span i {
+    color: #ff4d5a;
+}
+
+.ranking-row-score small {
+    color: #8f8f8f;
+    font-size: .72rem;
+}
+
+.ranking-row-info span i {
+    color: #ff8a3d;
+}
+
+.ranking-gain {
+    background: rgba(76, 214, 143, .14);
+    border-radius: 999px;
+    color: #4cd68f;
+    font-size: .72rem;
+    font-weight: 800;
+    padding: .05rem .5rem;
+    white-space: nowrap;
+}
+
+/* desglose de fin de temporada */
+.season-recap {
+    background: radial-gradient(circle at top, #2a0d10 0%, #121212 55%);
+    border: 1px solid #2a2a2a;
+    color: #e5e5e5;
+}
+
+.season-recap .modal-header {
+    align-items: flex-start;
+    border-bottom: 0;
+}
+
+.season-recap-heading {
+    flex: 1;
+    text-align: center;
+}
+
+.season-recap-eyebrow {
+    color: #ff4d5a;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.season-recap .modal-title {
+    color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.season-recap-heading p {
+    color: #a8a8a8;
+    margin: 0;
+}
+
+.season-awards {
+    display: grid;
+    gap: .75rem;
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+}
+
+.season-award {
+    --tone: #ffc145;
+    align-items: center;
+    background: #181818;
+    border: 1px solid color-mix(in srgb, var(--tone) 40%, #242424);
+    border-radius: 12px;
+    display: flex;
+    gap: 1rem;
+    padding: .9rem 1rem;
+}
+
+.season-award.is-red {
+    --tone: #ff4d5a;
+}
+
+.season-award.is-purple {
+    --tone: #b38cff;
+}
+
+.season-award.is-blue {
+    --tone: #6fb6ff;
+}
+
+.season-award.is-green {
+    --tone: #4cd68f;
+}
+
+.season-award.is-teal {
+    --tone: #3fd0c9;
+}
+
+.season-award-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--tone) 15%, transparent);
+    border-radius: 50%;
+    color: var(--tone);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1.3rem;
+    height: 3rem;
+    justify-content: center;
+    width: 3rem;
+}
+
+.season-award-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.season-award-title {
+    color: var(--tone);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.season-award-body strong {
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.season-award-value {
+    color: #a8a8a8;
+    font-size: .85rem;
+}
+
+.season-award-avatar {
+    border: 3px solid var(--tone);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--tone) 20%, transparent);
+    flex: 0 0 auto;
+    height: 3.6rem;
+    object-fit: cover;
+    width: 3.6rem;
+}
+
+.season-recap-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    justify-content: center;
+}
+
+.season-recap-links a {
+    border: 1px solid #2a2a2a;
+    border-radius: 999px;
+    color: #a8a8a8;
+    font-size: .82rem;
+    padding: .2rem .7rem;
+    text-decoration: none;
+}
+
+.season-recap-links a.is-active,
+.season-recap-links a:hover {
+    border-color: #ff4d5a;
+    color: #ffffff;
+}
+
+@media (max-width: 480px) {
+    .ranking {
+        padding: 1rem;
+    }
+
+    .ranking-podium-avatar img {
+        height: 3.4rem;
+        width: 3.4rem;
+    }
+
+    .ranking-podium-place.is-gold .ranking-podium-avatar img {
+        height: 4.2rem;
+        width: 4.2rem;
+    }
+
+    .season-award-avatar {
+        height: 2.8rem;
+        width: 2.8rem;
+    }
+}
+
+/* fechas de la temporada (entrenador) */
+.ranking-season-form {
+    background: #141414;
+    border: 1px solid #242424;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: .75rem 1rem 1rem;
+}
+
+.ranking-season-form h3 {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 .2rem;
+}
+
+.ranking-season-form p {
+    color: #8f8f8f;
+    font-size: .85rem;
+    margin: 0 0 .75rem;
+}
+
+.ranking-season-dates {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.ranking-season-dates > div {
+    flex: 1 1 150px;
+}
+
+.ranking-season-dates label {
+    color: #bdbdbd;
+    font-size: .8rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.ranking-season-dates .form-control:disabled {
+    background: #1b1b1b;
+    color: #8f8f8f;
+}
+
+.ranking-season-dates .btn {
+    flex: 0 0 auto;
+    font-weight: 700;
+}
+
+.ranking-season-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .6rem;
+}
+
+.ranking-preset-btn {
+    background: #1b1b1b;
+    border: 1px solid #2a2a2a;
+    border-radius: 999px;
+    color: #bdbdbd;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: .2rem .8rem;
+}
+
+.ranking-preset-btn:hover,
+.ranking-preset-btn:focus-visible,
+.ranking-preset-btn.is-active {
+    border-color: #ff4d5a;
+    color: #ffffff;
+}
+
+.ranking-preset-btn:disabled {
+    opacity: .4;
+}
+
+.ranking-viewer-score .ranking-gain {
+    color: #4cd68f;
+    font-size: .72rem;
+    margin-top: .2rem;
+}
+
+.ranking-podium-place .ranking-gain {
+    margin-top: .15rem;
+}

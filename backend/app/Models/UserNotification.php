@@ -19,7 +19,7 @@ class UserNotification extends BaseEntity {
 
     private const myTable = DbSchema::tableUserNotifications;
 
-    const typeIdTicketReceived = 10, typeIdTicketResubmitted = 20, typeIdTicketResolved = 30, typeIdRoutineAssigned = 40, typeIdReminder = 50, typeIdAchievement = 60;
+    const typeIdTicketReceived = 10, typeIdTicketResubmitted = 20, typeIdTicketResolved = 30, typeIdRoutineAssigned = 40, typeIdReminder = 50, typeIdAchievement = 60, typeIdSeasonClosed = 70;
 
     const listLimit = 20;
 
@@ -30,6 +30,7 @@ class UserNotification extends BaseEntity {
         self::typeIdRoutineAssigned => 'routine-assigned',
         self::typeIdReminder => 'reminder',
         self::typeIdAchievement => 'achievement',
+        self::typeIdSeasonClosed => 'season-closed',
     ];
 
     private int $userId, $type;
@@ -116,6 +117,22 @@ class UserNotification extends BaseEntity {
 
     static function addAchievement(DbConnector $dbConnect, int $userId, string $slug, ?string $gender = null): void{
         self::addNewList($dbConnect, [$userId], self::typeIdAchievement, $userId, ['achievement' => $slug, 'gender' => $gender]);
+    }
+
+    static function addSeasonClosedList(DbConnector $dbConnect, Gym $gym, int $season, array $standingList): void{
+        $data = ['gymName' => $gym->getName(), 'season' => $season];
+        foreach ($standingList as $standing) {
+            self::addNewList($dbConnect, [$standing['userId']], self::typeIdSeasonClosed, $gym->getEntityId(),
+                $data + ['position' => $standing['points'] > 0 ? $standing['position'] : null]);
+        }
+        self::addNewList($dbConnect, [$gym->getOwnerId()], self::typeIdSeasonClosed, $gym->getEntityId(), $data + ['isOwner' => true]);
+    }
+
+    static function markSeasonClosedRead(DbConnector $dbConnect, int $userId, int $gymId): int{
+        $now = $dbConnect->toDbDate(BaseHelper::utcNow());
+        return self::allocUserQuery($dbConnect, $userId)->whereNull('read_at')
+            ->where('type', self::typeIdSeasonClosed)->where('ref_id', $gymId)
+            ->update(['read_at' => $now, 'updated_at' => $now]);
     }
 
     private static function addNewList(DbConnector $dbConnect, array $userIdList, int $type, ?int $refId, array $data): void{

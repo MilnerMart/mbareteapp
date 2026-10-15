@@ -8,7 +8,7 @@
 @section('title', 'Mis gimnasios | Mbarete App')
 
 @section('css')
-    @vite(['resources/css/gym.css'])
+    @vite(['resources/css/gym.css', 'resources/css/ranking.css'])
 @endsection
 
 @section('content')
@@ -73,6 +73,9 @@
 
         @if ($memberGym)
             @include('gyms._member-card', ['gym' => $memberGym])
+            @if ($data['ranking'])
+                @include('gyms._ranking', ['ranking' => $data['ranking']])
+            @endif
         @elseif (empty($gyms))
             <div class="gym-empty">
                 <i class="fa-solid fa-dumbbell"></i>

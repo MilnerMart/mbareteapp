@@ -12,7 +12,7 @@
 @section('title', $gym['name'] . ' | Mbarete App')
 
 @section('css')
-    @vite(['resources/css/gym.css', 'resources/css/profile.css'])
+    @vite(['resources/css/gym.css', 'resources/css/profile.css', 'resources/css/ranking.css'])
 @endsection
 
 @section('content')
@@ -77,6 +77,10 @@
                 </a>
             </div>
         </div>
+
+        @if ($data['ranking'])
+            @include('gyms._ranking', ['ranking' => $data['ranking']])
+        @endif
 
         <div class="gym-students">
             <h2>Alumnos</h2>

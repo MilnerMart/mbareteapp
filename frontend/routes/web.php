@@ -123,6 +123,9 @@ Route::middleware('frontend.auth')->group(function () {
         Route::put('/{id}', [GymController::class, 'update'])->name('gym.update');
         Route::post('/{id}/image', [GymController::class, 'updateImage'])->name('gym.image');
         Route::delete('/{id}/users/{userId}', [GymController::class, 'removeUser'])->name('gym.users.remove');
+        Route::put('/{id}/ranking', [GymController::class, 'updateRankingVisibility'])->name('gym.ranking.visibility');
+        Route::post('/{id}/seasons', [GymController::class, 'startSeason'])->name('gym.season.start');
+        Route::put('/{id}/seasons/current', [GymController::class, 'updateSeason'])->name('gym.season.update');
     });
 
     Route::middleware('frontend.gym')->prefix('/tickets')->group(function () {

@@ -36,17 +36,7 @@ class UserProgress {
         // lo que vale cada cosa, el tope por dia y lo que pide cada rango los configura el admin (ProgressSettings).
         // El tope hace que una sola sesion larga no alcance para subir de rango: hace falta volver otros dias.
         $settings = ProgressSettings::load($dbConnect);
-        $points = 0;
-        $previousDay = null;
-        foreach ($dayMap as $day => $dayTotals) {
-            $isStreakDay = $previousDay && CarbonImmutable::parse($previousDay)->addDay()->isSameDay(CarbonImmutable::parse($day));
-            $dayPoints = $settings->scoring('pointsPerDay')
-                + ($isStreakDay ? $settings->scoring('pointsPerStreakDay') : 0)
-                + $dayTotals['minutes'] * $settings->scoring('pointsPerMinute')
-                + intdiv((int)$dayTotals['kilos'], $settings->scoring('kgPerPoint'));
-            $points += min($dayPoints, $settings->scoring('maxPointsPerDay'));
-            $previousDay = $day;
-        }
+        $points = array_sum(self::buildDayPointsMap($settings, $dayMap));
 
         return [
             'points' => $points,
@@ -58,7 +48,23 @@ class UserProgress {
         ] + $settings->buildRankModel($points);
     }
 
-    private static function estimateMinutes(object $row): int{
+    // $dayMap ordenado por dia: [dia => ['minutes' =>, 'kilos' =>]] => [dia => puntos de ese dia]
+    static function buildDayPointsMap(ProgressSettings $settings, array $dayMap): array{
+        $pointsMap = [];
+        $previousDay = null;
+        foreach ($dayMap as $day => $dayTotals) {
+            $isStreakDay = $previousDay && CarbonImmutable::parse($previousDay)->addDay()->isSameDay(CarbonImmutable::parse($day));
+            $dayPoints = $settings->scoring('pointsPerDay')
+                + ($isStreakDay ? $settings->scoring('pointsPerStreakDay') : 0)
+                + $dayTotals['minutes'] * $settings->scoring('pointsPerMinute')
+                + intdiv((int)$dayTotals['kilos'], $settings->scoring('kgPerPoint'));
+            $pointsMap[$day] = min($dayPoints, $settings->scoring('maxPointsPerDay'));
+            $previousDay = $day;
+        }
+        return $pointsMap;
+    }
+
+    static function estimateMinutes(object $row): int{
         if($row->duration_minutes){
             return (int)$row->duration_minutes;
         }
@@ -71,7 +77,7 @@ class UserProgress {
         return max(1, (int)ceil($seconds / 60));
     }
 
-    private static function countStreaks(array $sortedDayList): array{
+    static function countStreaks(array $sortedDayList): array{
         $streakDays = 0;
         $bestStreak = 0;
         $streak = 0;

@@ -85,6 +85,42 @@
             <div class="calendar-day-detail">
                 <h2>{{ $data['selectedLabel'] }}</h2>
 
+                <form method="POST" action="{{ $form['action'] }}" class="calendar-note-form" id="calendar-note-form">
+                    @csrf
+                    @if ($form['isEdit'])
+                        @method('PUT')
+                    @endif
+                    <h3 class="calendar-section-title">{{ $form['isEdit'] ? 'Editar anotacion' : 'Nueva anotacion' }} · {{ $form['dayLabel'] }}</h3>
+                    @if ($form['noteOn'])
+                        <input type="hidden" name="note_on" value="{{ $form['noteOn'] }}">
+                    @endif
+                    @if ($errors->any())
+                        <div class="alert alert-danger">{{ $errors->first() }}</div>
+                    @endif
+                    <label for="title" class="form-label">Titulo</label>
+                    <input type="text" id="title" name="title" class="form-control" value="{{ $form['values']['title'] }}"
+                        minlength="2" maxlength="120" required placeholder="Ej: Medir peso, turno con el nutricionista">
+                    <label for="body" class="form-label">Detalle <small>(opcional)</small></label>
+                    <textarea id="body" name="body" class="form-control" rows="2" maxlength="1000">{{ $form['values']['body'] }}</textarea>
+                    <fieldset class="calendar-remind-days">
+                        <legend class="form-label">Recordarme <small>(opcional)</small></legend>
+                        @foreach ($form['remindDayOptions'] as $days => $label)
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="remind_days[]" value="{{ $days }}" id="remind_days_{{ $days }}"
+                                    @checked(in_array($days, $form['remindDays'], true))>
+                                <label class="form-check-label" for="remind_days_{{ $days }}">{{ $label }}</label>
+                            </div>
+                        @endforeach
+                    </fieldset>
+                    <p class="calendar-form-hint">Te avisamos en la campanita los dias que marques.</p>
+                    <div class="calendar-form-actions">
+                        @if ($form['isEdit'])
+                            <a href="{{ $form['cancelUrl'] }}" class="btn calendar-cancel-btn">Cancelar</a>
+                        @endif
+                        <button type="submit" class="btn btn-primary">{{ $form['isEdit'] ? 'Guardar cambios' : 'Agregar' }}</button>
+                    </div>
+                </form>
+
                 @if (empty($data['noteList']) && empty($data['trainingList']) && empty($data['actionList']) && empty($data['progressList']))
                     <p class="calendar-empty">Nada registrado este dia.</p>
                 @endif
@@ -168,42 +204,6 @@
                         @endforeach
                     </ul>
                 @endif
-
-                <form method="POST" action="{{ $form['action'] }}" class="calendar-note-form" id="calendar-note-form">
-                    @csrf
-                    @if ($form['isEdit'])
-                        @method('PUT')
-                    @endif
-                    <h3 class="calendar-section-title">{{ $form['isEdit'] ? 'Editar anotacion' : 'Nueva anotacion' }} · {{ $form['dayLabel'] }}</h3>
-                    @if ($form['noteOn'])
-                        <input type="hidden" name="note_on" value="{{ $form['noteOn'] }}">
-                    @endif
-                    @if ($errors->any())
-                        <div class="alert alert-danger">{{ $errors->first() }}</div>
-                    @endif
-                    <label for="title" class="form-label">Titulo</label>
-                    <input type="text" id="title" name="title" class="form-control" value="{{ $form['values']['title'] }}"
-                        minlength="2" maxlength="120" required placeholder="Ej: Medir peso, turno con el nutricionista">
-                    <label for="body" class="form-label">Detalle <small>(opcional)</small></label>
-                    <textarea id="body" name="body" class="form-control" rows="2" maxlength="1000">{{ $form['values']['body'] }}</textarea>
-                    <fieldset class="calendar-remind-days">
-                        <legend class="form-label">Recordarme <small>(opcional)</small></legend>
-                        @foreach ($form['remindDayOptions'] as $days => $label)
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" name="remind_days[]" value="{{ $days }}" id="remind_days_{{ $days }}"
-                                    @checked(in_array($days, $form['remindDays'], true))>
-                                <label class="form-check-label" for="remind_days_{{ $days }}">{{ $label }}</label>
-                            </div>
-                        @endforeach
-                    </fieldset>
-                    <p class="calendar-form-hint">Te avisamos en la campanita los dias que marques.</p>
-                    <div class="calendar-form-actions">
-                        @if ($form['isEdit'])
-                            <a href="{{ $form['cancelUrl'] }}" class="btn calendar-cancel-btn">Cancelar</a>
-                        @endif
-                        <button type="submit" class="btn btn-primary">{{ $form['isEdit'] ? 'Guardar cambios' : 'Agregar' }}</button>
-                    </div>
-                </form>
             </div>
         </div>
     </section>

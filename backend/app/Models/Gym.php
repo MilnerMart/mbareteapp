@@ -26,6 +26,8 @@ class Gym extends BaseEntity {
     private ?int $ownerId;
 
     private int $alumnsCount = 0;
+
+    private bool $isRankingPublic = false;
     
     public static function allocNew(string $name, string $slug, int $ownerId):self{
         $self = new self();
@@ -71,11 +73,20 @@ class Gym extends BaseEntity {
     function isOwnedBy(int $userId):bool{
         return $this->ownerId === $userId;
     }
+
+    function isRankingPublic(): bool{
+        return $this->isRankingPublic;
+    }
+
+    function setRankingPublic(bool $isRankingPublic): void{
+        $this->isRankingPublic = $isRankingPublic;
+    }
     private function gym2Row(DbAdapter $dbAdapter): stdClass{
         $row = $this->allocDbRow($dbAdapter);
         $row->name = $this->name;
         $row->slug = $this->slug;
         $row->owner_id = $this->ownerId;
+        $row->is_ranking_public = $this->isRankingPublic;
         return $row;
     }
 
@@ -86,6 +97,7 @@ class Gym extends BaseEntity {
         $gym->slug = $row->slug;
         $gym->ownerId = $row->owner_id;
         $gym->alumnsCount = (int)($row->alumns_count ?? 0);
+        $gym->isRankingPublic = (bool)($row->is_ranking_public ?? false);
         return $gym;
     }
 
@@ -96,6 +108,7 @@ class Gym extends BaseEntity {
             'slug' =>  $this->getSlug(),
             'ownerId' => $this->ownerId,
             'alumnsCount' => $this->alumnsCount,
+            'isRankingPublic' => $this->isRankingPublic,
         ];
     }
 

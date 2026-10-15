@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\GymEntityController;
+use App\Http\Controllers\GymRankingController;
 use App\Http\Controllers\MuscleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermitController;
@@ -95,6 +96,10 @@ Route::prefix('/v1')->group(function(){
             Route::post('/gym/{id}/image', [GymEntityController::class, 'updateImage']);
             Route::get('/gym/{id}/users', [GymEntityController::class, 'users']);
             Route::delete('/gym/{id}/users/{userId}', [GymEntityController::class, 'removeUser']);
+            Route::get('/gym/{id}/ranking', [GymRankingController::class, 'show']);
+            Route::put('/gym/{id}/ranking', [GymRankingController::class, 'updateVisibility']);
+            Route::post('/gym/{id}/seasons', [GymRankingController::class, 'startSeason']);
+            Route::put('/gym/{id}/seasons/current', [GymRankingController::class, 'updateSeason']);
         });
 
         Route::prefix('routines')->group(function(){
