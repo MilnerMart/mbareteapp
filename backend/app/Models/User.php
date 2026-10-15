@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 use stdClass;
 
-#[Fillable(['name', 'last_name', 'email', 'password', 'age', 'height', 'weight', 'profile_image_url', 'status', 'goal', 'gender'])]
+#[Fillable(['name', 'last_name', 'email', 'password', 'age', 'height', 'weight', 'profile_image_url', 'status', 'goal', 'gender', 'theme'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,6 +31,8 @@ class User extends Authenticatable
     const goalSlugList = ['hypertrophy', 'fat-loss', 'strength', 'endurance', 'toning', 'health'];
 
     const genderSlugList = ['male', 'female', 'unspecified'];
+
+    const themeSlugList = ['dark', 'light'];
 
     // datos de perfil que la campanita le pide completar; se agrega aca cualquier campo nuevo del perfil
     const requiredProfileFieldList = ['gender', 'weight', 'height', 'age', 'goal'];

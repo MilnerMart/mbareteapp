@@ -180,6 +180,21 @@ class UserProfileTest extends TestCase
         $this->assertSame('female', DB::table('users')->where('id', $ownerId)->value('gender'));
     }
 
+    public function test_theme_choice_is_saved_and_comes_back_at_login(): void
+    {
+        $user = $this->register('atleta@example.com', 'trainee-role')->assertJsonPath('data.user.theme', null);
+        $token = $user->json('data.token');
+
+        $this->actingWithToken($token)->putJson('/api/v1/me/theme', ['theme' => 'sepia'])->assertUnprocessable()->assertJsonValidationErrors('theme');
+        $this->actingWithToken($token)->putJson('/api/v1/me/theme', ['theme' => 'light'])->assertOk()->assertJsonPath('data.theme', 'light');
+        $this->assertSame('light', DB::table('users')->where('id', $user->json('data.user.id'))->value('theme'));
+
+        $this->postJson('/api/v1/auth/login', ['email' => 'atleta@example.com', 'password' => static::password])
+            ->assertOk()->assertJsonPath('data.user.theme', 'light');
+        $this->app['auth']->forgetGuards();
+        $this->putJson('/api/v1/me/theme', ['theme' => 'dark'])->assertUnauthorized();
+    }
+
     private function profileData(array $overrides = []): array
     {
         return $overrides + [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Core\CoreModel;
 use App\Http\Requests\ProfileImageRequest;
 use App\Http\Requests\ProfileRequest;
+use App\Http\Requests\ThemeRequest;
 use App\Http\Resources\UserResource;
 use App\Helpers\BaseHelper;
 use App\Models\EntityLog;
@@ -116,6 +117,13 @@ class UserController extends Controller
         }
 
         return $this->successApiResponse($this->buildProfileModel($user, $user));
+    }
+
+    public function updateTheme(ThemeRequest $request): JsonResponse {
+        $user = $request->user();
+        $user->theme = $request->validated()['theme'];
+        $user->save();
+        return $this->successApiResponse(['theme' => $user->theme]);
     }
 
     public function updateProfileImage(ProfileImageRequest $request, string $id): JsonResponse
