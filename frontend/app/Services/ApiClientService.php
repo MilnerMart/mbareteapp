@@ -415,6 +415,18 @@ class ApiClientService
         return $this->put('/config/progress', $settings);
     }
 
+    public function getSystemRules(){
+        return $this->get('/config/rules');
+    }
+
+    public function updateSystemRules(array $ruleList){
+        return $this->put('/config/rules', ['rules' => $ruleList]);
+    }
+
+    public function runSystemRule(int $ruleModelId){
+        return $this->post('/config/rules/'.$ruleModelId.'/run');
+    }
+
     public function getCoreConfig(){
         return $this->get('/config/core');
     }

@@ -58,6 +58,25 @@ services:
       - backend-storage:/var/www/html/storage/app
       - backend-logs:/var/www/html/storage/logs
 
+  # tareas programadas: misma imagen y variables que el backend, pero en vez de atender la API corre el scheduler.
+  # Uno solo: si hubiera dos, cada regla correria dos veces. No publica puertos ni lo usa el frontend.
+  scheduler:
+    restart: unless-stopped
+    image: mbarete-backend:latest
+    env_file: ./deploy/env/backend.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      PHP_OPCACHE_ENABLE: "1"
+      AUTORUN_ENABLED: "false"
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    stop_signal: SIGTERM
+    volumes:
+      - backend-storage:/var/www/html/storage/app
+      - backend-logs:/var/www/html/storage/logs
+    depends_on:
+      - backend
+
 volumes:
   caddy-data:
   caddy-config:

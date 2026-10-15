@@ -140,6 +140,9 @@ Route::middleware('frontend.auth')->group(function () {
         Route::put('/progress', [ConfigController::class, 'updateProgress'])->name('config.progress.update');
         Route::get('/core', [ConfigController::class, 'core'])->name('config.core');
         Route::put('/core', [ConfigController::class, 'updateCore'])->name('config.core.update');
+        Route::get('/rules', [ConfigController::class, 'rules'])->name('config.rules');
+        Route::put('/rules', [ConfigController::class, 'updateRules'])->name('config.rules.update');
+        Route::post('/rules/{ruleModelId}/run', [ConfigController::class, 'runRule'])->whereNumber('ruleModelId')->name('config.rules.run');
         Route::get('/providers', [ConfigController::class, 'providers'])->name('config.providers');
         Route::post('/providers', [ConfigController::class, 'storeProvider'])->name('config.providers.store');
         Route::get('/providers/{id}', [ConfigController::class, 'showProvider'])->whereNumber('id')->name('config.providers.show');

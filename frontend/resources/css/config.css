@@ -421,3 +421,130 @@
     font-size: .75rem;
     text-transform: uppercase;
 }
+
+/* reglas del sistema */
+.config-rule-header {
+    align-items: flex-start;
+    display: flex;
+    gap: .85rem;
+    margin-bottom: 1rem;
+}
+
+.config-rule-header h2 {
+    margin-bottom: .2rem;
+}
+
+.config-rule-settings {
+    align-items: flex-end;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.config-rule-settings .form-switch {
+    margin-bottom: .5rem;
+}
+
+.config-rule-schedule {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
+    justify-content: space-between;
+    margin: .75rem 0 1rem;
+}
+
+.config-rule-schedule span {
+    color: #8f8f8f;
+    font-size: .85rem;
+}
+
+.config-rule-schedule strong {
+    color: #ffc145;
+    font-size: .85rem;
+}
+
+.config-rule-runs-header {
+    align-items: center;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    gap: .75rem;
+    justify-content: space-between;
+    padding-top: .75rem;
+}
+
+.config-rule-runs-header h3 {
+    color: #ffffff;
+    font-size: .95rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.config-rule-run-btn {
+    border: 1px solid #2a2a2a;
+    color: #e5e5e5;
+    font-weight: 700;
+}
+
+.config-rule-run-btn:hover,
+.config-rule-run-btn:focus-visible {
+    border-color: #ff4d5a;
+    color: #ffffff;
+}
+
+.config-rule-runs {
+    display: grid;
+    gap: .4rem;
+    list-style: none;
+    margin: .75rem 0 0;
+    padding: 0;
+}
+
+.config-rule-runs li {
+    align-items: center;
+    background: #151515;
+    border: 1px solid #222222;
+    border-radius: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .75rem;
+    padding: .45rem .65rem;
+}
+
+.config-run-status {
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 800;
+    padding: .1rem .55rem;
+}
+
+.config-run-status.is-completed {
+    background: rgba(76, 214, 143, .14);
+    color: #4cd68f;
+}
+
+.config-run-status.is-failed {
+    background: rgba(255, 77, 90, .14);
+    color: #ff4d5a;
+}
+
+.config-run-status.is-running,
+.config-run-status.is-pending {
+    background: rgba(111, 182, 255, .14);
+    color: #6fb6ff;
+}
+
+.config-run-status.is-skipped {
+    background: rgba(143, 143, 143, .14);
+    color: #a8a8a8;
+}
+
+.config-run-date {
+    color: #bdbdbd;
+    font-size: .82rem;
+}
+
+.config-run-detail {
+    color: #8f8f8f;
+    flex-basis: 100%;
+    font-size: .8rem;
+}

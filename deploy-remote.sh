@@ -5,7 +5,7 @@
 #   ./deploy-remote.sh deploy [rama]         git pull + build + migraciones + reinicio (corre deploy.sh alla)
 #   ./deploy-remote.sh db-export [archivo]   descarga un dump de la base que usa el servidor
 #   ./deploy-remote.sh db-import archivo     reemplaza la base del servidor con un dump
-#   ./deploy-remote.sh logs [servicio]       ultimas lineas de log (frontend, backend, caddy)
+#   ./deploy-remote.sh logs [servicio]       ultimas lineas de log (frontend, backend, scheduler, caddy)
 #   ./deploy-remote.sh ssh                   abre una terminal en la carpeta del proyecto
 # Configuracion: deploy/env/remote.env. Para otro servidor: REMOTE_ENV=deploy/env/remote.aws.env ./deploy-remote.sh ...
 set -euo pipefail

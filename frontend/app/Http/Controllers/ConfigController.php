@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Services\ApiClientService;
 use App\Support\ProfileLabels;
+use App\Support\SystemRuleLabels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ConfigController extends Controller
@@ -35,6 +37,13 @@ class ConfigController extends Controller
             'description' => 'Cuantos puntos da entrenar y que hace falta para subir a cada rango.',
             'icon' => 'fa-solid fa-medal',
             'route' => 'config.progress',
+        ],
+        [
+            'key' => 'rules',
+            'title' => 'Reglas del sistema',
+            'description' => 'Tareas que la app corre sola, cuando corren y que hicieron cada vez.',
+            'icon' => 'fa-solid fa-clock-rotate-left',
+            'route' => 'config.rules',
         ],
     ];
 
@@ -109,6 +118,47 @@ class ConfigController extends Controller
             return back()->withErrors(['progress' => $this->apiErrorMessage($response, 'No pudimos guardar los rangos.')])->withInput();
         }
         return redirect()->route('config.progress')->with('config_saved', 'Rangos y puntos guardados. Los niveles de todos se recalculan con estos valores.');
+    }
+
+    public function rules(): View{
+        $ruleList = $this->apiClient->getSystemRules();
+        $data['loadFailed'] = $ruleList === null;
+        $data['rules'] = SystemRuleLabels::buildRuleList($ruleList ?? []);
+        return $this->renderView('config.rules', compact('data'));
+    }
+
+    // todas las reglas se guardan juntas en un solo pedido
+    public function updateRules(Request $request): RedirectResponse{
+        $validated = $request->validate([
+            'rules' => ['required', 'array'],
+            'rules.*.is_enabled' => ['required', 'boolean'],
+            'rules.*.frequency' => ['required', Rule::in(array_keys(SystemRuleLabels::frequencyMap))],
+            'rules.*.run_at' => ['required', 'date_format:H:i'],
+            'rules.*.retry_minutes' => ['required', 'integer', 'min:0', 'max:1440'],
+        ], [
+            'rules.*.run_at.required' => 'Elige a que hora corre cada regla.',
+            'rules.*.run_at.date_format' => 'La hora tiene que tener el formato HH:MM.',
+            'rules.*.retry_minutes.*' => 'Los minutos de reintento van de 0 (no reintenta) a 1440 (un dia).',
+        ]);
+
+        $response = $this->apiClient->updateSystemRules($validated['rules']);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['rules' => $this->apiErrorMessage($response, 'No pudimos guardar las reglas.')])->withInput();
+        }
+        return redirect()->route('config.rules')->with('config_saved', 'Reglas guardadas. Corren solas desde su proximo horario.');
+    }
+
+    public function runRule(int $ruleModelId): RedirectResponse{
+        $response = $this->apiClient->runSystemRule($ruleModelId);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['rules' => $this->apiErrorMessage($response, 'No pudimos ejecutar la regla.')]);
+        }
+        $run = $response['data']['lastRun'] ?? [];
+        return match ($run['status'] ?? null) {
+            'completed' => back()->with('config_saved', 'Regla ejecutada: '.SystemRuleLabels::summaryText($response['data']['slug'] ?? '', $run['summary'] ?? []).'.'),
+            'skipped' => back()->withErrors(['rules' => 'La regla ya se estaba ejecutando. Mira el resultado en un momento.']),
+            default => back()->withErrors(['rules' => 'La regla fallo: '.($run['error'] ?? 'error desconocido')]),
+        };
     }
 
     public function providers(): View{

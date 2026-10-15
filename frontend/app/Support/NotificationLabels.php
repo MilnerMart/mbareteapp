@@ -76,6 +76,11 @@ class NotificationLabels
                     default => 'Mira el podio y los premios',
                 }],
             ],
+            'season-started' => [
+                'fa-solid fa-flag-checkered',
+                'Empezo la temporada '.($data['season'] ?? '').' de '.($data['gymName'] ?? 'tu gimnasio'),
+                [isset($data['endsOn']) ? 'Termina el '.Carbon::parse($data['endsOn'])->format('d/m/Y').'. ¡Cada entrenamiento suma fuerza!' : null],
+            ],
             default => ['fa-solid fa-bell', 'Tienes un aviso nuevo', []],
         };
 
@@ -117,6 +122,7 @@ class NotificationLabels
                 ? CalendarMonth::dayUrl(CarbonImmutable::parse($notification['data']['noteOn'], CalendarMonth::timezone))
                 : route('calendar.index'),
             'achievement' => route('user.profile', ['id' => session('auth_user.id'), 'logros' => 1]),
+            'season-started' => $refId ? route('gym.member', ['member' => $refId]) : null,
             'season-closed' => !$refId ? null : (($notification['data']['isOwner'] ?? false)
                 ? route('gym.show', [$refId, 'temporada' => $notification['data']['season'] ?? null])
                 : route('gym.member', ['member' => $refId, 'temporada' => $notification['data']['season'] ?? null])),
