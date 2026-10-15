@@ -57,7 +57,7 @@ class Permit extends BaseEntity {
         return $this->slug;
     }
 
-    function getRoleId(): int{
+    function getRoleId(): ?int{
         return $this->roleId;
     }
 

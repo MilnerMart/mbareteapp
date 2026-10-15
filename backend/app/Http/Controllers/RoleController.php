@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleRequest;
 use App\Models\Role;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class RoleController extends Controller {
     
 
-    public function index(): JsonResponse {
+    public function index(Request $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbconnector = $this->getDbConnector();   
         $roleList = Role::queryList($dbconnector);
         $model=[];
@@ -23,6 +25,7 @@ class RoleController extends Controller {
     }
 
     public function store(RoleRequest $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $validated = $request->validated();
         $role = Role::allocNew($validated['name'],$validated['slug']);

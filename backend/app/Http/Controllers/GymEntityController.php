@@ -179,6 +179,9 @@ class GymEntityController extends Controller {
         if(GymUser::hasNonBaseMembership($dbConnector, $user->id)){
             throw PublicException::validationError('Ya perteneces a un gimnasio. Por ahora solo puedes estar en uno');
         }
+        if($gym->isFull($dbConnector)){
+            throw PublicException::validationError($gym->getName().' ya tiene '.Gym::maxStudentsPerGym.' alumnos, el maximo por gimnasio');
+        }
         $pendingTicket = Ticket::queryPendingGymJoin($dbConnector, $user->id);
         if($pendingTicket){
             throw PublicException::validationError('Ya tienes la solicitud '.$pendingTicket->getTicketNumber().' esperando respuesta del entrenador');
@@ -256,7 +259,7 @@ class GymEntityController extends Controller {
             return;
         }
         if(count(Gym::queryListByOwnerId($dbConnector, $ownerId)) >= Gym::maxGymsPerTrainer){
-            throw PublicException::validationError('Por ahora cada entrenador puede tener un solo gimnasio');
+            throw PublicException::validationError('Cada entrenador puede tener hasta '.Gym::maxGymsPerTrainer.' gimnasios');
         }
     }
 

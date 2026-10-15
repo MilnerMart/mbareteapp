@@ -74,6 +74,13 @@ class Gym extends BaseEntity {
         return $this->ownerId === $userId;
     }
 
+    function isFull(DbConnector $dbConnect): bool{
+        if($this->slug === self::baseGymSlug || User::find($this->ownerId)?->hasSeeAllPermit($dbConnect)){
+            return false;
+        }
+        return GymUser::countByGymId($dbConnect, $this->getEntityId()) >= self::maxStudentsPerGym;
+    }
+
     function isRankingPublic(): bool{
         return $this->isRankingPublic;
     }
@@ -129,8 +136,9 @@ class Gym extends BaseEntity {
         return $dbConnect->fetchAll($query, [self::class, 'row2Gym']);
     }
 
-    // de momento cada entrenador gestiona un solo gimnasio (el admin no tiene limite)
-    const maxGymsPerTrainer = 1;
+    // cupo de la fase beta: hasta 2 gimnasios por entrenador (para separar turnos) de hasta 20 alumnos cada uno;
+    // el admin y el gimnasio base no tienen limite
+    const maxGymsPerTrainer = 2, maxStudentsPerGym = 20;
 
     static function queryListByOwnerId(DbConnector $dbConnect, int $ownerId):array{
         $query = self::allocSelectQuery($dbConnect)->where('g.owner_id', $ownerId);

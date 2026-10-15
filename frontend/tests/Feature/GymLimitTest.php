@@ -29,14 +29,18 @@ class GymLimitTest extends TestCase
         $this->withSession($this->trainerSession())->get('/gym/create')->assertOk();
     }
 
-    public function test_trainer_with_a_gym_cannot_create_another(): void
+    public function test_trainer_can_add_a_second_gym_for_another_shift_but_not_a_third(): void
     {
-        $this->managedGyms = [['id' => 3, 'name' => 'Coach Gym', 'slug' => 'coach-gym', 'ownerId' => 7, 'alumnsCount' => 0]];
+        $this->managedGyms = [['id' => 3, 'name' => 'Coach Gym Mañana', 'slug' => 'coach-gym-am', 'ownerId' => 7, 'alumnsCount' => 20]];
 
+        $this->withSession($this->trainerSession())->get('/gym')->assertOk()->assertSee('Nuevo gimnasio');
+        $this->withSession($this->trainerSession())->get('/gym/create')->assertOk();
+
+        $this->managedGyms[] = ['id' => 4, 'name' => 'Coach Gym Tarde', 'slug' => 'coach-gym-pm', 'ownerId' => 7, 'alumnsCount' => 12];
         $this->withSession($this->trainerSession())->get('/gym')->assertOk()->assertDontSee('Nuevo gimnasio');
         $this->withSession($this->trainerSession())->get('/gym/create')
             ->assertRedirect(route('gym.index'))
-            ->assertSessionHasErrors(['name' => 'Por ahora cada entrenador puede tener un solo gimnasio.']);
+            ->assertSessionHasErrors(['name' => 'Cada entrenador puede tener hasta 2 gimnasios.']);
     }
 
     public function test_admin_keeps_creating_gyms(): void

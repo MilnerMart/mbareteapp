@@ -8,11 +8,13 @@ use App\Http\Requests\RoleRequest;
 use App\Models\Permit;
 use App\Models\Role;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PermitController extends Controller {
     
 
-    public function index(): JsonResponse {
+    public function index(Request $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbconnector = $this->getDbConnector();   
         $permitList = Permit::queryList($dbconnector);
         $model=[];
@@ -25,6 +27,7 @@ class PermitController extends Controller {
     }
 
     public function store(PermitRequest $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $validated = $request->validated();
         $role = Role::queryByDbIdOrFail($dbConnector, $validated['roleId']);
@@ -38,7 +41,7 @@ class PermitController extends Controller {
     private function allocRolePermit(Role $role, Permit $permit){
         //Mejorar el binding del permit luego
         $dbConnector = $this->getDbConnector();
-        $rolePermits = $role->getRolePermits();
+        $rolePermits = $role->getRolePermits() ?? [];
         $rolePermits[] = $permit->getSlug();
         $role->setRolePermits($rolePermits);
         $role->writeToDb($dbConnector);

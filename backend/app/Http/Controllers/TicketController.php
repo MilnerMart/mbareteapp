@@ -71,8 +71,12 @@ class TicketController extends Controller {
 
         $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $ticket, $user){
             if($ticket->isGymJoin()){
-                if(!$ticket->getGymId() || !Gym::queryByDbId($dbConnector, $ticket->getGymId())){
+                $gym = $ticket->getGymId() ? Gym::queryByDbId($dbConnector, $ticket->getGymId()) : null;
+                if(!$gym){
                     throw PublicException::validationError('El gimnasio de la solicitud ya no existe');
+                }
+                if($gym->isFull($dbConnector)){
+                    throw PublicException::validationError($gym->getName().' ya tiene '.Gym::maxStudentsPerGym.' alumnos, el maximo por gimnasio');
                 }
                 GymUser::addNewGymUser($dbConnector, $ticket->getGymId(), $ticket->getRequesterId());
             } elseif($ticket->isTrainerRequest()) {

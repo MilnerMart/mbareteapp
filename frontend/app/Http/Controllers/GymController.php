@@ -12,7 +12,10 @@ use Illuminate\View\View;
 
 class GymController extends Controller
 {
-    private const gymLimitMessage = 'Por ahora cada entrenador puede tener un solo gimnasio.';
+    // cupo de la fase beta (Gym::maxGymsPerTrainer en el backend): dos gimnasios para separar turnos
+    private const maxGymsPerTrainer = 2;
+
+    private const gymLimitMessage = 'Cada entrenador puede tener hasta '.self::maxGymsPerTrainer.' gimnasios.';
 
     private const seasonDateMessages = [
         'starts_on.required' => 'Elige cuando empieza la temporada.',
@@ -161,10 +164,11 @@ class GymController extends Controller
         return redirect()->route('gym.index')->with('gym_saved', 'Gimnasio creado.');
     }
 
-    // de momento el entrenador gestiona un solo gimnasio; el backend tambien lo valida
+    // el backend tambien lo valida
     private function canCreateGym(array $managedGyms): bool{
         $userId = (int) session('auth_user.id');
-        return AuthPermits::isAdmin() || !collect($managedGyms)->contains(fn(array $gym) => (int)($gym['ownerId'] ?? 0) === $userId);
+        return AuthPermits::isAdmin()
+            || collect($managedGyms)->filter(fn(array $gym) => (int)($gym['ownerId'] ?? 0) === $userId)->count() < self::maxGymsPerTrainer;
     }
 
     private function buildRanking(Request $request, int $gymId, callable $seasonUrl): ?array{

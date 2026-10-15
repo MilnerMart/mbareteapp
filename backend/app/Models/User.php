@@ -59,7 +59,7 @@ class User extends Authenticatable
             $permitList = [];
             foreach ($this->queryRoleList($dbConnector) as $role) {
                 /**  @var Role $role */
-                $permitList = array_merge($permitList, $role->getRolePermits());
+                $permitList = array_merge($permitList, $role->getRolePermits() ?? []);
             }
             $this->permitListCache = array_values(array_unique($permitList));
         }

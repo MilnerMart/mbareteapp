@@ -7,12 +7,14 @@ use App\Http\Requests\ResourceRequest;
 use App\Models\Resource;
 use App\PublicException;
 use App\Services\ResourceService;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 
 class ResourceController extends Controller{
 
-     public function index(): JsonResponse {
+     public function index(Request $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbconnector = $this->getDbConnector();   
         $resourceList = Resource::queryList($dbconnector);
         $model=[];
@@ -24,6 +26,7 @@ class ResourceController extends Controller{
     }
 
     public function store(ResourceRequest $request): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $service = new ResourceService($dbConnector);
         $resourceOpts = $service->AllocResourceOpts($request);
@@ -33,7 +36,8 @@ class ResourceController extends Controller{
         return $this->successApiResponse($resource->buildApiModel(), 201);
     }
 
-    public function show(string $id): JsonResponse {
+    public function show(Request $request, string $id): JsonResponse {
+        $this->seeAllPermitOrFail($request->user());
         $dbConnector = $this->getDbConnector();
         $resource = Resource::queryByDbId($dbConnector,$id);
 

@@ -42,6 +42,10 @@ class GymUser {
         ->exists();
     }
 
+    static function countByGymId(DbConnector $dbConnect, int $gymId): int{
+        return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->count();
+    }
+
     static function isMember(DbConnector $dbConnect, int $gymId, int $userId): bool{
         return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('user_id', $userId)->exists();
     }

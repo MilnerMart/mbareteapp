@@ -12,7 +12,7 @@ class CoreModel{
         providerModelId = 90, providerConfigModelId = 100, coreConfigModelId = 110, notificationModelId = 120, entityLogModelId = 130, userModelId = 140, calendarNoteModelId = 150, progressEntryModelId = 160, gymSeasonModelId = 170;
 
     private const _modelInfoMap = [
-        self::exerciseModel => [
+        self::exerciseModelId => [
             'slug'=>'exercise',
             'label'=>'Ejercicios',
             'class'=>Exercise::class
