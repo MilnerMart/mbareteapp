@@ -161,6 +161,25 @@ class UserProfileTest extends TestCase
         ]);
     }
 
+    public function test_gender_is_locked_once_defined(): void
+    {
+        $owner = $this->register('atleta@example.com', 'trainee-role');
+        [$ownerId, $ownerToken] = [$owner->json('data.user.id'), $owner->json('data.token')];
+
+        $this->actingWithToken($ownerToken)->putJson('/api/v1/user/'.$ownerId.'/profile', $this->profileData())
+            ->assertOk()->assertJsonPath('data.gender', null);
+        $this->actingWithToken($ownerToken)->putJson('/api/v1/user/'.$ownerId.'/profile', $this->profileData(['gender' => 'female']))
+            ->assertOk()->assertJsonPath('data.gender', 'female');
+
+        $this->actingWithToken($ownerToken)->putJson('/api/v1/user/'.$ownerId.'/profile', $this->profileData(['gender' => 'male']))
+            ->assertStatus(400);
+        $this->actingWithToken($ownerToken)->putJson('/api/v1/user/'.$ownerId.'/profile', $this->profileData(['weight' => 70]))
+            ->assertOk()->assertJsonPath('data.gender', 'female')->assertJsonPath('data.weight', 70);
+        $this->actingWithToken($ownerToken)->putJson('/api/v1/user/'.$ownerId.'/profile', $this->profileData(['gender' => 'female', 'weight' => 72]))
+            ->assertOk()->assertJsonPath('data.weight', 72);
+        $this->assertSame('female', DB::table('users')->where('id', $ownerId)->value('gender'));
+    }
+
     private function profileData(array $overrides = []): array
     {
         return $overrides + [

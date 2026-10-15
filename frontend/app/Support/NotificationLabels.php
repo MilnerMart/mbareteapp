@@ -63,9 +63,9 @@ class NotificationLabels
                 }, isset($data['noteOn']) ? Carbon::parse($data['noteOn'])->format('d/m/Y') : null],
             ],
             'achievement' => [
-                AchievementLabels::icon($data['achievement'] ?? null),
-                '¡Nuevo logro! '.AchievementLabels::title($data['achievement'] ?? null),
-                [AchievementLabels::message($data['achievement'] ?? null)],
+                AchievementLabels::icon($data['achievement'] ?? null, $data['gender'] ?? null),
+                '¡Nuevo logro! '.AchievementLabels::title($data['achievement'] ?? null, $data['gender'] ?? null),
+                [AchievementLabels::message($data['achievement'] ?? null, $data['gender'] ?? null)],
             ],
             default => ['fa-solid fa-bell', 'Tienes un aviso nuevo', []],
         };

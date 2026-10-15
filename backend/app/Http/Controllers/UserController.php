@@ -97,7 +97,16 @@ class UserController extends Controller
             throw PublicException::forbiddenError('Solo puedes editar tu propio perfil');
         }
 
-        $user->fill($request->validated());
+        $profileData = $request->validated();
+        // el genero se define una sola vez: despues se ignora si no viene y se rechaza si quiere cambiarlo
+        if($user->gender){
+            if(isset($profileData['gender']) && $profileData['gender'] !== $user->gender){
+                throw PublicException::validationError('El genero ya fue definido y no se puede cambiar');
+            }
+            unset($profileData['gender']);
+        }
+
+        $user->fill($profileData);
         $changedFieldList = array_keys($user->getDirty());
         $user->save();
         if($changedFieldList){

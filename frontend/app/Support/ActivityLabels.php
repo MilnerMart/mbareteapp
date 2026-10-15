@@ -119,7 +119,7 @@ class ActivityLabels
         return [
             'icon' => match ($action) {
                 'rank-up' => 'fa-solid fa-medal',
-                'achievement' => AchievementLabels::icon($data['achievement'] ?? null),
+                'achievement' => AchievementLabels::icon($data['achievement'] ?? null, $data['gender'] ?? null),
                 default => self::modelIconMap[$model] ?? 'fa-solid fa-clock-rotate-left',
             },
             'text' => $text,
@@ -132,7 +132,7 @@ class ActivityLabels
     private static function userText(?string $action, array $data, bool $isOwn): string
     {
         return match ($action) {
-            'achievement' => self::verb('unlocked', $isOwn).' «'.AchievementLabels::title($data['achievement'] ?? null).'»',
+            'achievement' => self::verb('unlocked', $isOwn).' «'.AchievementLabels::title($data['achievement'] ?? null, $data['gender'] ?? null).'»',
             'rank-up' => self::verb('ranked-up', $isOwn).' al rango '.ProfileLabels::rankLabel($data['rank'] ?? null, $data['gender'] ?? null),
             'image-updated' => self::verb('photo-changed', $isOwn),
             default => self::verb('profile-updated', $isOwn).(empty($data['fields']) ? '' : ': '.implode(', ', array_map(

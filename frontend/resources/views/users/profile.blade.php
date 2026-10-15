@@ -83,7 +83,7 @@
                     <form method="POST" action="{{ route('user.profile.update', $profile['id']) }}" class="profile-form"
                         data-confirm-submit
                         data-confirm-title="Guardar perfil"
-                        data-confirm-text="Se actualizan tus datos, tu objetivo y tu genero.">
+                        data-confirm-text="{{ $form['confirmText'] }}">
                         @csrf
                         @method('PUT')
                         <div class="profile-form-row">
@@ -128,13 +128,13 @@
                             </div>
                             <div>
                                 <label for="gender" class="form-label">Genero</label>
-                                <select id="gender" name="gender" class="form-select">
+                                <select id="gender" name="gender" class="form-select" @disabled($form['isGenderLocked'])>
                                     <option value="">Sin definir</option>
                                     @foreach ($form['genderOptions'] as $value => $label)
                                         <option value="{{ $value }}" @selected($form['values']['gender'] === $value)>{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                <small class="profile-form-hint">Define como se nombra tu rango (Novato o Novata, por ejemplo).</small>
+                                <small class="profile-form-hint">{{ $form['genderHint'] }}</small>
                             </div>
                         </div>
                         <div class="profile-form-actions">

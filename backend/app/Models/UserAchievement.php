@@ -23,9 +23,10 @@ class UserAchievement {
                 'user_id' => $user->id, 'slug' => $slug, 'unlocked_at' => $now, 'created_at' => $now, 'updated_at' => $now,
             ], $newSlugList));
             foreach ($newSlugList as $slug) {
-                UserNotification::addAchievement($dbConnect, $user->id, $slug);
+                UserNotification::addAchievement($dbConnect, $user->id, $slug, $user->gender);
                 EntityLog::addNewForRef($dbConnect, $user->id, CoreModel::userModelId, $user->id, EntityLog::actionIdAchievement, $user->getFullName(), [
                     'achievement' => $slug,
+                    'gender' => $user->gender,
                 ]);
             }
         });

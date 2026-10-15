@@ -41,30 +41,37 @@ class AchievementLabels
         'minutes-6000' => ['Cien horas', '100 horas dedicadas a vos.', 'fa-solid fa-clock'],
     ];
 
-    static function title(?string $slug): string
+    // reemplazos para genero femenino; lo que no esta aca usa el texto general
+    const femaleCatalog = [
+        'kilos-3000' => ['Fuerza de leona', '3.000 kg en total, lo que pesa una camioneta.', 'fa-solid fa-truck-pickup'],
+        'kilos-15000' => ['Supermujer', '15.000 kg en total. ¡Ahora podes alzar el peso de un bondi!', 'fa-solid fa-bus'],
+        'kilos-150000' => ['Diosa del hierro', '150.000 kg, lo mismo que una locomotora.', 'fa-solid fa-train'],
+    ];
+
+    static function title(?string $slug, ?string $gender = null): string
     {
-        return self::catalog[$slug][0] ?? 'Logro';
+        return self::entry($slug, $gender)[0] ?? 'Logro';
     }
 
-    static function message(?string $slug): string
+    static function message(?string $slug, ?string $gender = null): string
     {
-        return self::catalog[$slug][1] ?? '';
+        return self::entry($slug, $gender)[1] ?? '';
     }
 
-    static function icon(?string $slug): string
+    static function icon(?string $slug, ?string $gender = null): string
     {
-        return self::catalog[$slug][2] ?? 'fa-solid fa-trophy';
+        return self::entry($slug, $gender)[2] ?? 'fa-solid fa-trophy';
     }
 
-    static function buildPanel(array $achievementList, bool $isOwnProfile): array
+    static function buildPanel(array $achievementList, bool $isOwnProfile, ?string $gender = null): array
     {
         $groupList = [];
         foreach ($achievementList as $achievement) {
             $groupList[$achievement['metric']]['title'] = self::groupLabelMap[$achievement['metric']] ?? 'Otros';
             $groupList[$achievement['metric']]['items'][] = [
-                'title' => self::title($achievement['slug']),
-                'message' => self::message($achievement['slug']),
-                'icon' => self::icon($achievement['slug']),
+                'title' => self::title($achievement['slug'], $gender),
+                'message' => self::message($achievement['slug'], $gender),
+                'icon' => self::icon($achievement['slug'], $gender),
                 'isUnlocked' => $achievement['isUnlocked'],
                 'dateLabel' => $achievement['unlockedAt'] ? 'Lo lograste el '.Carbon::parse($achievement['unlockedAt'])->format('d/m/Y') : null,
                 'progressText' => $achievement['isUnlocked'] ? null : self::formatValue($achievement['metric'], $achievement['current'])
@@ -79,6 +86,11 @@ class AchievementLabels
             'groupList' => array_values($groupList),
             'emptyText' => $isOwnProfile ? 'Entrena y marca tus ejercicios para desbloquear logros.' : 'Todavia no desbloqueo logros.',
         ];
+    }
+
+    private static function entry(?string $slug, ?string $gender): ?array
+    {
+        return ($gender === 'female' ? self::femaleCatalog[$slug] ?? null : null) ?? self::catalog[$slug] ?? null;
     }
 
     private static function formatValue(string $metric, int $value): string

@@ -34,7 +34,7 @@ class UserController extends Controller{
         $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null);
         $data['favorites'] = $this->buildFavoriteList($userInfo['favorites'] ?? [], $data['isOwnProfile']);
         $data['form'] = $data['isOwnProfile'] ? $this->buildProfileForm($userInfo) : null;
-        $data['achievements'] = AchievementLabels::buildPanel($userInfo['achievements'] ?? [], $data['isOwnProfile']);
+        $data['achievements'] = AchievementLabels::buildPanel($userInfo['achievements'] ?? [], $data['isOwnProfile'], $userInfo['gender'] ?? null);
         // ?logros=1 llega desde el aviso de la campanita y abre la lista de logros
         $data['openAchievements'] = request()->boolean('logros');
 
@@ -247,10 +247,17 @@ class UserController extends Controller{
                 'height' => old('height', $userInfo['height'] ?? ''),
                 'weight' => old('weight', $userInfo['weight'] ?? ''),
                 'goal' => old('goal', $userInfo['goal'] ?? ''),
-                'gender' => old('gender', $userInfo['gender'] ?? ''),
+                'gender' => empty($userInfo['gender']) ? old('gender', '') : $userInfo['gender'],
             ],
             'goalOptions' => ProfileLabels::goalLabelMap,
             'genderOptions' => ProfileLabels::genderLabelMap,
+            'isGenderLocked' => !empty($userInfo['gender']),
+            'genderHint' => empty($userInfo['gender'])
+                ? 'Define como se nombra tu rango (Novato o Novata, por ejemplo). Una vez guardado no se puede cambiar.'
+                : 'Ya lo definiste y no se puede cambiar.',
+            'confirmText' => empty($userInfo['gender'])
+                ? 'Se actualizan tus datos, tu objetivo y tu genero. El genero no se puede cambiar despues.'
+                : 'Se actualizan tus datos y tu objetivo.',
             // ?edit=1 llega desde la campanita cuando faltan datos del perfil
             'isOpen' => request()->boolean('edit') || (bool)session('errors')?->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender']),
         ];

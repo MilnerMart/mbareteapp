@@ -114,8 +114,8 @@ class UserNotification extends BaseEntity {
         ]);
     }
 
-    static function addAchievement(DbConnector $dbConnect, int $userId, string $slug): void{
-        self::addNewList($dbConnect, [$userId], self::typeIdAchievement, $userId, ['achievement' => $slug]);
+    static function addAchievement(DbConnector $dbConnect, int $userId, string $slug, ?string $gender = null): void{
+        self::addNewList($dbConnect, [$userId], self::typeIdAchievement, $userId, ['achievement' => $slug, 'gender' => $gender]);
     }
 
     private static function addNewList(DbConnector $dbConnect, array $userIdList, int $type, ?int $refId, array $data): void{

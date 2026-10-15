@@ -32,13 +32,7 @@
                     @method('PUT')
                 @endif
 
-                <div class="mb-3">
-                    <label for="kind" class="form-label">Tipo</label>
-                    <select class="form-select @error('kind') is-invalid @enderror" id="kind" name="kind" required>
-                        <option value="muscle" @selected(!$isActivity)>Grupo muscular (pecho, espalda, piernas...)</option>
-                        <option value="activity" @selected($isActivity)>Actividad (cardio, boxeo, atletismo...)</option>
-                    </select>
-                </div>
+                <input type="hidden" name="kind" value="{{ $kind }}">
 
                 <div class="mb-3">
                     <label for="name" class="form-label">Nombre</label>

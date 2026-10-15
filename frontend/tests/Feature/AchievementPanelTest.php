@@ -53,4 +53,20 @@ class AchievementPanelTest extends TestCase
             'action' => 'achievement', 'model' => 'user', 'entityId' => 1, 'data' => ['name' => 'Ana', 'achievement' => 'streak-30'],
         ], true)['text']);
     }
+
+    public function test_female_users_get_their_own_kilos_achievements(): void
+    {
+        $this->withSession(self::authSession);
+        $notification = ['id' => 6, 'type' => 'achievement', 'refId' => 1, 'isRead' => false, 'createdAt' => '2026-10-13T10:00:00-03:00',
+            'data' => ['achievement' => 'kilos-3000', 'gender' => 'female']];
+
+        $item = NotificationLabels::buildItem($notification);
+
+        $this->assertSame(['fa-solid fa-truck-pickup', '¡Nuevo logro! Fuerza de leona'], [$item['icon'], $item['text']]);
+        $this->assertSame('Desbloqueaste el logro «Supermujer»', ActivityLabels::buildItem([
+            'action' => 'achievement', 'model' => 'user', 'entityId' => 1, 'data' => ['name' => 'Ana', 'achievement' => 'kilos-15000', 'gender' => 'female'],
+        ], true)['text']);
+        $this->assertSame('¡Nuevo logro! Fuerza de hipopotamo', NotificationLabels::buildItem(['data' => ['achievement' => 'kilos-3000', 'gender' => 'unspecified']] + $notification)['text']);
+        $this->assertSame('¡Nuevo logro! Maquina constante', NotificationLabels::buildItem(['data' => ['achievement' => 'streak-30', 'gender' => 'female']] + $notification)['text']);
+    }
 }
