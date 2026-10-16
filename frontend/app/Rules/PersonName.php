@@ -15,7 +15,7 @@ class PersonName implements ValidationRule
 
     static function normalize(mixed $value): mixed
     {
-        return is_string($value) ? preg_replace('/\s+/u', ' ', trim($value)) : $value;
+        return is_string($value) ? trim(preg_replace('/\s+/u', ' ', $value)) : $value;
     }
 
     public function validate(string $attribute, mixed $value, Closure $fail): void

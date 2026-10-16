@@ -52,7 +52,7 @@
                                     autocomplete="given-name"
                                     minlength="2"
                                     maxlength="60"
-                                    pattern="[\p{L}\p{M}]+(?:(?:\. *| +|['’\-])[\p{L}\p{M}]+)*\.?"
+                                    pattern="\s*[\p{L}\p{M}]+(?:(?:\.\s*|\s+|['’\-])[\p{L}\p{M}]+)*\.?\s*" data-trim
                                     title="Solo letras, espacios, apóstrofes o guiones. Sin números, correos ni símbolos."
                                     required>
                             </div>
@@ -77,7 +77,7 @@
                                     autocomplete="family-name"
                                     minlength="2"
                                     maxlength="60"
-                                    pattern="[\p{L}\p{M}]+(?:(?:\. *| +|['’\-])[\p{L}\p{M}]+)*\.?"
+                                    pattern="\s*[\p{L}\p{M}]+(?:(?:\.\s*|\s+|['’\-])[\p{L}\p{M}]+)*\.?\s*" data-trim
                                     title="Solo letras, espacios, apóstrofes o guiones. Sin números, correos ni símbolos."
                                     required>
                             </div>

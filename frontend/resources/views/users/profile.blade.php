@@ -91,14 +91,14 @@
                                 <label for="name" class="form-label">Nombre</label>
                                 <input type="text" id="name" name="name" class="form-control" value="{{ $form['values']['name'] }}" autocomplete="given-name"
                                     minlength="2" maxlength="60" required
-                                    pattern="[\p{L}\p{M}]+(?:(?:\. *| +|['’\-])[\p{L}\p{M}]+)*\.?"
+                                    pattern="\s*[\p{L}\p{M}]+(?:(?:\.\s*|\s+|['’\-])[\p{L}\p{M}]+)*\.?\s*" data-trim
                                     title="Solo letras, espacios, apóstrofes o guiones. Sin números, correos ni símbolos.">
                             </div>
                             <div>
                                 <label for="last_name" class="form-label">Apellido</label>
                                 <input type="text" id="last_name" name="last_name" class="form-control" value="{{ $form['values']['last_name'] }}" autocomplete="family-name"
                                     minlength="2" maxlength="60" required
-                                    pattern="[\p{L}\p{M}]+(?:(?:\. *| +|['’\-])[\p{L}\p{M}]+)*\.?"
+                                    pattern="\s*[\p{L}\p{M}]+(?:(?:\.\s*|\s+|['’\-])[\p{L}\p{M}]+)*\.?\s*" data-trim
                                     title="Solo letras, espacios, apóstrofes o guiones. Sin números, correos ni símbolos.">
                             </div>
                         </div>

@@ -28,6 +28,14 @@ class RegisterNameValidationTest extends TestCase
         $this->assertSame(['María José', "O'Brien-Núñez"], array_values((array)DB::table('users')->where('email', 'maria@example.com')->first(['name', 'last_name'])));
     }
 
+    public function test_register_trims_non_breaking_and_tab_spaces(): void
+    {
+        $this->postJson('/api/v1/auth/register', $this->registerData('juan@example.com', "\u{00A0}Juan\u{00A0}Carlos\u{00A0}", "\tPérez Gómez "))
+            ->assertSuccessful();
+
+        $this->assertSame(['Juan Carlos', 'Pérez Gómez'], array_values((array)DB::table('users')->where('email', 'juan@example.com')->first(['name', 'last_name'])));
+    }
+
     private function registerData(string $email, string $name, string $lastName): array
     {
         return [

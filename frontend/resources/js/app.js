@@ -222,6 +222,13 @@ document.addEventListener('change', (event) => {
     }
 });
 
+// Campos con data-trim (nombres): se quitan los espacios de los extremos y los repetidos al salir del campo.
+document.addEventListener('change', (event) => {
+    if (event.target.matches('input[data-trim]')) {
+        event.target.value = event.target.value.replace(/\s+/g, ' ').trim();
+    }
+});
+
 // Interruptor de tema (data-theme-switch): la perilla se desliza y el tema cambia al momento; despues se guarda la
 // eleccion (en la cuenta o en este navegador) enviando el formulario.
 document.addEventListener('submit', (event) => {
