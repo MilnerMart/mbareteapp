@@ -244,9 +244,14 @@ class GymController extends Controller
         }
 
         $data['gym'] = $gym;
-        $data['students'] = $this->apiClient->getGymUsers($id) ?? [];
+        $data['students'] = array_map(fn(array $student) => $student + [
+            'isInactive' => !($student['is_active'] ?? true),
+        ], $this->apiClient->getGymUsers($id) ?? []);
+        // todos pertenecen al gimnasio base: de ahi no se quita a nadie, el admin da de baja desde la ficha
+        $data['canRemoveStudents'] = !($gym['isBase'] ?? false);
         $data['ranking'] = $this->buildRanking($request, $id, fn(int $season) => route('gym.show', [$id, 'temporada' => $season]));
         $data['isAdmin'] = AuthPermits::isAdmin();
+        $data['canOpenUserDetail'] = AuthPermits::canSeeUserDetail();
         $data['canAssignRoutines'] = AuthPermits::canAssignRoutines();
         // el entrenador asigna sus propias rutinas, el admin cualquiera
         $userId = (int) session('auth_user.id');

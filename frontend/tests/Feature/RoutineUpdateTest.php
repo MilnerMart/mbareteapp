@@ -76,7 +76,7 @@ class RoutineUpdateTest extends TestCase
             ->assertRedirect(route('user.profile', 1))
             ->assertSessionHas('auth_user.name', 'María José');
 
-        $this->assertSame(['name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender'], array_keys($payload));
+        $this->assertSame(['name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender', 'rest_days'], array_keys($payload));
         $this->assertSame(['María José', 'hypertrophy', null], [$payload['name'], $payload['goal'], $payload['gender']]);
 
         $this->withSession(['auth_user' => ['id' => 1], 'auth_token' => 'token'])

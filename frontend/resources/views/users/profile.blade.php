@@ -77,7 +77,7 @@
             <section class="card profile-card" id="profile-edit" @unless ($form['isOpen']) hidden @endunless>
                 <div class="card-body">
                     <h2 class="profile-section-title">Editar perfil</h2>
-                    @if ($errors->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender']))
+                    @if ($errors->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender', 'rest_days', 'rest_days.*']))
                         <div class="alert alert-danger">{{ $errors->first() }}</div>
                     @endif
                     <form method="POST" action="{{ route('user.profile.update', $profile['id']) }}" class="profile-form"
@@ -137,6 +137,15 @@
                                 <small class="profile-form-hint">{{ $form['genderHint'] }}</small>
                             </div>
                         </div>
+                        <div class="profile-form-block">
+                            <label for="rest_days" class="form-label">Dias de descanso</label>
+                            <select id="rest_days" name="rest_days[]" class="form-select" multiple data-searchable data-placeholder="Elige tus dias de descanso">
+                                @foreach ($form['restDayOptions'] as $restDay)
+                                    <option value="{{ $restDay['value'] }}" @selected($restDay['isSelected'])>{{ $restDay['label'] }}</option>
+                                @endforeach
+                            </select>
+                            <small class="profile-form-hint">Si no entrenas esos dias no pierdes la racha. Los demas dias cuentan para mantenerla.</small>
+                        </div>
                         <div class="profile-form-actions">
                             <button type="button" class="btn profile-btn-cancel" data-profile-edit-toggle aria-controls="profile-edit">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Guardar cambios</button>
@@ -173,6 +182,7 @@
                         </div>
                     @endforeach
                 </dl>
+                <p class="profile-rank-hint">{{ $progress['restDaysText'] }}</p>
                 <p class="profile-rank-hint">
                     Sumas puntos por cada dia entrenado, por mantener la racha, por los minutos entrenados y por los kilos que levantas.
                     Cada dia suma hasta un tope de puntos: la constancia vale mas que una sola sesion larga.

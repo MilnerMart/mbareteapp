@@ -230,6 +230,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.profile-form-block {
+    margin-bottom: 1rem;
+}
+
 .profile-form-actions {
     display: flex;
     gap: .75rem;

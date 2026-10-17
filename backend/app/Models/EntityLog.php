@@ -23,7 +23,8 @@ class EntityLog extends BaseEntity {
         actionIdExerciseAdded = 60, actionIdExerciseRemoved = 70, actionIdResourceAdded = 80, actionIdResourceRemoved = 90,
         actionIdImageUpdated = 100, actionIdApproved = 110, actionIdRejected = 120, actionIdResubmitted = 130,
         actionIdMemberRemoved = 140, actionIdVisibilityChanged = 150, actionIdRankUp = 160, actionIdAchievement = 170,
-        actionIdSeasonStarted = 180, actionIdSeasonUpdated = 190, actionIdSeasonResult = 200;
+        actionIdSeasonStarted = 180, actionIdSeasonUpdated = 190, actionIdSeasonResult = 200,
+        actionIdDeactivated = 210;
 
     const pageSize = 30;
 
@@ -48,6 +49,7 @@ class EntityLog extends BaseEntity {
         self::actionIdSeasonStarted => 'season-started',
         self::actionIdSeasonUpdated => 'season-updated',
         self::actionIdSeasonResult => 'season-result',
+        self::actionIdDeactivated => 'deactivated',
     ];
 
     private const modelSlugMap = [

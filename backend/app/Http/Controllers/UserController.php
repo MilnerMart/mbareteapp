@@ -6,12 +6,14 @@ use App\Core\CoreModel;
 use App\Http\Requests\ProfileImageRequest;
 use App\Http\Requests\ProfileRequest;
 use App\Http\Requests\ThemeRequest;
+use App\Http\Requests\UserDeactivateRequest;
 use App\Http\Resources\UserResource;
 use App\Helpers\BaseHelper;
 use App\Models\EntityLog;
 use App\Models\Exercise;
 use App\Models\GymUser;
 use App\Models\Muscle;
+use App\Models\Permit;
 use App\Models\Resource;
 use App\Models\Role;
 use App\Models\Routine;
@@ -46,7 +48,7 @@ class UserController extends Controller
     }
     public function detail(Request $request, string $id): JsonResponse {
         $viewer = $request->user();
-        $this->seeAllPermitOrFail($viewer);
+        $this->permitOrFail($viewer, Permit::seeUserDetailPermitSlug, 'No tienes permisos para ver la ficha de usuarios');
         $user = User::find($id);
         if(!$user){
             throw PublicException::notFoundError('Usuario no encontrado');
@@ -59,6 +61,34 @@ class UserController extends Controller
             'gyms' => GymUser::queryGymNameMapByUserIds($dbConnector, [$user->id])[$user->id] ?? [],
             'routines' => UserRoutine::queryRoutineMapByUserIds($dbConnector, [$user->id])[$user->id] ?? [],
             'pending_profile_fields' => $user->getPendingProfileFieldList(),
+            'deactivation' => $user->buildDeactivationApiModel($dbConnector),
+            'can_deactivate' => $user->canBeDeactivatedBy($dbConnector, $viewer),
+        ]);
+    }
+
+    // baja logica desde la ficha (admin, o see-user-detail + deactivate-user): no puede iniciar sesion y se cierran sus sesiones abiertas
+    public function deactivate(UserDeactivateRequest $request, string $id): JsonResponse {
+        $admin = $request->user();
+        $this->permitOrFail($admin, Permit::seeUserDetailPermitSlug, 'No tienes permisos para dar de baja usuarios');
+        $this->permitOrFail($admin, Permit::deactivateUserPermitSlug, 'No tienes permisos para dar de baja usuarios');
+        $user = User::find($id);
+        if(!$user){
+            throw PublicException::notFoundError('Usuario no encontrado');
+        }
+        if((int)$user->id === (int)$admin->id){
+            throw PublicException::validationError('No puedes darte de baja a ti mismo');
+        }
+        if($user->isDeactivated()){
+            throw PublicException::validationError($user->getFullName().' ya fue dado de baja');
+        }
+        $dbConnector = $this->getDbConnector();
+        if(!$user->canBeDeactivatedBy($dbConnector, $admin)){
+            throw PublicException::forbiddenError('Solo otro administrador puede dar de baja a un administrador');
+        }
+
+        $user->deactivate($dbConnector, $admin, $request->validated()['reason']);
+        return $this->successApiResponse(UserResource::make($user)->resolve() + [
+            'deactivation' => $user->buildDeactivationApiModel($dbConnector),
         ]);
     }
 
@@ -105,6 +135,9 @@ class UserController extends Controller
                 throw PublicException::validationError('El genero ya fue definido y no se puede cambiar');
             }
             unset($profileData['gender']);
+        }
+        if(array_key_exists('rest_days', $profileData)){
+            $profileData['rest_days'] = User::normalizeRestDayList($profileData['rest_days'] ?? []);
         }
 
         $user->fill($profileData);
@@ -202,7 +235,13 @@ class UserController extends Controller
         ];
     }
 
-    private function queryVisibleRoutine(User $viewer, int $routineId, bool $isAdmin): ?Routine {
+    private function permitOrFail(User $user, string $permitSlug, string $message): void {
+        if(!$user->hasPermit($this->getDbConnector(), $permitSlug)){
+            throw PublicException::forbiddenError($message);
+        }
+    }
+
+        private function queryVisibleRoutine(User $viewer, int $routineId, bool $isAdmin): ?Routine {
         $routine = Routine::queryByDbId($this->getDbConnector(), $routineId);
         if(!$routine){
             return null;

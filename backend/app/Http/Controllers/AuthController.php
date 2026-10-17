@@ -70,6 +70,9 @@ class AuthController extends Controller
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             throw PublicException::validationError('Las credenciales ingresadas no son correctas');
         }
+        if ($user->isDeactivated()) {
+            throw PublicException::forbiddenError('Tu cuenta fue dada de baja. Si crees que es un error, contacta al administrador');
+        }
 
         $user->tokens()->where('name', $this->tokenName($request))->delete();
         $token = $user->createToken($this->tokenName($request))->plainTextToken;

@@ -22,7 +22,8 @@ class Permit extends BaseEntity {
 
     const seeAllPermitSlug = 'the-one-who-sees-all', createGymEntityPermitSlug = 'create-gym-entity', assignRoutinesPermitSlug = 'Assing-routines',
         belongsToGymPermitSlug = 'belongs-to-gym', createCatalogEntityPermitSlug = 'create-catalog-entity',
-        allowConfigPermitSlug = 'allow-config';
+        allowConfigPermitSlug = 'allow-config', deactivateUserPermitSlug = 'deactivate-user',
+        seeUserDetailPermitSlug = 'see-user-detail';
 
     private string $name, $slug;
 

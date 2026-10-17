@@ -2,8 +2,10 @@
     $gym = $data['gym'];
     $students = $data['students'];
     $isAdmin = $data['isAdmin'];
+    $canOpenUserDetail = $data['canOpenUserDetail'];
     $canAssignRoutines = $data['canAssignRoutines'];
     $assignableRoutines = $data['assignableRoutines'];
+    $canRemoveStudents = $data['canRemoveStudents'];
     $owner = $gym['refs']['owner'] ?? null;
     $ownerName = $owner ? trim(($owner['name'] ?? '') . ' ' . ($owner['last_name'] ?? '')) : null;
 @endphp
@@ -96,14 +98,14 @@
                         @php
                             $studentName = trim(($student['name'] ?? '') . ' ' . ($student['last_name'] ?? ''));
                         @endphp
-                        <li class="gym-student @if ($isAdmin) is-clickable @endif" @if ($isAdmin) data-user-detail-card @endif>
+                        <li class="gym-student @if ($canOpenUserDetail) is-clickable @endif" @if ($canOpenUserDetail) data-user-detail-card @endif>
                             <img
                                 src="{{ $student['profile_image_url'] ?? asset('images/chavukuBiceps.png') }}"
                                 alt=""
                                 class="gym-student-avatar">
                             <div class="gym-student-info">
-                                @if ($isAdmin)
-                                    {{-- el admin abre la ficha del alumno (solo lectura) tocando la tarjeta --}}
+                                @if ($canOpenUserDetail)
+                                    {{-- el admin (o quien puede dar de baja) abre la ficha del alumno tocando la tarjeta; desde ahi puede darlo de baja --}}
                                     <button type="button" class="gym-student-open" data-bs-toggle="modal" data-bs-target="#userDetailModal"
                                         data-user-detail-url="{{ route('user.detail', $student['id']) }}" title="Ver ficha del alumno">
                                         {{ $studentName ?: 'Alumno' }}
@@ -112,6 +114,9 @@
                                     <strong>{{ $studentName ?: 'Alumno' }}</strong>
                                 @endif
                                 <span>{{ $student['email'] }}</span>
+                                @if ($student['isInactive'])
+                                    <span class="gym-student-inactive">Dado de baja</span>
+                                @endif
                                 @if (!empty($student['routines']))
                                     <ul class="gym-student-routines" aria-label="Rutinas asignadas">
                                         @foreach ($student['routines'] as $routine)
@@ -132,7 +137,7 @@
                                 @endif
                             </div>
                             <div class="gym-student-actions">
-                                @if ($canAssignRoutines)
+                                @if ($canAssignRoutines && !$student['isInactive'])
                                     @if (empty($assignableRoutines))
                                         <a href="{{ route('routine.create') }}" class="btn gym-edit-btn">
                                             <i class="fa-solid fa-clipboard-list"></i>
@@ -154,20 +159,22 @@
                                         </form>
                                     @endif
                                 @endif
-                                <form
-                                    method="POST"
-                                    action="{{ route('gym.users.remove', [$gym['id'], $student['id']]) }}"
-                                    data-confirm-delete
-                                    data-confirm-title="Quitar alumno"
-                                    data-confirm-button="Quitar"
-                                    data-confirm-text="{{ $studentName ?: 'Este alumno' }} dejara de pertenecer a {{ $gym['name'] }}. Para volver tendra que pedir unirse de nuevo.">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn gym-remove-btn">
-                                        <i class="fa-solid fa-user-minus"></i>
-                                        <span>Quitar</span>
-                                    </button>
-                                </form>
+                                @if ($canRemoveStudents)
+                                    <form
+                                        method="POST"
+                                        action="{{ route('gym.users.remove', [$gym['id'], $student['id']]) }}"
+                                        data-confirm-delete
+                                        data-confirm-title="Quitar alumno"
+                                        data-confirm-button="Quitar"
+                                        data-confirm-text="{{ $studentName ?: 'Este alumno' }} dejara de pertenecer a {{ $gym['name'] }}. Para volver tendra que pedir unirse de nuevo.">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn gym-remove-btn">
+                                            <i class="fa-solid fa-user-minus"></i>
+                                            <span>Quitar</span>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </li>
                     @endforeach
@@ -176,12 +183,12 @@
         </div>
     </section>
 
-    @if ($isAdmin)
+    @if ($canOpenUserDetail)
         <div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailTitle" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content user-detail-modal">
                     <div class="modal-header">
-                        <span class="user-detail-readonly"><i class="fa-solid fa-eye" aria-hidden="true"></i> Ficha del alumno (solo lectura)</span>
+                        <span class="user-detail-readonly"><i class="fa-solid fa-eye" aria-hidden="true"></i> Ficha del alumno</span>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body" data-user-detail-body></div>
@@ -191,7 +198,7 @@
     @endif
 @endsection
 
-@if ($isAdmin)
+@if ($canOpenUserDetail)
     @section('js')
         {{-- module: corre despues de app.js, que es quien expone jQuery --}}
         <script type="module">

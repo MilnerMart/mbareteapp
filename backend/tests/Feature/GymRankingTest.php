@@ -275,6 +275,7 @@ class GymRankingTest extends TestCase
     {
         $register = $this->register($email, 'trainee-role')->assertCreated();
         $userId = $register->json('data.user.id');
+        $this->clearRestDays($userId);
         DB::table('gym_users')->insert(['gym_id' => $this->gymId, 'user_id' => $userId, 'is_public' => $isPublic, 'created_at' => now(), 'updated_at' => now()]);
         return [$register->json('data.token'), $userId];
     }

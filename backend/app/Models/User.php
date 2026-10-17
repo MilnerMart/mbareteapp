@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Core\CoreModel;
 use App\Core\EntityStatus;
 use App\Db\DbAdapter;
 use App\Db\DbConnector;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 use stdClass;
 
-#[Fillable(['name', 'last_name', 'email', 'password', 'age', 'height', 'weight', 'profile_image_url', 'status', 'goal', 'gender', 'theme'])]
+#[Fillable(['name', 'last_name', 'email', 'password', 'age', 'height', 'weight', 'profile_image_url', 'status', 'goal', 'gender', 'theme', 'rest_days'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,6 +35,14 @@ class User extends Authenticatable
 
     const themeSlugList = ['dark', 'light'];
 
+    const weekDayList = [1, 2, 3, 4, 5, 6, 7];
+
+    const maxRestDays = 6;
+
+    const defaultRestDayList = [6, 7];
+
+    const minDeactivationReasonLength = 5, maxDeactivationReasonLength = 500;
+
     // datos de perfil que la campanita le pide completar; se agrega aca cualquier campo nuevo del perfil
     const requiredProfileFieldList = ['gender', 'weight', 'height', 'age', 'goal'];
 
@@ -47,6 +56,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'rest_days' => 'array',
         ];
     }
 
@@ -82,6 +92,61 @@ class User extends Authenticatable
 
     function getFullName(): string{
         return trim($this->name.' '.$this->last_name);
+    }
+
+    function isDeactivated(): bool{
+        return (int)$this->status === EntityStatus::statusIdDeleted;
+    }
+
+    function deactivate(DbConnector $dbConnector, User $admin, string $reason): void{
+        $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $admin, $reason){
+            $this->status = EntityStatus::statusIdDeleted;
+            $this->deactivated_at = $dbConnector->toDbDate(BaseHelper::utcNow());
+            $this->deactivated_by = $admin->id;
+            $this->deactivation_reason = $reason;
+            $this->save();
+            $this->tokens()->delete();
+            EntityLog::addNewForRef($dbConnector, $admin->id, CoreModel::userModelId, $this->id, EntityLog::actionIdDeactivated, $this->getFullName(), [
+                'reason' => $reason,
+            ]);
+        });
+    }
+
+    // la baja pide ver la ficha y el permiso de baja (el admin tiene los dos); a un admin solo lo da de baja otro admin
+    function canBeDeactivatedBy(DbConnector $dbConnector, User $viewer): bool{
+        return !$this->isDeactivated() && (int)$this->id !== (int)$viewer->id
+            && $viewer->hasPermit($dbConnector, Permit::seeUserDetailPermitSlug)
+            && $viewer->hasPermit($dbConnector, Permit::deactivateUserPermitSlug)
+            && (!$this->hasSeeAllPermit($dbConnector) || $viewer->hasSeeAllPermit($dbConnector));
+    }
+
+        function buildDeactivationApiModel(DbConnector $dbConnector): ?array{
+        if(!$this->isDeactivated()){
+            return null;
+        }
+        return [
+            'at' => BaseHelper::toDisplayDate($this->deactivated_at),
+            'byName' => $this->deactivated_by ? self::queryFullNameById($dbConnector, (int)$this->deactivated_by) : null,
+            'reason' => $this->deactivation_reason,
+        ];
+    }
+
+    function getRestDayList(): array{
+        return $this->rest_days === null ? self::defaultRestDayList : self::normalizeRestDayList($this->rest_days);
+    }
+
+    static function normalizeRestDayList(array $restDayList): array{
+        $restDayList = array_values(array_unique(array_intersect(array_map('intval', $restDayList), self::weekDayList)));
+        sort($restDayList);
+        return $restDayList;
+    }
+
+    static function queryRestDayMapByIds(DbConnector $dbConnector, array $userIdList): array{
+        if(!$userIdList){
+            return [];
+        }
+        return array_map(fn(?string $restDays) => $restDays === null ? self::defaultRestDayList : self::normalizeRestDayList(BaseHelper::fromDbJson($restDays) ?? []),
+            self::allocDbTable($dbConnector)->whereIn('id', $userIdList)->pluck('rest_days', 'id')->all());
     }
 
     function getPendingProfileFieldList(): array{
@@ -157,6 +222,7 @@ class User extends Authenticatable
         $row->height = $userData['height'];
         $row->weight = $userData['weight'];
         $row->status = EntityStatus::statusIdActive;
+        $row->rest_days = BaseHelper::jsonEncode(self::defaultRestDayList);
         $row->created_at = $now;
         $row->updated_at = $now;
         return $row;

@@ -26,6 +26,12 @@ trait InteractsWithMuscleApi
         Artisan::call('migrate', ['--force' => true]);
     }
 
+    // las rachas de los tests usan dias relativos a hoy: sin dias de descanso no dependen del dia de la semana en que corren
+    protected function clearRestDays(int ...$userIdList): void
+    {
+        DB::table('users')->whereIn('id', $userIdList)->update(['rest_days' => '[]']);
+    }
+
     protected function register(string $email, string $roleSlug, ?string $gymCode = null)
     {
         return $this->postJson('/api/v1/auth/register', [

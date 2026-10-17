@@ -82,8 +82,11 @@ Route::middleware('frontend.auth')->group(function () {
         Route::get('/public-resources/{itemKey}/media', [ExerciseController::class, 'publicResourceMedia'])->name('public-resource.media');
     });
 
+    // ficha del usuario (see-user-detail) y su baja (ademas deactivate-user); el admin tiene los dos
+    Route::get('/users/{id}/detail', [UserController::class, 'detail'])->middleware('frontend.user-detail')->whereNumber('id')->name('user.detail');
+    Route::post('/users/{id}/deactivate', [UserController::class, 'deactivate'])->middleware('frontend.deactivate')->whereNumber('id')->name('user.deactivate');
+
     Route::middleware('frontend.admin')->group(function () {
-        Route::get('/users/{id}/detail', [UserController::class, 'detail'])->whereNumber('id')->name('user.detail');
         Route::get('/users/{id}/activity', [UserController::class, 'activity'])->whereNumber('id')->name('user.activity');
         Route::get('/muscle/{id}/edit', [MuscleController::class, 'edit'])->whereNumber('id')->name('muscle.edit');
         Route::put('/muscle/{id}', [MuscleController::class, 'update'])->whereNumber('id')->name('muscle.update');

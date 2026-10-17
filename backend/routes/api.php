@@ -46,6 +46,7 @@ Route::prefix('/v1')->group(function(){
         Route::get('/user/{id}', [UserController::class, 'show']);
         Route::get('/user/{id}/detail', [UserController::class, 'detail']);
         Route::get('/user/{id}/logs', [UserController::class, 'logs']);
+        Route::post('/user/{id}/deactivate', [UserController::class, 'deactivate']);
 
         Route::post('/muscle', [MuscleController::class, 'store']);
         Route::put('/muscle/{id}', [MuscleController::class, 'update']);

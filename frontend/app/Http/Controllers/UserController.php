@@ -18,6 +18,8 @@ use Illuminate\View\View;
 
 class UserController extends Controller{
 
+    private const minDeactivationReasonLength = 5;
+
     private ApiClientService $apiClient;
 
     public function __construct(ApiClientService $apiClient){
@@ -31,7 +33,7 @@ class UserController extends Controller{
 
         $data['isOwnProfile'] = (int) session('auth_user.id') === $id;
         $data['profile'] = $this->buildProfileModel($userInfo);
-        $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null);
+        $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null, $userInfo['rest_days'] ?? []);
         $data['favorites'] = $this->buildFavoriteList($userInfo['favorites'] ?? [], $data['isOwnProfile']);
         $data['form'] = $data['isOwnProfile'] ? $this->buildProfileForm($userInfo) : null;
         $data['achievements'] = AchievementLabels::buildPanel($userInfo['achievements'] ?? [], $data['isOwnProfile'], $userInfo['gender'] ?? null);
@@ -60,7 +62,7 @@ class UserController extends Controller{
         }
 
         $data['profile'] = $this->buildProfileModel($userInfo);
-        $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null);
+        $data['progress'] = $this->buildProgressModel($userInfo['progress'] ?? [], $userInfo['gender'] ?? null, $userInfo['rest_days'] ?? []);
         $data['favorites'] = $this->buildFavoriteList($userInfo['favorites'] ?? [], false);
         $data['infoList'] = [
             ['label' => 'Correo', 'value' => ($userInfo['email'] ?? '-').(($userInfo['email_verified'] ?? false) ? '' : ' (sin confirmar)')],
@@ -75,10 +77,47 @@ class UserController extends Controller{
             'url' => route('routine.show', $routine['id']),
         ], $userInfo['routines'] ?? []);
         $pendingLabelList = array_filter(array_map(fn(string $field) => ProfileLabels::profileFieldLabelMap[$field] ?? null, $userInfo['pending_profile_fields'] ?? []));
-        $data['activityUrl'] = route('user.activity', $id);
+        // el registro de actividad sigue siendo solo del admin
+        $data['activityUrl'] = AuthPermits::isAdmin() ? route('user.activity', $id) : null;
         $data['pendingText'] = $pendingLabelList ? 'Datos sin completar: '.implode(', ', $pendingLabelList) : null;
+        $data['deactivation'] = $this->buildDeactivationModel($userInfo['deactivation'] ?? null);
+        $data['deactivateForm'] = ($userInfo['can_deactivate'] ?? false) ? [
+            'url' => route('user.deactivate', $id),
+            'confirmText' => $data['profile']['fullName'].' no podra volver a iniciar sesion y dejara de aparecer en las listas de alumnos y rankings.',
+            'minLength' => self::minDeactivationReasonLength,
+        ] : null;
 
         return response()->view('users._detail', compact('data'));
+    }
+
+    // baja logica desde la ficha del alumno: el motivo queda registrado y se ve en su ficha
+    public function deactivate(Request $request, int $id): RedirectResponse{
+        $request->merge(['reason' => trim((string)$request->input('reason'))]);
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:'.self::minDeactivationReasonLength, 'max:500'],
+        ], [
+            'reason.required' => 'Indica el motivo de la baja.',
+            'reason.min' => 'El motivo de la baja tiene que tener al menos '.self::minDeactivationReasonLength.' caracteres.',
+            'reason.max' => 'El motivo de la baja puede tener hasta 500 caracteres.',
+        ]);
+
+        $response = $this->apiClient->deactivateUser($id, $validated['reason']);
+        if(!$this->isApiSuccess($response)){
+            return back()->withErrors(['student' => $this->apiErrorMessage($response, 'No pudimos dar de baja al usuario.')]);
+        }
+
+        $fullName = trim(($response['data']['name'] ?? '').' '.($response['data']['last_name'] ?? '')) ?: 'El usuario';
+        return back()->with('gym_saved', $fullName.' fue dado de baja.');
+    }
+
+    private function buildDeactivationModel(?array $deactivation): ?array{
+        if(!$deactivation){
+            return null;
+        }
+        return [
+            'title' => 'Dado de baja el '.TicketLabels::formatDate($deactivation['at'] ?? null).(empty($deactivation['byName']) ? '' : ' por '.$deactivation['byName']),
+            'reason' => $deactivation['reason'] ?? '-',
+        ];
     }
 
     // registro de actividad del usuario, solo para el admin
@@ -122,7 +161,13 @@ class UserController extends Controller{
             'weight' => ['required', 'integer', 'min:25', 'max:250'],
             'goal' => ['nullable', Rule::in(array_keys(ProfileLabels::goalLabelMap))],
             'gender' => ['nullable', Rule::in(array_keys(ProfileLabels::genderLabelMap))],
+            'rest_days' => ['nullable', 'array', 'max:'.ProfileLabels::maxRestDays],
+            'rest_days.*' => ['integer', 'distinct', Rule::in(array_keys(ProfileLabels::weekDayLabelMap))],
+        ], [
+            'rest_days.max' => 'Deja al menos un dia de entrenamiento en la semana.',
         ]);
+        // el select multiple no envia nada si se quitan todos: se manda vacio para que vuelva a pedir todos los dias
+        $validated['rest_days'] = array_map('intval', $validated['rest_days'] ?? []);
 
         $response = $this->apiClient->updateProfile($id, $validated);
         if(!$this->isApiSuccess($response)){
@@ -175,7 +220,7 @@ class UserController extends Controller{
     }
 
     // nivel calculado con puntos por dias entrenados, racha, minutos y kilos (lo calcula el backend)
-    private function buildProgressModel(array $progress, ?string $gender): array{
+    private function buildProgressModel(array $progress, ?string $gender, array $restDayList): array{
         $points = (int)($progress['points'] ?? 0);
         $nextRankPoints = $progress['nextRankPoints'] ?? null;
 
@@ -188,6 +233,7 @@ class UserController extends Controller{
             'nextText' => $nextRankPoints
                 ? 'Faltan '.number_format($nextRankPoints - $points, 0, ',', '.').' puntos para '.ProfileLabels::rankLabel($progress['nextRank'] ?? null, $gender)
                 : 'Llegaste al rango maximo',
+            'restDaysText' => ProfileLabels::restDaysText($restDayList),
             'metricList' => [
                 ['icon' => 'fa-solid fa-calendar-check', 'label' => 'Dias entrenados', 'value' => (int)($progress['trainingDays'] ?? 0)],
                 ['icon' => 'fa-solid fa-fire', 'label' => 'Racha actual', 'value' => $currentStreak.' dia'.($currentStreak === 1 ? '' : 's')],
@@ -249,6 +295,7 @@ class UserController extends Controller{
                 'goal' => old('goal', $userInfo['goal'] ?? ''),
                 'gender' => empty($userInfo['gender']) ? old('gender', '') : $userInfo['gender'],
             ],
+            'restDayOptions' => $this->buildRestDayOptionList(array_map('intval', (array)old('rest_days', $userInfo['rest_days'] ?? []))),
             'goalOptions' => ProfileLabels::goalLabelMap,
             'genderOptions' => ProfileLabels::genderLabelMap,
             'isGenderLocked' => !empty($userInfo['gender']),
@@ -259,7 +306,15 @@ class UserController extends Controller{
                 ? 'Se actualizan tus datos, tu objetivo y tu genero. El genero no se puede cambiar despues.'
                 : 'Se actualizan tus datos y tu objetivo.',
             // ?edit=1 llega desde la campanita cuando faltan datos del perfil
-            'isOpen' => request()->boolean('edit') || (bool)session('errors')?->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender']),
+            'isOpen' => request()->boolean('edit') || (bool)session('errors')?->hasAny(['profile', 'name', 'last_name', 'age', 'height', 'weight', 'goal', 'gender', 'rest_days', 'rest_days.*']),
         ];
+    }
+
+    private function buildRestDayOptionList(array $restDayList): array{
+        return array_map(fn(int $day, string $label) => [
+            'value' => $day,
+            'label' => $label,
+            'isSelected' => in_array($day, $restDayList, true),
+        ], array_keys(ProfileLabels::weekDayLabelMap), ProfileLabels::weekDayLabelMap);
     }
 }

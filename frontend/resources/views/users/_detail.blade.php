@@ -1,4 +1,4 @@
-{{-- Ficha de solo lectura de un usuario para el admin: se inserta en el modal de la tarjeta del alumno. Recibe $data. --}}
+{{-- Ficha de un usuario para el admin o quien puede darlo de baja: se inserta en el modal de la tarjeta del alumno. Recibe $data. --}}
 @php
     $profile = $data['profile'];
     $progress = $data['progress'];
@@ -13,12 +13,21 @@
             <div class="profile-chips">
                 <span class="profile-chip"><i class="fa-solid fa-medal"></i><span>{{ $profile['rankLabel'] }}</span></span>
             </div>
-            <a href="{{ $data['activityUrl'] }}" class="btn gym-edit-btn user-detail-activity">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Ver registro de actividad</span>
-            </a>
+            @if ($data['activityUrl'])
+                <a href="{{ $data['activityUrl'] }}" class="btn gym-edit-btn user-detail-activity">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Ver registro de actividad</span>
+                </a>
+            @endif
         </div>
     </div>
+
+    @if ($data['deactivation'])
+        <div class="user-detail-deactivation" role="status">
+            <strong><i class="fa-solid fa-user-slash" aria-hidden="true"></i> {{ $data['deactivation']['title'] }}</strong>
+            <p>Motivo: {{ $data['deactivation']['reason'] }}</p>
+        </div>
+    @endif
 
     @if ($data['pendingText'])
         <p class="user-detail-pending"><i class="fa-solid fa-user-pen" aria-hidden="true"></i> {{ $data['pendingText'] }}</p>
@@ -100,4 +109,21 @@
             </article>
         @endforeach
     </div>
+
+    @if ($data['deactivateForm'])
+        <form method="POST" action="{{ $data['deactivateForm']['url'] }}" class="user-detail-deactivate"
+            data-confirm-reason
+            data-confirm-title="Dar de baja a {{ $data['profile']['fullName'] }}"
+            data-confirm-text="{{ $data['deactivateForm']['confirmText'] }}"
+            data-confirm-button="Dar de baja"
+            data-reason-word="confirmar"
+            data-reason-min="{{ $data['deactivateForm']['minLength'] }}">
+            @csrf
+            <input type="hidden" name="reason" value="">
+            <button type="submit" class="btn gym-remove-btn">
+                <i class="fa-solid fa-user-slash"></i>
+                <span>Dar de baja</span>
+            </button>
+        </form>
+    @endif
 </div>

@@ -102,6 +102,7 @@ class UserProfileTest extends TestCase
     {
         $user = $this->register('atleta@example.com', 'trainee-role');
         [$userId, $token] = [$user->json('data.user.id'), $user->json('data.token')];
+        $this->clearRestDays($userId);
         $runId = DB::table('exercises')->where('name', 'Correr en cinta')->value('id');
         $walkId = DB::table('exercises')->where('name', 'Caminata en cinta')->value('id');
         $ropeId = DB::table('exercises')->where('name', 'Saltar la cuerda')->value('id');
@@ -140,6 +141,83 @@ class UserProfileTest extends TestCase
             ->assertJsonPath('data.progress.points', 164)
             ->assertJsonPath('data.progress.rank', 'beginner')
             ->assertJsonPath('data.progress.nextRank', 'steady');
+    }
+
+    public function test_rest_days_keep_the_streak_alive(): void
+    {
+        $user = $this->register('atleta@example.com', 'trainee-role');
+        [$userId, $token] = [$user->json('data.user.id'), $user->json('data.token')];
+        $runId = DB::table('exercises')->where('name', 'Correr en cinta')->value('id');
+        $routineId = $this->createRoutine($token, 'Cardio', [$runId]);
+        $today = CarbonImmutable::parse(RoutineExerciseLog::today());
+        $restDayList = [$today->subDays(2)->dayOfWeekIso, $today->subDay()->dayOfWeekIso];
+        sort($restDayList);
+
+        $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()->assertJsonPath('data.rest_days', [6, 7]);
+
+        // entreno hace 3 dias y descanso ayer y anteayer: sin dias de descanso la racha se corto
+        $this->insertLog($userId, $routineId, $runId, $today->subDays(3)->toDateString(), ['duration_minutes' => 10]);
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => []]))
+            ->assertOk()
+            ->assertJsonPath('data.rest_days', [])
+            ->assertJsonPath('data.progress.currentStreak', 0);
+
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => array_reverse($restDayList)]))
+            ->assertOk()
+            ->assertJsonPath('data.rest_days', $restDayList)
+            ->assertJsonPath('data.progress.currentStreak', 1);
+
+        // hoy vuelve: los dos dias de descanso no cortan la racha y suma el extra por dia de racha (2 x 10 + 20 min + 5)
+        $this->insertLog($userId, $routineId, $runId, $today->toDateString(), ['duration_minutes' => 10]);
+        $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()
+            ->assertJsonPath('data.progress.currentStreak', 2)
+            ->assertJsonPath('data.progress.bestStreak', 2)
+            ->assertJsonPath('data.progress.points', 45);
+
+        // entrenar en un dia de descanso tambien suma a la racha
+        $this->insertLog($userId, $routineId, $runId, $today->subDay()->toDateString(), ['duration_minutes' => 10]);
+        $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()
+            ->assertJsonPath('data.progress.currentStreak', 3);
+
+        // un dia de entrenamiento sin entrenar si la corta (hace 4 y 5 dias no son de descanso)
+        $this->insertLog($userId, $routineId, $runId, $today->subDays(6)->toDateString(), ['duration_minutes' => 10]);
+        $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()
+            ->assertJsonPath('data.progress.currentStreak', 3)
+            ->assertJsonPath('data.progress.bestStreak', 3);
+
+        // si no manda la lista se conserva; con una lista vacia pide entrenar todos los dias
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData())
+            ->assertOk()->assertJsonPath('data.rest_days', $restDayList);
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => []]))
+            ->assertOk()
+            ->assertJsonPath('data.rest_days', [])
+            ->assertJsonPath('data.progress.currentStreak', 2);
+    }
+
+    public function test_rest_days_default_to_the_weekend_for_new_and_existing_users(): void
+    {
+        $user = $this->register('atleta@example.com', 'trainee-role')->assertJsonPath('data.user.rest_days', [6, 7]);
+        [$userId, $token] = [$user->json('data.user.id'), $user->json('data.token')];
+        $this->assertSame([6, 7], json_decode(DB::table('users')->where('id', $userId)->value('rest_days'), true));
+
+        // un usuario sin el dato guardado tambien descansa el fin de semana
+        DB::table('users')->where('id', $userId)->update(['rest_days' => null]);
+        $this->actingWithToken($token)->getJson('/api/v1/user/'.$userId)->assertOk()->assertJsonPath('data.rest_days', [6, 7]);
+    }
+
+    public function test_rest_days_reject_invalid_values(): void
+    {
+        $user = $this->register('atleta@example.com', 'trainee-role');
+        [$userId, $token] = [$user->json('data.user.id'), $user->json('data.token')];
+
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => [1, 2, 3, 4, 5, 6, 7]]))
+            ->assertUnprocessable()->assertJsonValidationErrors('rest_days');
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => [0]]))
+            ->assertUnprocessable()->assertJsonValidationErrors('rest_days.0');
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => [6, 6]]))
+            ->assertUnprocessable()->assertJsonValidationErrors('rest_days.0');
+        $this->actingWithToken($token)->putJson('/api/v1/user/'.$userId.'/profile', $this->profileData(['rest_days' => 'sabado']))
+            ->assertUnprocessable()->assertJsonValidationErrors('rest_days');
     }
 
     private function createRoutine(string $token, string $name, array $exerciseIdList): int

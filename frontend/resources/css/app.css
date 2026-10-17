@@ -607,3 +607,83 @@ body {
     color: var(--c-text-subtle-8f8f8f);
     padding: .5rem .75rem;
 }
+
+.searchable-select-box {
+    align-items: center;
+    cursor: text;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    min-height: calc(1.5em + .75rem + 2px);
+}
+
+.searchable-select-box:focus-within {
+    border-color: var(--c-red-text-ff6b6b);
+}
+
+.searchable-select-chips {
+    display: contents;
+}
+
+.searchable-select-chip {
+    align-items: center;
+    background: rgba(193, 18, 31, .35);
+    border-radius: 999px;
+    color: var(--c-text-strong-ffffff);
+    display: inline-flex;
+    font-size: .85rem;
+    gap: .25rem;
+    line-height: 1.2;
+    padding: .2rem .35rem .2rem .65rem;
+}
+
+.searchable-select-chip-remove {
+    background: none;
+    border: 0;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: .75;
+    padding: 0 .2rem;
+}
+
+.searchable-select-chip-remove:hover {
+    opacity: 1;
+}
+
+.searchable-select-input {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    flex: 1 0 6rem;
+    min-width: 6rem;
+    outline: none;
+    padding: 0;
+}
+
+.searchable-select-option.is-selected::after {
+    color: var(--c-red-text-ff6b6b);
+    content: '\2713';
+    float: right;
+    font-weight: 700;
+}
+
+/* aviso que pide escribir una palabra y un motivo (form[data-confirm-reason] en resources/js/app.js) */
+.swal-reason-word,
+.swal-reason-text {
+    box-sizing: border-box;
+    margin: .75rem 0 0;
+    width: 100%;
+}
+
+.swal-reason-label {
+    display: block;
+    font-weight: 600;
+    margin-top: 1rem;
+    text-align: left;
+}
+
+.swal-reason-label + .swal-reason-text {
+    margin-top: .35rem;
+    min-height: 6rem;
+}

@@ -68,9 +68,13 @@ class GymUser {
         ->all();
     }
 
+    // los dados de baja no aparecen en la lista de alumnos ni compiten en el ranking
     static function queryPublicUserIdListByGymId(DbConnector $dbConnect, int $gymId): array{
-        return self::allocDbTable($dbConnect)->where('gym_id', $gymId)->where('is_public', true)
-        ->orderBy('created_at')->pluck('user_id')->all();
+        return self::allocDbTable($dbConnect, 'gu')
+        ->join(DbSchema::tableUsers.' as u', 'u.id', '=', 'gu.user_id')
+        ->where('gu.gym_id', $gymId)->where('gu.is_public', true)
+        ->where('u.status', '!=', EntityStatus::statusIdDeleted)
+        ->orderBy('gu.created_at')->pluck('gu.user_id')->all();
     }
 
     static function updateVisibility(DbConnector $dbConnect, int $gymId, int $userId, bool $isPublic): bool{

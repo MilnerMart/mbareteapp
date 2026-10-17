@@ -16,6 +16,7 @@ class AchievementTest extends TestCase
     {
         $student = $this->register('student@example.com', 'trainee-role');
         [$userId, $token] = [$student->json('data.user.id'), $student->json('data.token')];
+        $this->clearRestDays($userId);
         $exerciseId = DB::table('exercises')->value('id');
         $routineId = $this->actingWithToken($token)->postJson('/api/v1/routines', ['name' => 'Fuerza', 'frequency' => 3, 'rest_minutes' => 1])
             ->assertCreated()->json('data.id');
@@ -56,6 +57,7 @@ class AchievementTest extends TestCase
     {
         $student = $this->register('student@example.com', 'trainee-role');
         [$userId, $token] = [$student->json('data.user.id'), $student->json('data.token')];
+        $this->clearRestDays($userId);
         $exerciseId = DB::table('exercises')->value('id');
         $routineId = $this->actingWithToken($token)->postJson('/api/v1/routines', ['name' => 'Cardio', 'frequency' => 3, 'rest_minutes' => 1])
             ->assertCreated()->json('data.id');

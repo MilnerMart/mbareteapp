@@ -38,6 +38,15 @@ class ProfileRequest extends FormRequest
             'weight' => ['required', 'integer', 'min:25', 'max:250'],
             'goal' => ['nullable', Rule::in(User::goalSlugList)],
             'gender' => ['nullable', Rule::in(User::genderSlugList)],
+            'rest_days' => ['nullable', 'array', 'max:'.User::maxRestDays],
+            'rest_days.*' => ['integer', 'distinct', Rule::in(User::weekDayList)],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'rest_days.max' => 'Deja al menos un dia de entrenamiento en la semana',
         ];
     }
 }

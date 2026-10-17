@@ -175,6 +175,10 @@ class ApiClientService
         return $this->get('/user/'.$id.'/detail');
     }
 
+    public function deactivateUser(int $id, string $reason){
+        return $this->post('/user/'.$id.'/deactivate', ['reason' => $reason]);
+    }
+
     public function getUserLogs(int $id, int $page, ?string $model){
         return $this->get('/user/'.$id.'/logs', array_filter(['page' => $page, 'model' => $model]));
     }

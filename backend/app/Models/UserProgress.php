@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Db\DbConnector;
 use App\Db\DbSchema;
+use App\Helpers\BaseHelper;
 use Carbon\CarbonImmutable;
 
 class UserProgress {
@@ -31,12 +32,13 @@ class UserProgress {
         }
         ksort($dayMap);
         $dayList = array_keys($dayMap);
-        [, $bestStreak, $currentStreak] = self::countStreaks($dayList);
+        $restDayList = User::queryRestDayMapByIds($dbConnect, [$userId])[$userId] ?? [];
+        [, $bestStreak, $currentStreak] = self::countStreaks($dayList, $restDayList);
 
         // lo que vale cada cosa, el tope por dia y lo que pide cada rango los configura el admin (ProgressSettings).
         // El tope hace que una sola sesion larga no alcance para subir de rango: hace falta volver otros dias.
         $settings = ProgressSettings::load($dbConnect);
-        $points = array_sum(self::buildDayPointsMap($settings, $dayMap));
+        $points = array_sum(self::buildDayPointsMap($settings, $dayMap, $restDayList));
 
         return [
             'points' => $points,
@@ -49,11 +51,11 @@ class UserProgress {
     }
 
     // $dayMap ordenado por dia: [dia => ['minutes' =>, 'kilos' =>]] => [dia => puntos de ese dia]
-    static function buildDayPointsMap(ProgressSettings $settings, array $dayMap): array{
+    static function buildDayPointsMap(ProgressSettings $settings, array $dayMap, array $restDayList = []): array{
         $pointsMap = [];
         $previousDay = null;
         foreach ($dayMap as $day => $dayTotals) {
-            $isStreakDay = $previousDay && CarbonImmutable::parse($previousDay)->addDay()->isSameDay(CarbonImmutable::parse($day));
+            $isStreakDay = $previousDay && self::keepsStreak(BaseHelper::parseDate($previousDay), BaseHelper::parseDate($day), $restDayList);
             $dayPoints = $settings->scoring('pointsPerDay')
                 + ($isStreakDay ? $settings->scoring('pointsPerStreakDay') : 0)
                 + $dayTotals['minutes'] * $settings->scoring('pointsPerMinute')
@@ -77,22 +79,32 @@ class UserProgress {
         return max(1, (int)ceil($seconds / 60));
     }
 
-    static function countStreaks(array $sortedDayList): array{
+    // la racha sigue si entre dos dias entrenados solo hubo dias de descanso; entrenar en un dia de descanso tambien suma
+    static function countStreaks(array $sortedDayList, array $restDayList = []): array{
         $streakDays = 0;
         $bestStreak = 0;
         $streak = 0;
         $previous = null;
         foreach ($sortedDayList as $day) {
-            $date = CarbonImmutable::parse($day);
-            $isConsecutive = $previous && $previous->addDay()->isSameDay($date);
+            $date = BaseHelper::parseDate($day);
+            $isConsecutive = $previous && self::keepsStreak($previous, $date, $restDayList);
             $streak = $isConsecutive ? $streak + 1 : 1;
             $streakDays += $isConsecutive ? 1 : 0;
             $bestStreak = max($bestStreak, $streak);
             $previous = $date;
         }
 
-        $today = CarbonImmutable::parse(RoutineExerciseLog::today());
-        $isAlive = $previous && ($previous->isSameDay($today) || $previous->addDay()->isSameDay($today));
+        $today = BaseHelper::parseDate(RoutineExerciseLog::today());
+        $isAlive = $previous && self::keepsStreak($previous, $today, $restDayList);
         return [$streakDays, $bestStreak, $isAlive ? $streak : 0];
+    }
+
+    static function keepsStreak(CarbonImmutable $lastDay, CarbonImmutable $day, array $restDayList): bool{
+        for ($gapDay = $lastDay->addDay(); $gapDay->lt($day); $gapDay = $gapDay->addDay()) {
+            if(!in_array($gapDay->dayOfWeekIso, $restDayList, true)){
+                return false;
+            }
+        }
+        return true;
     }
 }

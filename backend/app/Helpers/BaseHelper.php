@@ -2,6 +2,7 @@
 namespace App\Helpers;
 
 use App\PublicException;
+use Carbon\CarbonImmutable;
 use DateTimeZone;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -28,6 +29,10 @@ abstract class BaseHelper {
         self::$displayTz ??= new DateTimeZone(self::displayTimezone);
         $date = is_string($date) ? new DateTimeImmutable($date) : DateTimeImmutable::createFromInterface($date);
         return $date->setTimezone(self::$displayTz)->format(DATE_ATOM);
+    }
+
+    static function parseDate(string $date): CarbonImmutable {
+        return CarbonImmutable::parse($date);
     }
 
     static function fromDbJson(?string $json):?array {

@@ -2,8 +2,10 @@
 
 use App\Http\Middleware\EnsureBelongsToGym;
 use App\Http\Middleware\EnsureCanConfigureApp;
+use App\Http\Middleware\EnsureCanDeactivateUsers;
 use App\Http\Middleware\EnsureCanCreateCatalog;
 use App\Http\Middleware\EnsureCanManageGyms;
+use App\Http\Middleware\EnsureCanSeeUserDetail;
 use App\Http\Middleware\EnsureFrontendAuthenticated;
 use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Foundation\Application;
@@ -26,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'frontend.member' => EnsureBelongsToGym::class,
             'frontend.catalog' => EnsureCanCreateCatalog::class,
             'frontend.config' => EnsureCanConfigureApp::class,
+            'frontend.user-detail' => EnsureCanSeeUserDetail::class,
+            'frontend.deactivate' => EnsureCanDeactivateUsers::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

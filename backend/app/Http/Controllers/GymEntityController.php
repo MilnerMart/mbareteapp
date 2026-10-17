@@ -76,13 +76,23 @@ class GymEntityController extends Controller {
             $gym->setSlug($validated['slug']);
             $dirty = true;
         }
-        if($gym->getOwnerId() !== $ownerId){
+        $previousOwnerId = $gym->getOwnerId();
+        if($previousOwnerId !== $ownerId){
             $this->gymLimitOrFail($ownerId);
             $gym->setOwnerId($ownerId);
             $dirty = true;
         }
         if($dirty){
-            $gym->writeToDb($dbConnector);
+            $dbConnector->getEnvConecction()->transaction(function() use ($dbConnector, $gym, $previousOwnerId){
+                $gym->writeToDb($dbConnector);
+                // el dueño no es alumno de su gimnasio; en el base, quien deja de ser dueño vuelve a ser alumno como todos
+                if($previousOwnerId !== $gym->getOwnerId()){
+                    GymUser::removeGymUser($dbConnector, $gym->getEntityId(), $gym->getOwnerId());
+                    if($gym->getSlug() === Gym::baseGymSlug){
+                        GymUser::addNewGymUser($dbConnector, $gym->getEntityId(), $previousOwnerId);
+                    }
+                }
+            });
             EntityLog::addNew($dbConnector, $request->user()->id, $gym, EntityLog::actionIdUpdated, $gym->getName());
         }
 
@@ -102,7 +112,8 @@ class GymEntityController extends Controller {
 
     public function users(Request $request, string $id): JsonResponse {
         $gym = $this->queryAccessibleGymOrFail($request, $id);
-        $userIdList = GymUser::queryUserIdListByGymId($this->getDbConnector(), $gym->getEntityId());
+        $userIdList = array_values(array_filter(GymUser::queryUserIdListByGymId($this->getDbConnector(), $gym->getEntityId()),
+            fn($userId) => !$gym->isOwnedBy((int)$userId)));
         $userList = User::whereIn('id', $userIdList)->get()->sortBy(fn(User $user) => array_search($user->id, $userIdList));
         $viewer = $request->user();
         $routineMap = UserRoutine::queryRoutineMapByUserIds($this->getDbConnector(), $userIdList,
@@ -119,6 +130,9 @@ class GymEntityController extends Controller {
 
     public function removeUser(Request $request, string $id, string $userId): JsonResponse {
         $gym = $this->queryAccessibleGymOrFail($request, $id);
+        if($gym->getSlug() === Gym::baseGymSlug){
+            throw PublicException::validationError('Todos los usuarios pertenecen a '.$gym->getName().', no se los puede quitar. El admin puede darlos de baja desde su ficha');
+        }
         if(!GymUser::removeGymUser($this->getDbConnector(), $gym->getEntityId(), (int)$userId)){
             throw PublicException::notFoundError('El alumno no pertenece a este gimnasio');
         }
@@ -146,7 +160,6 @@ class GymEntityController extends Controller {
             }
             $gymModel = $this->buildGymModel($gym);
             // el front decide si mostrarlo; el codigo no se expone
-            $gymModel['isBase'] = $gym->getSlug() === Gym::baseGymSlug;
             unset($gymModel['slug']);
             if(!$isAdmin){
                 unset($gymModel['alumnsCount']);
@@ -214,6 +227,7 @@ class GymEntityController extends Controller {
         $resource = Resource::queryByOwnerAndModelId($dbconnector, CoreModel::gymEntityModelId, $gym->getEntityId());
         $gymModel = $gym->buildApiModel();
         $gymModel['image_url'] = $this->getResourceService()->obtainPublicUrl($resource);
+        $gymModel['isBase'] = $gym->getSlug() === Gym::baseGymSlug;
         $gymModel['refs']['owner'] = $userOwner ? UserResource::make($userOwner) : null;
         return $gymModel;
     }

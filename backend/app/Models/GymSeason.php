@@ -146,6 +146,7 @@ class GymSeason {
         }
 
         $settings = ProgressSettings::load($dbConnect);
+        $restDayMap = User::queryRestDayMapByIds($dbConnect, $participantIdList);
         $seasonDays = (int)CarbonImmutable::parse($startsOn)->diffInDays(CarbonImmutable::parse($endsOn)) + 1;
         $secondHalfOn = CarbonImmutable::parse($startsOn)->addDays(intdiv($seasonDays, 2))->toDateString();
         $standingList = [];
@@ -153,7 +154,8 @@ class GymSeason {
         foreach ($participantIdList as $userId) {
             $dayMap = $dayMapByUser[$userId] ?? [];
             ksort($dayMap);
-            $pointsMap = UserProgress::buildDayPointsMap($settings, $dayMap);
+            $restDayList = $restDayMap[$userId] ?? [];
+            $pointsMap = UserProgress::buildDayPointsMap($settings, $dayMap, $restDayList);
             $pointsMapByUser[$userId] = $pointsMap;
             $firstHalfPoints = array_sum(array_filter($pointsMap, fn(string $day) => $day < $secondHalfOn, ARRAY_FILTER_USE_KEY));
             $sessionMap = $sessionMapByUser[$userId] ?? [];
@@ -162,7 +164,7 @@ class GymSeason {
                 return $total > 0 && count($exerciseSet) >= $total;
             }, ARRAY_FILTER_USE_BOTH));
             $points = array_sum($pointsMap);
-            $streakList = $dayMap ? UserProgress::countStreaks(array_keys($dayMap)) : [0, 0, 0];
+            $streakList = $dayMap ? UserProgress::countStreaks(array_keys($dayMap), $restDayList) : [0, 0, 0];
             $standingList[] = [
                 'userId' => $userId,
                 'points' => $points,

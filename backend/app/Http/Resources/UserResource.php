@@ -26,6 +26,8 @@ class UserResource extends JsonResource
             'goal' => $this->goal,
             'gender' => $this->gender,
             'theme' => $this->theme,
+            'rest_days' => $this->getRestDayList(),
+            'is_active' => !$this->isDeactivated(),
             'profile_image_url' => $this->profile_image_url ? asset($this->profile_image_url) : null,
         ];
     }

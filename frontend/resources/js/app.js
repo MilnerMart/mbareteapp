@@ -91,6 +91,64 @@ document.addEventListener('submit', async (event) => {
     }
 });
 
+// Formularios con data-confirm-reason: piden escribir una palabra (data-reason-word, "confirmar" por defecto) y el
+// motivo, obligatorio, que se envia en su input name="reason" (ej. dar de baja a un usuario). data-reason-min es el
+// largo minimo del motivo. Si el formulario esta en un modal de bootstrap el aviso se dibuja dentro de el: si no,
+// el modal se queda con el foco y no deja escribir en el aviso.
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('form[data-confirm-reason]');
+
+    if (!form || form.dataset.confirmed === 'true') {
+        return;
+    }
+
+    event.preventDefault();
+
+    const confirmWord = form.dataset.reasonWord || 'confirmar';
+    const minLength = Number(form.dataset.reasonMin || 1);
+    const wordInput = Object.assign(document.createElement('input'), {
+        type: 'text', className: 'swal2-input swal-reason-word', placeholder: confirmWord, autocomplete: 'off',
+    });
+    wordInput.setAttribute('aria-label', `Escribi ${confirmWord} para confirmar`);
+    const reasonLabel = Object.assign(document.createElement('label'), { className: 'swal-reason-label', textContent: 'Motivo (obligatorio)' });
+    const reasonInput = Object.assign(document.createElement('textarea'), {
+        className: 'swal2-textarea swal-reason-text', placeholder: 'Cuenta por que se hace (queda registrado en su ficha)', maxLength: 500,
+    });
+    reasonInput.id = 'swal-reason-text';
+    reasonLabel.htmlFor = reasonInput.id;
+
+    const result = await Swal.fire({
+        target: form.closest('.modal') || document.body,
+        icon: 'warning',
+        title: form.dataset.confirmTitle || 'Confirmar',
+        html: buildConfirmContent(form.dataset.confirmText, document.createElement('br'), 'Escribi ',
+            Object.assign(document.createElement('b'), { textContent: confirmWord }), ' para confirmar.',
+            wordInput, reasonLabel, reasonInput),
+        showCancelButton: true,
+        confirmButtonText: form.dataset.confirmButton || 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#780000',
+        didOpen: () => wordInput.focus(),
+        preConfirm: () => {
+            if (wordInput.value.trim().toLowerCase() !== confirmWord) {
+                Swal.showValidationMessage(`Escribi "${confirmWord}" para confirmar.`);
+                return false;
+            }
+            if (reasonInput.value.trim().length < minLength) {
+                Swal.showValidationMessage(`Escribi el motivo (al menos ${minLength} caracteres).`);
+                return false;
+            }
+            return reasonInput.value.trim();
+        },
+    });
+
+    if (result.isConfirmed) {
+        form.querySelector('input[name="reason"]').value = result.value;
+        form.dataset.confirmed = 'true';
+        form.submit();
+    }
+});
+
 // Botones con data-confirm-reject: confirman el rechazo de una solicitud antes de enviar su formaction.
 $(document).on('click', 'button[data-confirm-reject]', async function (event) {
     event.preventDefault();

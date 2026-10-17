@@ -150,8 +150,10 @@ class TicketControllerTest extends TestCase
             ->assertOk()->assertJsonPath('data.0.id', $baseGymId)->assertJsonPath('data.0.isPublic', false)
             ->assertJsonPath('data.0.isBase', true)
             ->assertJsonMissingPath('data.0.alumnsCount');
-        $this->actingWithToken($this->login(static::adminEmail))->getJson('/api/v1/me/gyms')
-            ->assertOk()->assertJsonPath('data.0.id', $baseGymId)->assertJsonPath('data.0.alumnsCount', 2);
+        // el admin es el dueño del gimnasio base: lo gestiona pero no es alumno de el
+        $adminToken = $this->login(static::adminEmail);
+        $this->actingWithToken($adminToken)->getJson('/api/v1/me/gyms')->assertOk()->assertJsonCount(0, 'data');
+        $this->actingWithToken($adminToken)->getJson('/api/v1/entities/gym/'.$baseGymId)->assertOk()->assertJsonPath('data.alumnsCount', 1);
         $this->actingWithToken($coachToken)->putJson('/api/v1/me/gyms/'.$baseGymId.'/visibility', ['is_public' => true])
             ->assertOk()->assertJsonPath('data.isPublic', true);
         $this->actingWithToken($coachToken)->putJson('/api/v1/me/gyms/'.$baseGymId.'/visibility', ['is_public' => false])

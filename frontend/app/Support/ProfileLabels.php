@@ -19,6 +19,19 @@ class ProfileLabels
         'unspecified' => 'Prefiero no especificar',
     ];
 
+    // dia ISO de la semana, igual que el backend (User::weekDayList)
+    const weekDayLabelMap = [
+        1 => 'Lunes',
+        2 => 'Martes',
+        3 => 'Miercoles',
+        4 => 'Jueves',
+        5 => 'Viernes',
+        6 => 'Sabado',
+        7 => 'Domingo',
+    ];
+
+    const maxRestDays = 6;
+
     // nombres de los datos de perfil que el backend pide completar (User::requiredProfileFieldList)
     const profileFieldLabelMap = [
         'gender' => 'genero',
@@ -60,6 +73,16 @@ class ProfileLabels
     {
         $rank = isset(self::rankLabelMap[$rank]) ? $rank : 'novice';
         return $gender === 'female' ? (self::femaleRankLabelMap[$rank] ?? self::rankLabelMap[$rank]) : self::rankLabelMap[$rank];
+    }
+
+    static function restDaysText(array $restDayList): string
+    {
+        $labelList = array_values(array_map('mb_strtolower', array_intersect_key(self::weekDayLabelMap, array_flip(array_map('intval', $restDayList)))));
+        if(!$labelList){
+            return 'Sin dias de descanso: para mantener la racha hay que entrenar todos los dias.';
+        }
+        $last = array_pop($labelList);
+        return 'Dias de descanso (no cortan la racha): '.($labelList ? implode(', ', $labelList).' y '.$last : $last).'.';
     }
 
     static function formatMinutes(int $minutes): string
